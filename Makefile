@@ -3,7 +3,6 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := hello-world
+PROJECT_NAME := outlander-connect
 
 include $(IDF_PATH)/make/project.mk
-
