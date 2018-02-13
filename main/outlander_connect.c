@@ -6,6 +6,8 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 
+#include "car_connect.h"
+
 const static char * APP_TAG = "Main";
 
 esp_err_t event_handler(void *ctx, system_event_t *event)
@@ -35,8 +37,5 @@ void app_main(void)
     ESP_ERROR_CHECK( esp_wifi_start() );
     ESP_ERROR_CHECK( esp_wifi_connect() );
     
-    while (true) {
-        ESP_LOGI(APP_TAG,"Ping...");
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
-    }
+    car_connect();
 }
