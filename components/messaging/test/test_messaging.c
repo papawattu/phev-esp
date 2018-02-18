@@ -91,3 +91,28 @@ void test_register_handlers_can_be_called(void)
     
     TEST_ASSERT_EQUAL(1,inTimes);
 }
+
+void outHandler_two(message_t message)
+{
+    const uint8_t data[] = {0x0,0x01};
+
+    TEST_ASSERT_EQUAL_MEMORY(data, message.data,2);
+}
+void test_published_message_data(void)
+{
+    messageClient_t * client = NULL;
+
+    message_t message;
+
+    uint8_t data[] = {0x0,0x01};
+    message.data = (data_t *) &data;
+    message.length = 2;
+    
+    messagingClientInit(&client);
+
+    client->registerHandlers(client, inHandler, outHandler_two);
+
+    client->publish(client,message);
+    
+    TEST_ASSERT_EQUAL(1,inTimes);
+}

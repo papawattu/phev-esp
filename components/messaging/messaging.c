@@ -16,9 +16,7 @@ int publish(messageClient_t *client, message_t message)
 }
 int registerHandlers(messageClient_t *client, messageClientHandler_t incoming, messageClientHandler_t outgoing) 
 {
-    //if(!client) return -1;
     client->incomingHandler = incoming;
-    
     client->outgoingHandler = outgoing;
     client->publish = publish;
     return 0;
