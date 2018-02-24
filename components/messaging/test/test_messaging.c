@@ -19,7 +19,7 @@ void inHandler(message_t message)
 void test_bootstrap(void)
 {
     
-    messageClient_t * client = NULL;
+    messagingClient_t * client = NULL;
     
     messagingClientInit(&client);
 
@@ -34,11 +34,11 @@ void test_publish_returns_zero(void)
     message.data = (data_t *) &data;
     message.length = 2;
 
-    messageClient_t * client = NULL;
+    messagingClient_t * client = NULL;
     
     messagingClientInit(&client);
 
-    client->registerHandlers(client, inHandler, outHandler);
+    registerHandlers(client, inHandler, outHandler);
 
     int ret = client->publish(client, message);
     
@@ -53,11 +53,11 @@ void test_publish_calls_outgoing_handler(void)
     message.data = (data_t *) &data;
     message.length = 2;
 
-    messageClient_t * client = NULL;
+    messagingClient_t * client = NULL;
     
     messagingClientInit(&client);
 
-    client->registerHandlers(client, inHandler, outHandler);
+    registerHandlers(client, inHandler, outHandler);
 
     client->publish(client, message);
     
@@ -65,17 +65,17 @@ void test_publish_calls_outgoing_handler(void)
 }
 void test_register_handlers_returns_zero(void)
 {
-    messageClient_t * client = NULL;
+    messagingClient_t * client = NULL;
 
     messagingClientInit(&client);
 
-    int ret = client->registerHandlers(client, inHandler, outHandler);
+    int ret = registerHandlers(client, inHandler, outHandler);
 
     TEST_ASSERT_EQUAL(0,ret);
 }
 void test_register_handlers_can_be_called(void)
 {
-    messageClient_t * client = NULL;
+    messagingClient_t * client = NULL;
 
     message_t message;
 
@@ -85,7 +85,7 @@ void test_register_handlers_can_be_called(void)
     
     messagingClientInit(&client);
 
-    client->registerHandlers(client, inHandler, outHandler);
+    registerHandlers(client, inHandler, outHandler);
 
     client->incomingHandler(message);
     
@@ -100,7 +100,7 @@ void outHandler_two(message_t message)
 }
 void test_published_message_data(void)
 {
-    messageClient_t * client = NULL;
+    messagingClient_t * client = NULL;
 
     message_t message;
 
@@ -110,9 +110,53 @@ void test_published_message_data(void)
     
     messagingClientInit(&client);
 
-    client->registerHandlers(client, inHandler, outHandler_two);
+    registerHandlers(client, inHandler, outHandler_two);
 
     client->publish(client,message);
     
     TEST_ASSERT_EQUAL(1,inTimes);
+}
+
+void test_create_messaging_client()
+{
+    messagingSettings_t settings;
+    messagingClient_t * client = createMessagingClient(settings);
+
+    TEST_ASSERT_NOT_NULL(client);
+}
+int mock_start()
+{
+
+}
+void test_create_messaging_client_start()
+{
+    messagingSettings_t settings;
+    settings.start = mock_start;
+    messagingClient_t * client = createMessagingClient(settings);
+
+    TEST_ASSERT_EQUAL(mock_start,client->start);
+}
+int mock_stop()
+{
+
+}
+void test_create_messaging_client_stop()
+{
+    messagingSettings_t settings;
+    settings.stop = mock_stop;
+    messagingClient_t * client = createMessagingClient(settings);
+
+    TEST_ASSERT_EQUAL(mock_stop,client->stop);
+}
+int mock_connect()
+{
+
+}
+void test_create_messaging_client_connect()
+{
+    messagingSettings_t settings;
+    settings.connect = mock_connect;
+    messagingClient_t * client = createMessagingClient(settings);
+
+    TEST_ASSERT_EQUAL(mock_connect,client->connect);
 }

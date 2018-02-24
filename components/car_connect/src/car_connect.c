@@ -1,12 +1,13 @@
 #include "car_connect.h"
+/*
 #include "esp_wifi.h"
 #include "esp_system.h"
 #include "esp_event.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
-
+*/
 static const char * CAR_CONNECT_TAG = "CarConnect";
-
+/*
 esp_err_t event_handler(void *ctx, system_event_t *event)
 {
     return ESP_OK;
@@ -30,8 +31,12 @@ void startWireless()
     ESP_ERROR_CHECK( esp_wifi_start() );
     ESP_ERROR_CHECK( esp_wifi_connect() );
 }
-void car_connect() 
+*/
+void connect_car(messagingClient_t *in, messagingClient_t *out) 
 {
-    ESP_LOGI(CAR_CONNECT_TAG,"Car connect ...");
-    startWireless();
+    in->start();
+    in->connect();
+
+    out->start();
+    out->connect();
 }
