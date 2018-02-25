@@ -1,11 +1,11 @@
-#include "socket_client.h"
+#include "msg_tcpip.h"
 #ifndef TEST
 #include "lwip/sockets.h"
 #else
 #include "sockets.h"
 #endif
 
-int socketClientStart(messagingSettings_t settings)
+int tcpIpClientStart(messagingSettings_t settings) 
 {
     struct sockaddr_in remote_ip;
     int _socket;
@@ -27,4 +27,9 @@ int socketClientStart(messagingSettings_t settings)
     }
 
     return 0;
+}
+
+messagingClient_t * createTcpIpClient(messagingSettings_t settings)
+{
+    
 }

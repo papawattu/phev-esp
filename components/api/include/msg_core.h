@@ -1,5 +1,5 @@
-#ifndef _MESSAGING_H_
-#define _MESSAGING_H_
+#ifndef _MSG_CORE_H_
+#define _MSG_CORE_H_
 
 #include <stdint.h>
 

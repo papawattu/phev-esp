@@ -1,7 +1,7 @@
 #include "unity.h"
 
-#include "mock_messaging.h"
-#include "car_connect.h"
+#include "mock_msg_core.h"
+#include "msg_pipe.h"
 void setUp() 
 {
 
@@ -55,8 +55,8 @@ void test_should_call_start_incoming()
 
     startInStubNum = 0;
         
-    connect_car(in, out);
-
+    msg_pipe(in, out);
+    
     TEST_ASSERT_EQUAL(1,startInStubNum);
     
 }
@@ -80,7 +80,7 @@ void test_should_call_connect_incoming()
 
     connectInStubNum = 0;
         
-    connect_car(in, out);
+    msg_pipe(in, out);
 
     TEST_ASSERT_EQUAL(1,connectInStubNum);
 } 
@@ -104,7 +104,7 @@ void test_should_call_start_outgoing()
 
     startOutStubNum = 0;
         
-    connect_car(in, out);
+    msg_pipe(in, out);
 
     TEST_ASSERT_EQUAL(1,startOutStubNum);
     
@@ -129,7 +129,7 @@ void test_should_call_connect_outgoing()
 
     connectOutStubNum = 0;
         
-    connect_car(in, out);
+    msg_pipe(in, out);
 
     TEST_ASSERT_EQUAL(1,connectOutStubNum);
 } 

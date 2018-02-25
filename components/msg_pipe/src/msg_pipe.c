@@ -1,4 +1,4 @@
-#include "car_connect.h"
+#include "msg_pipe.h"
 /*
 #include "esp_wifi.h"
 #include "esp_system.h"
@@ -32,7 +32,7 @@ void startWireless()
     ESP_ERROR_CHECK( esp_wifi_connect() );
 }
 */
-void connect_car(messagingClient_t *in, messagingClient_t *out) 
+void msg_pipe(messagingClient_t *in, messagingClient_t *out) 
 {
     in->start();
     in->connect();

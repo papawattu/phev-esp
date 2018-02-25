@@ -1,8 +1,8 @@
 #include "unity.h"
 
-#include "mock_messaging.h"
+#include "mock_msg_core.h"
 #include "mock_sockets.h"
-#include "socket_client.h"
+#include "msg_tcpip.h"
 
 
 void setUp(void)
@@ -14,14 +14,14 @@ void setUp(void)
     connect_IgnoreAndReturn(0);
     
 }
-void test_socket_client_start(void)
+void test_tcpip_client_start(void)
 {
     
     messagingSettings_t settings;
     settings.host = "1.2.3.4";
     settings.port = 1234;
 
-    int ret = socketClientStart(settings);
+    int ret = tcpIpClientStart(settings);
 
     TEST_ASSERT_EQUAL(0,ret);
 }
