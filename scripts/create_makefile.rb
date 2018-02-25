@@ -5,7 +5,7 @@ require "#{CMOCK_DIR}/lib/cmock"
 UNITY_DIR = File.join(CMOCK_DIR, 'vendor', 'unity')
 require "#{UNITY_DIR}/auto/generate_test_runner"
 SRC_DIR =  ENV.fetch('SRC_DIR','./src')
-INCLUDE_PATH = ENV.fetch('INCLUDE_PATH','./include')
+INCLUDE_DIR = ENV.fetch('INCLUDE_DIR','./include')
 TEST_DIR = ENV.fetch('TEST_DIR', './**/test')
 UNITY_SRC = File.join(UNITY_DIR, 'src')
 CMOCK_SRC = File.join(CMOCK_DIR, 'src')
@@ -36,6 +36,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts "CC = gcc"
   mkfile.puts "BUILD_DIR ?= ./build"
   mkfile.puts "SRC_DIR ?= #{SRC_DIR}"
+  mkfile.puts "INCLUDE_DIR ?= #{INCLUDE_DIR}"
   mkfile.puts "TEST_DIR ?= #{TEST_DIR}"
   mkfile.puts "TEST_CFLAGS ?= -DTEST"
   mkfile.puts "CMOCK_DIR ?= #{CMOCK_DIR}"
@@ -44,7 +45,6 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts "TEST_MAKEFILE = ${TEST_BUILD_DIR}/MakefileTestSupport"
   mkfile.puts "OBJ ?= ${BUILD_DIR}/obj"
   mkfile.puts "OBJ_DIR = ${OBJ}"
-  mkfile.puts "INCLUDE_PATH ?= #{INCLUDE_PATH}"
   
   mkfile.puts ""
 
@@ -61,9 +61,8 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   test_sources = Dir["#{TEST_DIR}/test_*.c"]
   test_targets = []
   generator = UnityTestRunnerGenerator.new
-
   # headers that begin with prefix or end with suffix are not included 
-  all_headers = Dir["#{INCLUDE_PATH}/*.h"]  
+  all_headers = Dir["#{INCLUDE_DIR}/*.h"]  
 
   def reject_mock_files(file)
     extn = File.extname file
@@ -98,7 +97,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     if not makefile_targets.include? module_obj
         makefile_targets.push(module_obj)
         mkfile.puts "#{module_obj}: #{module_src}"
-        mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{INCLUDE_PATH}"
+        mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{INCLUDE_DIR}"
         mkfile.puts ""
     end
 
@@ -114,7 +113,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
         if not makefile_targets.include? linkonlymodule_obj
             makefile_targets.push(linkonlymodule_obj)
             mkfile.puts "#{linkonlymodule_obj}: #{linkonlymodule_src}"
-            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I ${INCLUDE_PATH}"
+            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{INCLUDE_DIR}"
             mkfile.puts ""
         end
     end
@@ -126,7 +125,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build runner
     mkfile.puts "#{runner_obj}: #{runner_source}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I ${INCLUDE_PATH}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{INCLUDE_DIR}"
     mkfile.puts ""
 
     # Collect mocks to generate
@@ -157,7 +156,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build test suite
     mkfile.puts "#{test_obj}: #{test} #{module_obj} #{mock_objs.join(' ')}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR} -I ${INCLUDE_PATH}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR} -I #{INCLUDE_DIR}"
     mkfile.puts ""
 
     # Build test suite executable
@@ -186,7 +185,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     mkfile.puts ""
 
     mkfile.puts "#{mock_obj}: #{mock_src} #{mock_header}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I ${INCLUDE_PATH}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{INCLUDE_DIR}"
     mkfile.puts ""
   end
 

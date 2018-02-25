@@ -4,8 +4,6 @@
 #
 PROJECT_NAME := outlander-connect
 
-local: setup test
-	
 -include $(IDF_PATH)/make/project.mk
 
 -include components/Makefile
