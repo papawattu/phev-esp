@@ -3,14 +3,16 @@
 
 static int outTimes = 0;
 static int inTimes = 0;
+static int started = 0;
+static int connected = 0;
 
-void outHandler(message_t message) 
+void outHandler(messagingClient_t *client, message_t message) 
 {
     outTimes ++;
     return;
 }
 
-void inHandler(message_t message) 
+void inHandler(messagingClient_t *client, message_t message) 
 {
     inTimes ++;
     return;
@@ -87,12 +89,12 @@ void test_register_handlers_can_be_called(void)
 
     registerHandlers(client, inHandler, outHandler);
 
-    client->incomingHandler(message);
+    client->incomingHandler(client,message);
     
     TEST_ASSERT_EQUAL(1,inTimes);
 }
 
-void outHandler_two(message_t message)
+void outHandler_two(messagingClient_t *client, message_t message)
 {
     const uint8_t data[] = {0x0,0x01};
 
@@ -124,9 +126,11 @@ void test_create_messaging_client()
 
     TEST_ASSERT_NOT_NULL(client);
 }
-int mock_start()
-{
 
+int mock_start(messagingClient_t *client)
+{
+    started = 1;
+    return 0;
 }
 void test_create_messaging_client_start()
 {
@@ -136,9 +140,10 @@ void test_create_messaging_client_start()
 
     TEST_ASSERT_EQUAL(mock_start,client->start);
 }
-int mock_stop()
+int mock_stop(messagingClient_t *client)
 {
-
+    started = 0;
+    return 0;
 }
 void test_create_messaging_client_stop()
 {
@@ -148,9 +153,10 @@ void test_create_messaging_client_stop()
 
     TEST_ASSERT_EQUAL(mock_stop,client->stop);
 }
-int mock_connect()
+int mock_connect(messagingClient_t *client)
 {
-
+    connected = 1;
+    return 0;
 }
 void test_create_messaging_client_connect()
 {
@@ -159,4 +165,40 @@ void test_create_messaging_client_connect()
     messagingClient_t * client = createMessagingClient(settings);
 
     TEST_ASSERT_EQUAL(mock_connect,client->connect);
+}
+void test_messaging_client_start()
+{
+    messagingSettings_t settings;
+    settings.start = mock_start;
+    messagingClient_t * client = createMessagingClient(settings);
+
+    started = 0;
+
+    client->start(client);
+
+    TEST_ASSERT_EQUAL(1,started);
+}
+void test_messaging_client_stop()
+{
+    messagingSettings_t settings;
+    settings.stop = mock_stop;
+    messagingClient_t * client = createMessagingClient(settings);
+
+    started = 1;
+    
+    client->stop(client);
+
+    TEST_ASSERT_EQUAL(0,started);
+}
+void test_messaging_client_connect()
+{
+    messagingSettings_t settings;
+    settings.connect = mock_connect;
+    messagingClient_t * client = createMessagingClient(settings);
+
+    connected = 0;
+    
+    client->connect(client);
+
+    TEST_ASSERT_EQUAL(1,connected);
 }

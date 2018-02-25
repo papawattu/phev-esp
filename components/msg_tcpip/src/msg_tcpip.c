@@ -5,7 +5,7 @@
 #include "sockets.h"
 #endif
 
-int tcpIpClientStart(messagingSettings_t settings) 
+int tcpIpClientStart(messagingClient_t *client, messagingSettings_t settings) 
 {
     struct sockaddr_in remote_ip;
     int _socket;
@@ -28,9 +28,40 @@ int tcpIpClientStart(messagingSettings_t settings)
 
     return 0;
 }
+int tcpipStart(messagingClient_t *client)
+{
 
-messagingClient_t * createTcpIpClient(messagingSettings_t settings)
+}
+int tcpipStop(messagingClient_t *client)
 {
     
-    return NULL;
+}
+int tcpipConnect(messagingClient_t *client)
+{
+    
+}
+void tcpipIncomingHandler(messagingClient_t *client, message_t message)
+{
+    
+}
+void tcpipOutgoingHandler(messagingClient_t *client, message_t  message)
+{
+    
+}
+messagingClient_t * createTcpIpClient(tcpipsettings_t settings)
+{
+    messagingSettings_t clientSettings;
+
+    clientSettings.host = settings.host;
+    clientSettings.port = settings.port;
+
+    clientSettings.incomingHandler = tcpipIncomingHandler;
+    clientSettings.outgoingHandler = tcpipOutgoingHandler;
+    
+    clientSettings.start = tcpipStart;
+    clientSettings.stop = tcpipStop;
+    clientSettings.connect = tcpipConnect;
+
+    return createMessagingClient(clientSettings);
+
 }

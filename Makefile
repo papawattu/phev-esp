@@ -4,6 +4,10 @@
 #
 PROJECT_NAME := outlander-connect
 
--include $(IDF_PATH)/make/project.mk
+local: clean setup test
 
--include components/Makefile
+ifeq ($(MAKECMDGOALS),local)
+include components/Makefile
+endif
+
+-include $(IDF_PATH)/make/project.mk

@@ -20,14 +20,14 @@ void test_tcpip_client_start(void)
     settings.host = "1.2.3.4";
     settings.port = 1234;
 
-    int ret = tcpIpClientStart(settings);
+    int ret = tcpIpClientStart(NULL,settings);
 
     TEST_ASSERT_EQUAL(0,ret);
-}
+} 
 void test_create_tcpip_client(void)
 {
-    
-    messagingSettings_t settings;
+    createMessagingClient_IgnoreAndReturn(1);
+    tcpipsettings_t settings;
     settings.host = "1.2.3.4";
 
     settings.port = 1234;

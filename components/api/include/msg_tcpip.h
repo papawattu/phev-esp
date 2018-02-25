@@ -3,8 +3,13 @@
 
 #include "msg_core.h"
 
-messagingClient_t * createTcpIpClient(messagingSettings_t);
+typedef struct tcpipsettings_t {
+    char * host;
+    uint16_t port;
+} tcpipsettings_t;
 
-int tcpIpClientStart(messagingSettings_t settings);
+messagingClient_t * createTcpIpClient(tcpipsettings_t);
+
+int tcpIpClientStart(messagingClient_t *client, messagingSettings_t settings);
 
 #endif

@@ -12,25 +12,25 @@ void tearDown()
 }
 static int startInStubNum = 0;
 
-int startInStub()
+int startInStub(messagingClient_t *client)
 {
     startInStubNum ++;
 }
 static int connectInStubNum = 0;
 
-int connectInStub()
+int connectInStub(messagingClient_t *client)
 {
     connectInStubNum ++;
 }
 static int startOutStubNum = 0;
 
-int startOutStub()
+int startOutStub(messagingClient_t *client)
 {
     startOutStubNum ++;
 }
 static int connectOutStubNum = 0;
 
-int connectOutStub()
+int connectOutStub(messagingClient_t *client)
 {
     connectOutStubNum ++;
 }
