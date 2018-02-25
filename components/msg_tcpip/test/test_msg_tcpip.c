@@ -7,16 +7,15 @@
 
 void setUp(void)
 {
-    bzero_Ignore();
-    htons_IgnoreAndReturn(0);
-    inet_aton_Ignore();
-    socket_ExpectAndReturn(0,0,0,0);
-    connect_IgnoreAndReturn(0);
     
 }
 void test_tcpip_client_start(void)
 {
-    
+    bzero_Ignore();
+    htons_IgnoreAndReturn(0);
+    inet_aton_Ignore();
+    socket_ExpectAndReturn(0,0,0,0);
+    connect_IgnoreAndReturn(0);   
     messagingSettings_t settings;
     settings.host = "1.2.3.4";
     settings.port = 1234;
@@ -25,15 +24,15 @@ void test_tcpip_client_start(void)
 
     TEST_ASSERT_EQUAL(0,ret);
 }
-/*
-void test_socket_client_start(void)
+void test_create_tcpip_client(void)
 {
     
     messagingSettings_t settings;
     settings.host = "1.2.3.4";
+
     settings.port = 1234;
 
-    int ret = socketClientStart(settings);
+    messagingClient_t * client = createTcpIpClient(settings);
 
-    TEST_ASSERT_EQUAL(0,ret);
-} */
+    TEST_ASSERT_NOT_NULL(client);
+} 

@@ -6,15 +6,19 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 
-#include "car_connect.h"
+#include "msg_pipe.h"
+#include "msg_tcpip.h"
+#include "msg_gcp_mqtt.h"
 
 const static char * APP_TAG = "Main";
 
-void app_main(void)
+void start_app(void)
 {
     ESP_LOGI(APP_TAG,"Application starting...");
     nvs_flash_init();
     tcpip_adapter_init();
-    
-    car_connect();
+}
+void app_main(void)
+{
+    start_app();
 }

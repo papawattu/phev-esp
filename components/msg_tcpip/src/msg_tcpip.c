@@ -32,4 +32,5 @@ int tcpIpClientStart(messagingSettings_t settings)
 messagingClient_t * createTcpIpClient(messagingSettings_t settings)
 {
     
+    return NULL;
 }
