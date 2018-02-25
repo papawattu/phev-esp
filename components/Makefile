@@ -32,8 +32,8 @@ TEST_MAKEFILE = $(TEST_BUILD_DIR)/MakefileTestSupport
 
 clean:
 	$(CLEANUP) $(TEST_BUILD_DIR)
-setup:
+setup: clean
 	mkdir -p $(BUILD_DIR)
-	INCLUDE_PATH=$(INCLUDE_PATH) ruby $(CMOCK_DIR)/scripts/create_makefile.rb
+	INCLUDE_PATH=$(INCLUDE_PATH) ruby ./scripts/create_makefile.rb
 
 -include $(TEST_MAKEFILE)
