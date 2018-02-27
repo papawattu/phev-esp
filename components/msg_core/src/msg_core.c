@@ -13,7 +13,7 @@ int connect(messagingClient_t *client)
 {
     return 0;
 }
-int publish(messagingClient_t *client, message_t message)
+int publish(messagingClient_t *client, message_t *message)
 {
     client->outgoingHandler(client, message);
     return 0;
@@ -25,13 +25,38 @@ int registerHandlers(messagingClient_t *client, messagingClientHandler_t incomin
     client->publish = publish;
     return 0;
 }
+
+void loop(messagingClient_t *client) 
+{
+    int i;
+    message_t *message = client->incomingHandler(client);
+
+    if(message && client->numSubs)
+    {
+        for(i = 0;i < client->numSubs;i++)
+        {
+            client->subs[i](client, message);
+        }
+    }
+
+}
+void subscribe(messagingClient_t *client, messagingSubscriptionCallback_t * callback)
+{
+    if(client->numSubs < MAX_SUBSCRIPTIONS) 
+    {
+        client->subs[client->numSubs++] = callback;
+    }
+}
 int messagingClientInit(messagingClient_t **client)
 {
     (*client) = (messagingClient_t *) malloc(sizeof(messagingClient_t));
     (*client)->start = start;
     (*client)->stop = stop;
     (*client)->connect = connect;
+    (*client)->loop = loop;
+    (*client)->subscribe = subscribe;
 
+    (*client)->numSubs = 0;
     return 0;
 }
 

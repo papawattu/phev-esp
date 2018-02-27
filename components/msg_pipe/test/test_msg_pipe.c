@@ -1,5 +1,4 @@
 #include "unity.h"
-
 #include "mock_msg_core.h"
 #include "msg_pipe.h"
 void setUp() 

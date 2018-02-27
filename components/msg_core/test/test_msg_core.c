@@ -6,16 +6,17 @@ static int inTimes = 0;
 static int started = 0;
 static int connected = 0;
 
-void outHandler(messagingClient_t *client, message_t message) 
+void outHandler(messagingClient_t *client, message_t *message) 
 {
     outTimes ++;
     return;
 }
 
-void inHandler(messagingClient_t *client, message_t message) 
+message_t * inHandler(messagingClient_t *client) 
 {
+    message_t message;
     inTimes ++;
-    return;
+    return &message;
 }
 
 void test_bootstrap(void)
@@ -42,7 +43,7 @@ void test_publish_returns_zero(void)
 
     registerHandlers(client, inHandler, outHandler);
 
-    int ret = client->publish(client, message);
+    int ret = client->publish(client, &message);
     
     TEST_ASSERT_EQUAL(0,ret);
 }
@@ -61,7 +62,7 @@ void test_publish_calls_outgoing_handler(void)
 
     registerHandlers(client, inHandler, outHandler);
 
-    client->publish(client, message);
+    client->publish(client, &message);
     
     TEST_ASSERT_EQUAL(2,outTimes);
 }
@@ -79,26 +80,19 @@ void test_register_handlers_can_be_called(void)
 {
     messagingClient_t * client = NULL;
 
-    message_t message;
-
-    uint8_t data[] = {0x0,0x01};
-    message.data = (data_t *) &data;
-    message.length = 2;
-    
     messagingClientInit(&client);
 
     registerHandlers(client, inHandler, outHandler);
 
-    client->incomingHandler(client,message);
+    client->incomingHandler(client);
     
     TEST_ASSERT_EQUAL(1,inTimes);
 }
 
-void outHandler_two(messagingClient_t *client, message_t message)
+void outHandler_two(messagingClient_t *client, message_t *message)
 {
     const uint8_t data[] = {0x0,0x01};
-
-    TEST_ASSERT_EQUAL_MEMORY(data, message.data,2);
+    TEST_ASSERT_EQUAL_MEMORY(data, message->data,2);
 }
 void test_published_message_data(void)
 {
@@ -114,7 +108,7 @@ void test_published_message_data(void)
 
     registerHandlers(client, inHandler, outHandler_two);
 
-    client->publish(client,message);
+    client->publish(client,&message);
     
     TEST_ASSERT_EQUAL(1,inTimes);
 }
@@ -201,4 +195,55 @@ void test_messaging_client_connect()
     client->connect(client);
 
     TEST_ASSERT_EQUAL(1,connected);
+}
+static int mock_pub_called = 0;
+static int mock_sub_called = 0;
+message_t *latest_message;
+
+void mock_pub(messagingClient_t *client, message_t *message) 
+{
+    mock_pub_called ++;
+    latest_message = message;
+}
+message_t * mock_sub(messagingClient_t *client)
+{
+    mock_sub_called ++;
+    return latest_message;
+}
+static int subscriptionCalled = 0;
+
+void subscription(messagingClient_t *client, message_t *message)
+{
+    subscriptionCalled ++;    
+    TEST_ASSERT_NOT_NULL(client);
+    TEST_ASSERT_NOT_NULL(message);
+    
+    uint8_t data[] = {0x0,0x01};
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(data,message->data,2);
+    TEST_ASSERT_EQUAL(2,message->length);
+}
+void test_messaging_pub_sub()
+{
+    messagingSettings_t settings;
+    message_t message;
+    uint8_t data[] = {0x0,0x01};
+    message.data = (data_t *) &data;
+    message.length = 2;
+    settings.start = mock_start;
+    settings.connect = mock_connect;
+    settings.outgoingHandler = mock_pub;
+    settings.incomingHandler = mock_sub;
+    
+    messagingClient_t * client = createMessagingClient(settings);
+    
+    client->start(client);
+    client->connect(client);
+    client->publish(client, &message);
+    client->subscribe(client, subscription);
+
+    client->loop(client);
+
+    TEST_ASSERT_EQUAL(1, mock_pub_called);
+    TEST_ASSERT_EQUAL(1, mock_sub_called);
+    TEST_ASSERT_EQUAL(1, subscriptionCalled);
 }
