@@ -11,7 +11,7 @@ int stop(messagingClient_t *client)
 }
 int connect(messagingClient_t *client)
 {
-    return 0;
+    return client->connect(client);
 }
 int publish(messagingClient_t *client, message_t *message)
 {
@@ -70,6 +70,7 @@ messagingClient_t * createMessagingClient(messagingSettings_t settings)
     client->start = settings.start;
     client->stop = settings.stop;
     client->connect = settings.connect;
+    client->connected = 0;
 
     return client;
 }

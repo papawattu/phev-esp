@@ -16,4 +16,6 @@ int htons(int a);
 void inet_aton(char *host, int* b);
 int socket(int a,int b,int c);
 int connect(int a,struct sockaddr * b,size_t c);
+ssize_t write(int fd, const void *buf, size_t count);
+ssize_t read(int fd, void *buf, size_t count);
 #endif

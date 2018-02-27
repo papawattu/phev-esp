@@ -3,13 +3,19 @@
 
 #include "msg_core.h"
 
-typedef struct tcpipsettings_t {
+#define TCPIP_CLIENT_READ_BUF_SIZE 2048
+
+typedef struct tcpIpSettings_t {
     char * host;
     uint16_t port;
-} tcpipsettings_t;
+} tcpIpSettings_t;
+typedef struct tcpip_ctx_t {
+    int socket;
+    char * host;
+    uint16_t port;
+    uint8_t * readBuffer;
+} tcpip_ctx_t;
 
-messagingClient_t * createTcpIpClient(tcpipsettings_t);
-
-int tcpIpClientStart(messagingClient_t *client, messagingSettings_t settings);
+messagingClient_t * createTcpIpClient(tcpIpSettings_t);
 
 #endif
