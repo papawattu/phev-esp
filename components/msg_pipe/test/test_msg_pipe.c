@@ -132,3 +132,68 @@ void test_should_call_connect_outgoing()
 
     TEST_ASSERT_EQUAL(1,connectOutStubNum);
 } 
+void test_should_set_in_and_out_clients()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;    
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    
+    createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    messagingClient_t *in = createMessagingClient(settings);
+    messagingClient_t *out = createMessagingClient(settings);
+
+    connectOutStubNum = 0;
+        
+    msg_pipe_ctx_t * ctx = msg_pipe(in, out);
+
+    TEST_ASSERT_EQUAL(in,ctx->in);
+    TEST_ASSERT_EQUAL(out,ctx->out);
+} 
+int loopInStubCalled = 0;
+int loopOutStubCalled = 0;
+
+void loopInStub(messagingClient_t * ctx)
+{
+    loopInStubCalled ++;
+}
+void loopOutStub(messagingClient_t * ctx)
+{
+    loopOutStubCalled ++;
+}
+void test_should_call_loop_for_both_clients()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.loop = loopInStub;    
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.loop = loopOutStub;
+
+    createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    messagingClient_t *in = createMessagingClient(settings);
+    messagingClient_t *out = createMessagingClient(settings);
+
+    connectOutStubNum = 0;
+        
+    msg_pipe_ctx_t * ctx = msg_pipe(in, out);
+
+    ctx->loop(ctx);
+    
+    TEST_ASSERT_EQUAL(1,loopInStubCalled);
+    TEST_ASSERT_EQUAL(1,loopOutStubCalled);
+} 

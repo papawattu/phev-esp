@@ -50,12 +50,12 @@ message_t * tcpipIncomingHandler(messagingClient_t *client)
     } 
     return NULL;   
 }
-void tcpipOutgoingHandler(messagingClient_t *client, message_t  message)
+void tcpipOutgoingHandler(messagingClient_t *client, message_t *message)
 {
     tcpip_ctx_t * ctx = (tcpip_ctx_t *) client->ctx;
-    if(message.data && message.length) 
+    if(message->data && message->length) 
     {
-        write(ctx->socket,message.data,message.length);
+        write(ctx->socket,message->data,message->length);
     }
 }
 messagingClient_t * createTcpIpClient(tcpIpSettings_t settings)

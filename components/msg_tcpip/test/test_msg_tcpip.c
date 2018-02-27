@@ -54,7 +54,7 @@ void test_tcpip_client_outgoing_handler(void)
     message.data = &data;
     message.length = 4;
     write_ExpectAndReturn(1,&data,4,0);
-    tcpipOutgoingHandler(&client,message);
+    tcpipOutgoingHandler(&client,&message);
 
 } 
 void test_tcpip_client_incoming_handler_no_message(void)
