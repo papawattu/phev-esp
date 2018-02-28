@@ -14,7 +14,7 @@ typedef struct message_t {
 }  message_t;
 typedef void (* messagingClientHandler_t)(messagingClient_t *client, message_t *message);
 
-typedef void (* messagingSubscriptionCallback_t)(messagingClient_t *client, message_t *message);
+typedef void (* messagingSubscriptionCallback_t)(messagingClient_t *client, void * params, message_t *message);
 
 typedef struct messagingSettings_t {
     void * ctx;
@@ -25,7 +25,7 @@ typedef struct messagingSettings_t {
     void (* outgoingHandler)(messagingClient_t *client, message_t *message);
 } messagingSettings_t;
 struct messagingClient_t {
-    messagingSubscriptionCallback_t subs[MAX_SUBSCRIPTIONS];
+    messagingSubscriptionCallback_t subs[MAX_SUBSCRIPTIONS][1];
     int numSubs;
     int connected;
 
@@ -36,7 +36,7 @@ struct messagingClient_t {
     messagingClient_t * (* incomingHandler)(messagingClient_t *client);
     void (* outgoingHandler)(messagingClient_t *client, message_t *message);
     int (* publish)(messagingClient_t *client, message_t *message);
-    void (* subscribe)(messagingClient_t *client, messagingSubscriptionCallback_t * callback);
+    void (* subscribe)(messagingClient_t *client, void * params, messagingSubscriptionCallback_t callback);
 
     void * ctx;
 };

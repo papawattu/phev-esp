@@ -14,6 +14,6 @@ typedef struct msg_pipe_ctx_t {
 
 msg_pipe_ctx_t * msg_pipe(messagingClient_t *incoming, messagingClient_t *outgoing);
 
-void loop(msg_pipe_ctx_t * ctx);
+void msg_pipe_loop(msg_pipe_ctx_t * ctx);
 
 #endif

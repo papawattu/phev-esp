@@ -212,7 +212,7 @@ message_t * mock_sub(messagingClient_t *client)
 }
 static int subscriptionCalled = 0;
 
-void subscription(messagingClient_t *client, message_t *message)
+void subscription(messagingClient_t *client, void * params, message_t *message)
 {
     subscriptionCalled ++;    
     TEST_ASSERT_NOT_NULL(client);
@@ -239,7 +239,7 @@ void test_messaging_pub_sub()
     client->start(client);
     client->connect(client);
     client->publish(client, &message);
-    client->subscribe(client, subscription);
+    client->subscribe(client, NULL, subscription);
 
     client->loop(client);
 

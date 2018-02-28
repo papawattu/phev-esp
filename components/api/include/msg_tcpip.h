@@ -20,4 +20,8 @@ typedef struct tcpip_ctx_t {
 
 messagingClient_t * createTcpIpClient(tcpIpSettings_t);
 
+int tcpipStart(messagingClient_t *client);
+int tcpipStop(messagingClient_t *client);
+int tcpipConnect(messagingClient_t *client);
+
 #endif

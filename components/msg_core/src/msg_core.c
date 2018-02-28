@@ -35,16 +35,17 @@ void loop(messagingClient_t *client)
     {
         for(i = 0;i < client->numSubs;i++)
         {
-            client->subs[i](client, message);
+            client->subs[i][0](client, client->subs[i][1],message);
         }
     }
 
 }
-void subscribe(messagingClient_t *client, messagingSubscriptionCallback_t * callback)
+void subscribe(messagingClient_t *client, void * params, messagingSubscriptionCallback_t callback)
 {
     if(client->numSubs < MAX_SUBSCRIPTIONS) 
     {
-        client->subs[client->numSubs++] = callback;
+        client->subs[client->numSubs][0] = callback;
+        client->subs[client->numSubs++][1] = params;
     }
 }
 int messagingClientInit(messagingClient_t **client)

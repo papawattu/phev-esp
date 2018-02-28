@@ -11,7 +11,8 @@ void setUp(void)
 }
 void test_create_tcpip_client(void)
 {
-    createMessagingClient_IgnoreAndReturn(1);
+    messagingClient_t ret;
+    createMessagingClient_IgnoreAndReturn(&ret);
     tcpIpSettings_t settings;
     settings.host = "1.2.3.4";
 
