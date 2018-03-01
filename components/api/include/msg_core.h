@@ -41,6 +41,6 @@ struct messagingClient_t {
     void * ctx;
 };
 
-messagingClient_t *createMessagingClient(messagingSettings_t); 
+messagingClient_t * msg_core_createMessagingClient(messagingSettings_t); 
 
 #endif

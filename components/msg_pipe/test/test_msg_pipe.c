@@ -59,11 +59,11 @@ void test_should_call_start_incoming()
     mockOut.connect = connectOutStub;
     mockOut.subscribe = subscribeOutStub;
     
-    createMessagingClient_ExpectAndReturn(settings,&mockIn);
-    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
-    messagingClient_t *in = createMessagingClient(settings);
-    messagingClient_t *out = createMessagingClient(settings);
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
 
     startInStubNum = 0;
         
@@ -86,11 +86,11 @@ void test_should_call_connect_incoming()
     mockOut.connect = connectOutStub;
     mockOut.subscribe = subscribeOutStub;
 
-    createMessagingClient_ExpectAndReturn(settings,&mockIn);
-    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
-    messagingClient_t *in = createMessagingClient(settings);
-    messagingClient_t *out = createMessagingClient(settings);
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
 
     connectInStubNum = 0;
         
@@ -112,11 +112,11 @@ void test_should_call_start_outgoing()
     mockOut.connect = connectOutStub;
     mockOut.subscribe = subscribeOutStub;
     
-    createMessagingClient_ExpectAndReturn(settings,&mockIn);
-    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
-    messagingClient_t *in = createMessagingClient(settings);
-    messagingClient_t *out = createMessagingClient(settings);
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
 
     startOutStubNum = 0;
         
@@ -139,11 +139,11 @@ void test_should_call_connect_outgoing()
     mockOut.connect = connectOutStub;
     mockOut.subscribe = subscribeOutStub;
 
-    createMessagingClient_ExpectAndReturn(settings,&mockIn);
-    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
-    messagingClient_t *in = createMessagingClient(settings);
-    messagingClient_t *out = createMessagingClient(settings);
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
 
     connectOutStubNum = 0;
         
@@ -165,11 +165,11 @@ void test_should_set_in_and_out_clients()
     mockOut.connect = connectOutStub;
     mockOut.subscribe = subscribeOutStub;
 
-    createMessagingClient_ExpectAndReturn(settings,&mockIn);
-    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
-    messagingClient_t *in = createMessagingClient(settings);
-    messagingClient_t *out = createMessagingClient(settings);
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
 
     connectOutStubNum = 0;
         
@@ -206,11 +206,11 @@ void test_should_call_loop_for_both_clients()
     mockOut.subscribe = subscribeOutStub;
     mockOut.loop = loopOutStub;
 
-    createMessagingClient_ExpectAndReturn(settings,&mockIn);
-    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
-    messagingClient_t *in = createMessagingClient(settings);
-    messagingClient_t *out = createMessagingClient(settings);
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
 
     connectOutStubNum = 0;
         
@@ -238,11 +238,11 @@ void test_should_subscribe_both_clients()
     mockOut.loop = loopOutStub;
     mockOut.subscribe = subscribeOutStub;
     
-    createMessagingClient_ExpectAndReturn(settings,&mockIn);
-    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
-    messagingClient_t *in = createMessagingClient(settings);
-    messagingClient_t *out = createMessagingClient(settings);
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
 
     subscribeInStubNum = 0;
     subscribeOutStubNum = 0;
@@ -271,11 +271,11 @@ void test_should_publish_message_incoming()
     mockOut.loop = loopOutStub;
     mockOut.subscribe = subscribeOutStub;
     
-    createMessagingClient_ExpectAndReturn(settings,&mockIn);
-    createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
-    messagingClient_t *in = createMessagingClient(settings);
-    messagingClient_t *out = createMessagingClient(settings);
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
 
     msg_pipe_ctx_t * ctx = msg_pipe(in, out);
 

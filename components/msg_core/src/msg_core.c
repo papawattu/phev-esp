@@ -1,32 +1,32 @@
 #include "stdlib.h"
 #include "msg_core.h"
 
-int start(messagingClient_t *client)
+int msg_core_start(messagingClient_t *client)
 {
     return 0;
 }
-int stop(messagingClient_t *client)
+int msg_core_stop(messagingClient_t *client)
 {
     return 0;
 }
-int connect(messagingClient_t *client)
+int msg_core_connect(messagingClient_t *client)
 {
     return client->connect(client);
 }
-int publish(messagingClient_t *client, message_t *message)
+int msg_core_publish(messagingClient_t *client, message_t *message)
 {
     client->outgoingHandler(client, message);
     return 0;
 }
-int registerHandlers(messagingClient_t *client, messagingClientHandler_t incoming, messagingClientHandler_t outgoing) 
+int msg_core_registerHandlers(messagingClient_t *client, messagingClientHandler_t incoming, messagingClientHandler_t outgoing) 
 {
     client->incomingHandler = incoming;
     client->outgoingHandler = outgoing;
-    client->publish = publish;
+    client->publish = msg_core_publish;
     return 0;
 }
 
-void loop(messagingClient_t *client) 
+void msg_core_loop(messagingClient_t *client) 
 {
     int i;
     message_t *message = client->incomingHandler(client);
@@ -40,7 +40,7 @@ void loop(messagingClient_t *client)
     }
 
 }
-void subscribe(messagingClient_t *client, void * params, messagingSubscriptionCallback_t callback)
+void msg_core_subscribe(messagingClient_t *client, void * params, messagingSubscriptionCallback_t callback)
 {
     if(client->numSubs < MAX_SUBSCRIPTIONS) 
     {
@@ -48,30 +48,31 @@ void subscribe(messagingClient_t *client, void * params, messagingSubscriptionCa
         client->subs[client->numSubs++][1] = params;
     }
 }
-int messagingClientInit(messagingClient_t **client)
+int msg_core_messagingClientInit(messagingClient_t **client)
 {
     (*client) = (messagingClient_t *) malloc(sizeof(messagingClient_t));
-    (*client)->start = start;
-    (*client)->stop = stop;
-    (*client)->connect = connect;
-    (*client)->loop = loop;
-    (*client)->subscribe = subscribe;
+    (*client)->start = msg_core_start;
+    (*client)->stop = msg_core_stop;
+    (*client)->connect = msg_core_connect;
+    (*client)->loop = msg_core_loop;
+    (*client)->subscribe = msg_core_subscribe;
 
     (*client)->numSubs = 0;
     return 0;
 }
 
-messagingClient_t * createMessagingClient(messagingSettings_t settings)
+messagingClient_t * msg_core_createMessagingClient(messagingSettings_t settings)
 {
     messagingClient_t * client;
 
-    messagingClientInit(&client);
-    registerHandlers(client, settings.incomingHandler,settings.outgoingHandler);
+    msg_core_messagingClientInit(&client);
+    msg_core_registerHandlers(client, settings.incomingHandler,settings.outgoingHandler);
 
     client->start = settings.start;
     client->stop = settings.stop;
     client->connect = settings.connect;
     client->connected = 0;
+    client->ctx = settings.ctx;
 
     return client;
 }

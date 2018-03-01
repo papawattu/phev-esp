@@ -24,7 +24,7 @@ void test_bootstrap(void)
     
     messagingClient_t * client = NULL;
     
-    messagingClientInit(&client);
+    msg_core_messagingClientInit(&client);
 
     TEST_ASSERT_NOT_NULL(client);
 }
@@ -39,9 +39,9 @@ void test_publish_returns_zero(void)
 
     messagingClient_t * client = NULL;
     
-    messagingClientInit(&client);
+    msg_core_messagingClientInit(&client);
 
-    registerHandlers(client, inHandler, outHandler);
+    msg_core_registerHandlers(client, inHandler, outHandler);
 
     int ret = client->publish(client, &message);
     
@@ -58,9 +58,9 @@ void test_publish_calls_outgoing_handler(void)
 
     messagingClient_t * client = NULL;
     
-    messagingClientInit(&client);
+    msg_core_messagingClientInit(&client);
 
-    registerHandlers(client, inHandler, outHandler);
+    msg_core_registerHandlers(client, inHandler, outHandler);
 
     client->publish(client, &message);
     
@@ -70,9 +70,9 @@ void test_register_handlers_returns_zero(void)
 {
     messagingClient_t * client = NULL;
 
-    messagingClientInit(&client);
+    msg_core_messagingClientInit(&client);
 
-    int ret = registerHandlers(client, inHandler, outHandler);
+    int ret = msg_core_registerHandlers(client, inHandler, outHandler);
 
     TEST_ASSERT_EQUAL(0,ret);
 }
@@ -80,9 +80,9 @@ void test_register_handlers_can_be_called(void)
 {
     messagingClient_t * client = NULL;
 
-    messagingClientInit(&client);
+    msg_core_messagingClientInit(&client);
 
-    registerHandlers(client, inHandler, outHandler);
+    msg_core_registerHandlers(client, inHandler, outHandler);
 
     client->incomingHandler(client);
     
@@ -104,9 +104,9 @@ void test_published_message_data(void)
     message.data = (data_t *) &data;
     message.length = 2;
     
-    messagingClientInit(&client);
+    msg_core_messagingClientInit(&client);
 
-    registerHandlers(client, inHandler, outHandler_two);
+    msg_core_registerHandlers(client, inHandler, outHandler_two);
 
     client->publish(client,&message);
     
@@ -116,7 +116,7 @@ void test_published_message_data(void)
 void test_create_messaging_client()
 {
     messagingSettings_t settings;
-    messagingClient_t * client = createMessagingClient(settings);
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
 
     TEST_ASSERT_NOT_NULL(client);
 }
@@ -130,7 +130,7 @@ void test_create_messaging_client_start()
 {
     messagingSettings_t settings;
     settings.start = mock_start;
-    messagingClient_t * client = createMessagingClient(settings);
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
 
     TEST_ASSERT_EQUAL(mock_start,client->start);
 }
@@ -143,7 +143,7 @@ void test_create_messaging_client_stop()
 {
     messagingSettings_t settings;
     settings.stop = mock_stop;
-    messagingClient_t * client = createMessagingClient(settings);
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
 
     TEST_ASSERT_EQUAL(mock_stop,client->stop);
 }
@@ -156,7 +156,7 @@ void test_create_messaging_client_connect()
 {
     messagingSettings_t settings;
     settings.connect = mock_connect;
-    messagingClient_t * client = createMessagingClient(settings);
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
 
     TEST_ASSERT_EQUAL(mock_connect,client->connect);
 }
@@ -164,7 +164,7 @@ void test_messaging_client_start()
 {
     messagingSettings_t settings;
     settings.start = mock_start;
-    messagingClient_t * client = createMessagingClient(settings);
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
 
     started = 0;
 
@@ -176,7 +176,7 @@ void test_messaging_client_stop()
 {
     messagingSettings_t settings;
     settings.stop = mock_stop;
-    messagingClient_t * client = createMessagingClient(settings);
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
 
     started = 1;
     
@@ -188,7 +188,7 @@ void test_messaging_client_connect()
 {
     messagingSettings_t settings;
     settings.connect = mock_connect;
-    messagingClient_t * client = createMessagingClient(settings);
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
 
     connected = 0;
     
@@ -234,7 +234,7 @@ void test_messaging_pub_sub()
     settings.outgoingHandler = mock_pub;
     settings.incomingHandler = mock_sub;
     
-    messagingClient_t * client = createMessagingClient(settings);
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
     
     client->start(client);
     client->connect(client);
