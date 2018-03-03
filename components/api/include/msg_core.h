@@ -37,10 +37,10 @@ struct messagingClient_t {
     void (* outgoingHandler)(messagingClient_t *client, message_t *message);
     int (* publish)(messagingClient_t *client, message_t *message);
     void (* subscribe)(messagingClient_t *client, void * params, messagingSubscriptionCallback_t callback);
-
+    
     void * ctx;
 };
 
 messagingClient_t * msg_core_createMessagingClient(messagingSettings_t); 
-
+void msg_core_call_subs(messagingClient_t *, message_t*);
 #endif

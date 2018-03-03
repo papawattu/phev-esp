@@ -42,12 +42,13 @@ void test_tcpip_client_connect(void)
 } 
 void test_tcpip_client_outgoing_handler(void)
 {
-    tcpip_ctx_t ctx;
     uint8_t buffer[4];
-    ctx.host = "1.2.3.4";
-    ctx.port = 1234;
-    ctx.socket = 1;
-    ctx.readBuffer = &buffer;
+    
+    tcpip_ctx_t ctx = {
+        .host = "1.2.3.4",
+        .port = 1234,
+        .socket = 1,
+        .readBuffer = &buffer };
     messagingClient_t client;
     client.ctx = (void *) &ctx;
     message_t message;

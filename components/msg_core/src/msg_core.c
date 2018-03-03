@@ -26,11 +26,9 @@ int msg_core_registerHandlers(messagingClient_t *client, messagingClientHandler_
     return 0;
 }
 
-void msg_core_loop(messagingClient_t *client) 
+void msg_core_call_subs(messagingClient_t *client, message_t *message)
 {
     int i;
-    message_t *message = client->incomingHandler(client);
-
     if(message && client->numSubs)
     {
         for(i = 0;i < client->numSubs;i++)
@@ -38,6 +36,12 @@ void msg_core_loop(messagingClient_t *client)
             client->subs[i][0](client, client->subs[i][1],message);
         }
     }
+}
+void msg_core_loop(messagingClient_t *client) 
+{
+    message_t *message = client->incomingHandler(client);
+
+    msg_core_call_subs(client, message);
 
 }
 void msg_core_subscribe(messagingClient_t *client, void * params, messagingSubscriptionCallback_t callback)

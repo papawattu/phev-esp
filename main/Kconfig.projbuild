@@ -1,0 +1,23 @@
+menu "Application Configuration"
+    
+config MQTT_MAX_HOST_LEN
+    int "max host len"
+    range 10 250
+    default 64
+
+config MQTT_MAX_CLIENT_LEN
+    int "max client len"
+    range 1 256
+    default 128
+
+config MQTT_MAX_USERNAME_LEN
+    int "max username len"
+    range 10 128
+    default 128
+
+config MQTT_MAX_PASSWORD_LEN
+    int "max password len"
+    range 10 512
+    default 512
+
+endmenu

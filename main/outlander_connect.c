@@ -16,6 +16,8 @@
 #include "msg_tcpip.h"
 #include "msg_gcp_mqtt.h"
 
+#include "apps/sntp/sntp.h"
+
 #define CONFIG_WIFI_SSID "BTHub3-HSZ3"
 #define CONFIG_WIFI_PASSWORD "simpsons"
 
@@ -27,17 +29,18 @@ const static char * APP_TAG = "Main";
 
 msg_pipe_ctx_t * connect(void)
 {
-    tcpIpSettings_t settings;
-    settings.host = "192.168.1.103";
-    settings.port = 8082;
-    messagingClient_t * in = msg_tcpip_createTcpIpClient(settings);
-    ESP_LOGI(APP_TAG,"Incoming Host %s",((tcpip_ctx_t *) in->ctx)->host);
-    ESP_LOGI(APP_TAG,"Incoming Port %d",((tcpip_ctx_t *) in->ctx)->port);
+    gcpSettings_t inSettings = {
+        .host = "192.168.1.103",
+        .port = 8080
+    };
+    tcpIpSettings_t outSettings = {
+        .host = "192.168.1.103",
+        .port = 8081
+    };
     
-    settings.host = "192.168.1.103";
-    settings.port = 8081;
-    messagingClient_t * out = msg_tcpip_createTcpIpClient(settings);
-    
+    messagingClient_t * in = msg_gcp_createGcpClient(inSettings);
+    messagingClient_t * out = msg_tcpip_createTcpIpClient(outSettings);
+
     ESP_LOGI(APP_TAG,"Outgoing Host %s",((tcpip_ctx_t *) out->ctx)->host);
     ESP_LOGI(APP_TAG,"Outgoing Port %d",((tcpip_ctx_t *) out->ctx)->port);
     
@@ -46,6 +49,12 @@ msg_pipe_ctx_t * connect(void)
 
 void main_loop(msg_pipe_ctx_t * ctx)
 {
+    
+    while(!(ctx->in->connected && ctx->out->connected))
+    {
+        ESP_LOGI(APP_TAG,"Waiting to connect...");
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
     while(ctx->in->connected && ctx->out->connected)
     {
         msg_pipe_loop(ctx);
@@ -98,6 +107,28 @@ static void wifi_conn_init(void)
     ESP_LOGI(APP_TAG, "start the WIFI SSID:[%s] password:[%s]", CONFIG_WIFI_SSID, "******");
     ESP_ERROR_CHECK(esp_wifi_start());
 }
+static void sntp_task(void)
+{
+    int retry = 0;
+    const int retry_count = 100;
+    time_t now;
+    struct tm timeinfo;
+
+    ESP_LOGI(APP_TAG, "Initializing SNTP");
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_init();
+
+    while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count)
+    {
+        ESP_LOGI(APP_TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        time(&now);
+        localtime_r(&now, &timeinfo);
+    }
+    ESP_LOGI(APP_TAG, "Got Time!!!");
+}
+
 void start_app(void)
 {
     ESP_LOGI(APP_TAG,"Application starting...");
@@ -106,6 +137,9 @@ void start_app(void)
     wifi_conn_init();
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                        false, true, portMAX_DELAY);
+    sntp_task();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+        
     msg_pipe_ctx_t *ctx = connect();
 
     main_loop(ctx);
