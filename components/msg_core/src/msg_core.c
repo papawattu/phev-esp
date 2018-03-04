@@ -22,16 +22,14 @@ int msg_core_registerHandlers(messagingClient_t *client, messagingClientHandler_
 {
     client->incomingHandler = incoming;
     client->outgoingHandler = outgoing;
-    client->publish = msg_core_publish;
     return 0;
 }
 
 void msg_core_call_subs(messagingClient_t *client, message_t *message)
 {
-    int i;
     if(message && client->numSubs)
     {
-        for(i = 0;i < client->numSubs;i++)
+        for(int i = 0;i < client->numSubs;i++)
         {
             client->subs[i][0](client, client->subs[i][1],message);
         }
@@ -60,7 +58,7 @@ int msg_core_messagingClientInit(messagingClient_t **client)
     (*client)->connect = msg_core_connect;
     (*client)->loop = msg_core_loop;
     (*client)->subscribe = msg_core_subscribe;
-
+    (*client)->publish = msg_core_publish;
     (*client)->numSubs = 0;
     return 0;
 }

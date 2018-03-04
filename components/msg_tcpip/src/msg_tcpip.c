@@ -45,10 +45,6 @@ message_t * msg_tcpip_incomingHandler(messagingClient_t *client)
 
     if(len)
     {
-        //char * str = malloc(sizeof("Received message " + len));
-        //sprintf(str, "Received message %s",ctx->readBuffer);
-        //log_info("Received message");
-        
         message_t * message = malloc(sizeof(message_t));
         message->data = malloc(len);
         memcpy(message->data, ctx->readBuffer,len);
@@ -61,10 +57,7 @@ void msg_tcpip_outgoingHandler(messagingClient_t *client, message_t *message)
 {
     tcpip_ctx_t * ctx = (tcpip_ctx_t *) client->ctx;
     if(message->data && message->length) 
-    {
-        //log_info("Sending message");
-        //log_info(message->data);
-        
+    {   
         write(ctx->socket,message->data,message->length);
     }
 }

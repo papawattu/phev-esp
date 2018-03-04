@@ -45,17 +45,13 @@ void msg_gcp_data_cb(void * self, void * params)
         char *topic = malloc(event_data->topic_length + 1);
         memcpy(topic, event_data->topic, event_data->topic_length);
         topic[event_data->topic_length] = 0;
-    //    printf("[APP] Publish topic: %s", topic);
         free(topic);
     }
 
     uint8_t *data = malloc(event_data->data_length + 1);
     memcpy(data, event_data->data, event_data->data_length);
     data[event_data->data_length] = 0;
-    //printf("[APP] Publish data[%d/%d bytes] %s",
-    //         event_data->data_length + event_data->data_offset,
-    //         event_data->data_total_length, data);
-
+    
     message_t message = {
         .data = data,
         .length = event_data->data_length
@@ -91,7 +87,7 @@ void getIatExp(char *iat, char *exp, int time_size)
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
-    // Is time set? If not, tm_year will be (1970 - 1900).
+    
     while (timeinfo.tm_year < (2016 - 1900))
     {
         time(&now);

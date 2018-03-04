@@ -43,6 +43,7 @@ msg_pipe_ctx_t * connect(void)
     messagingClient_t * in = msg_gcp_createGcpClient(inSettings);
     messagingClient_t * out = msg_tcpip_createTcpIpClient(outSettings);
 
+
     ESP_LOGI(APP_TAG,"Outgoing Host %s",((tcpip_ctx_t *) out->ctx)->host);
     ESP_LOGI(APP_TAG,"Outgoing Port %d",((tcpip_ctx_t *) out->ctx)->port);
     
@@ -131,14 +132,12 @@ static void sntp_task(void)
         time(&now);
         localtime_r(&now, &timeinfo);
     }
-    ESP_LOGI(APP_TAG, "Got Time!!!");
+    ESP_LOGI(APP_TAG, "Time synced");
 }
 
 void start_app(void)
 {
     ESP_LOGI(APP_TAG,"Application starting...");
-    nvs_flash_init();
-    tcpip_adapter_init();
     wifi_conn_init();
     ppp_main();
     sntp_task();
@@ -151,5 +150,8 @@ void start_app(void)
 }
 void app_main(void)
 {
+    nvs_flash_init();
+    tcpip_adapter_init();
+    
     start_app();
 }
