@@ -3,7 +3,6 @@
 #include <time.h>
 #include "msg_gcp_mqtt.h"
 #include "jwt.h"
-#include "mqtt.h"
 
 const char priv_key[] = {"-----BEGIN PRIVATE KEY-----\n\
 MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDnoS3ICNP1y9c5\n\
@@ -36,8 +35,8 @@ jOAmKcVLejliuwOuflOncA==\n\
 
 void msg_gcp_data_cb(void * self, void * params)
 {
-    mqtt_client *client = (mqtt_client *)self;
-    mqtt_event_data_t *event_data = (mqtt_event_data_t *)params;
+    esp_mqtt_client_handle_t *client = (mqtt_client *)self;
+    esp_mqtt_event_t *event_data = (esp_mqtt_event_t *)params;
 
     if (event_data->data_offset == 0)
     {
@@ -59,7 +58,7 @@ void msg_gcp_data_cb(void * self, void * params)
 
     msg_core_call_subs((messagingClient_t *) client->settings->params, &message);
 }
-mqtt_settings mqttsettings = {
+esp_mqtt_client_config_t mqttsettings = {
     .host = "mqtt.googleapis.com",
     .port = 8883,
     .client_id = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device",
@@ -74,10 +73,10 @@ mqtt_settings mqttsettings = {
 
 void msg_gcp_connected_cb(void *self, void *params)
 {
-    mqtt_client * client = (mqtt_client *) self;
+    esp_mqtt_client_handle_t * client = (esp_mqtt_client_handle_t *) self;
     ((messagingClient_t *) client->settings->params)->connected = 1;
 
-    mqtt_subscribe(client, "/devices/my-device/config", 0);
+    esp_mqtt_subscribe(client, "/devices/my-device/config", 0);
  
 }
 
@@ -173,7 +172,7 @@ message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 }
 void msg_gcp_outgoingHandler(messagingClient_t *client, message_t *message)
 {
-    mqtt_publish(((gcp_ctx_t *) client->ctx)->client, "/devices/my-device/events",  message->data, message->length,0,0);
+    esp_mqtt_publish(((gcp_ctx_t *) client->ctx)->client, "/devices/my-device/events",  message->data, message->length,0,0);
 }
 
 messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)

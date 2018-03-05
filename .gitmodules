@@ -1,0 +1,6 @@
+[submodule "components/espmqtt"]
+	path = components/espmqtt
+	url = https://github.com/papawattu/espmqtt.git
+[submodule "components/libjwt"]
+	path = components/libjwt
+	url = https://github.com/papawattu/libjwt.git

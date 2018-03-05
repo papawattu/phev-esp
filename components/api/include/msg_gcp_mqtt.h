@@ -2,7 +2,7 @@
 #define _MSG_GCP_MQTT_H_
 #include "sdkconfig.h"
 typedef void *QueueHandle_t;
-#include "mqtt.h"
+#include "mqtt_client.h"
 #include "msg_core.h"
 
 #define MSG_GCP_OK 0
@@ -26,7 +26,7 @@ typedef struct gcp_ctx_t
     char *host;
     uint16_t port;
     uint8_t *readBuffer;
-    mqtt_client * client;
+    esp_mqtt_client_handle_t * client;
 } gcp_ctx_t;
 
 messagingClient_t *msg_gcp_createGcpClient(gcpSettings_t);

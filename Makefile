@@ -4,8 +4,11 @@
 #
 PROJECT_NAME := outlander-connect
 
-local: clean setup test
+local: setup test
 
+ifeq ($(MAKECMDGOALS),setup)
+include components/Makefile
+endif
 ifeq ($(MAKECMDGOALS),local)
 include components/Makefile
 endif
