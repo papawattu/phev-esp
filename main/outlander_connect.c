@@ -21,8 +21,11 @@
 #include "ppp_client.h"
 #include "json_bin.h"
 
-#define CONFIG_WIFI_SSID "BTHub3-HSZ3"
-#define CONFIG_WIFI_PASSWORD "simpsons"
+//#define CONFIG_WIFI_SSID "BTHub3-HSZ3"
+//#define CONFIG_WIFI_PASSWORD "simpsons"
+
+#define CONFIG_WIFI_SSID "REMOTE45cfsc"
+#define CONFIG_WIFI_PASSWORD "fhcm852767"
 
 static EventGroupHandle_t wifi_event_group;
 
@@ -37,8 +40,8 @@ msg_pipe_ctx_t * connect(void)
         .port = 8080
     };
     tcpIpSettings_t outSettings = {
-        .host = "192.168.1.103",
-        .port = 8081
+        .host = "192.168.8.46",
+        .port = 8080
     };
     
     messagingClient_t * in = msg_gcp_createGcpClient(inSettings);
@@ -139,6 +142,8 @@ static void sntp_task(void)
 void start_app(void)
 {
     ESP_LOGI(APP_TAG,"Application starting...");
+    uint8_t new_mac[8] = {0x24,0x0d,0xc2,0xc2,0x91,0x85};
+    esp_base_mac_addr_set(new_mac);
     wifi_conn_init();
     ppp_main();
     sntp_task();

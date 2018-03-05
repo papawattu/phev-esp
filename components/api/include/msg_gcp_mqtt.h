@@ -5,6 +5,9 @@ typedef void *QueueHandle_t;
 #include "mqtt.h"
 #include "msg_core.h"
 
+#define MSG_GCP_OK 0
+#define MSG_GCP_FAIL -1
+
 #define GCP_CLIENT_READ_BUF_SIZE 2048
 //#define CONFIG_MQTT_SECURITY_ON
 

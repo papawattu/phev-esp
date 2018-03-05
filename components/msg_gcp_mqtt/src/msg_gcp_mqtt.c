@@ -141,11 +141,11 @@ char *createJwt(const char *project_id)
 
 int msg_gcp_start(messagingClient_t *client) 
 {
-    return 0;
+    return MSG_GCP_OK;
 }
 int msg_gcp_stop(messagingClient_t *client)
 {
-    return 0;
+    return MSG_GCP_OK;
 }
 
 int msg_gcp_connect(messagingClient_t *client)
@@ -153,16 +153,19 @@ int msg_gcp_connect(messagingClient_t *client)
     const char *clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device";
     const char *password = createJwt("phev-db3fa");
 
-    strcpy(mqttsettings.client_id, clientId);
-    strcpy(mqttsettings.password, password);
+    if(password != NULL) 
+    {
+        strcpy(mqttsettings.client_id, clientId);
+        strcpy(mqttsettings.password, password);
     
-    mqttsettings.params = client;
+        mqttsettings.params = client;
 
-    mqtt_client * mqttclient = mqtt_start(&mqttsettings);
+        mqtt_client * mqttclient = mqtt_start(&mqttsettings);
 
-    ((gcp_ctx_t *) client->ctx)->client = mqttclient;
-    return 0;
-
+        ((gcp_ctx_t *) client->ctx)->client = mqttclient;
+        return MSG_GCP_OK;
+    }
+    return MSG_GCP_FAIL;
 }
 message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 {
@@ -196,4 +199,3 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
     return msg_core_createMessagingClient(clientSettings);
 
 }
-
