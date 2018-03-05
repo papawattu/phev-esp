@@ -9,7 +9,7 @@ SRC_DIR =  ENV.fetch('SRC_DIR','./src')
 INCLUDE_DIR = ENV.fetch('INCLUDE_DIR','./include')
 TEST_DIR = ENV.fetch('TEST_DIR', './**/test')
 UNITY_SRC = File.join(UNITY_DIR, 'src')
-CMOCK_SRC = File.join(CMOCK_DIR, 'src')
+CMOCK_SRC = 'File.join(CMOCK_DIR, 'src')'
 CJSON_SRC = File.join(CJSON_DIR, '')
 BUILD_DIR = ENV.fetch('BUILD_DIR', './build')
 TEST_BUILD_DIR = ENV.fetch('TEST_BUILD_DIR', File.join(BUILD_DIR, 'test'))
@@ -63,9 +63,9 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts ""
 
   # Build cJSON
-  mkfile.puts "#{CJSON_OBJ}: #{CJSON_SRC}/cJSON.c"
-  mkfile.puts "\t${CC} -o $@ -c $< -I #{CJSON_SRC}"
-  mkfile.puts ""
+  #mkfile.puts "#{CJSON_OBJ}: #{CJSON_SRC}/cJSON.c"
+  #mkfile.puts "\t${CC} -o $@ -c $< -I #{CJSON_SRC}"
+  #mkfile.puts ""
 
   test_sources = Dir["#{TEST_DIR}/test_*.c"]
   test_targets = []
@@ -169,7 +169,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     mkfile.puts ""
 
     # Build test suite executable
-    test_objs = "#{test_obj} #{runner_obj} #{module_obj} #{mock_objs.join(' ')} #{linkonly_objs.join(' ')} #{UNITY_OBJ} #{CMOCK_OBJ} #{CJSON_OBJ}"
+    test_objs = "#{test_obj} #{runner_obj} #{module_obj} #{mock_objs.join(' ')} #{linkonly_objs.join(' ')} #{UNITY_OBJ} #{CMOCK_OBJ}"
     mkfile.puts "#{test_bin}: #{test_objs}"
     mkfile.puts "\t${CC} -o $@ ${LDFLAGS} #{test_objs}"
     mkfile.puts ""

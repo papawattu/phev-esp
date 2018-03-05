@@ -1,7 +1,7 @@
 #include "unity.h"
 
 #include "mock_msg_core.h"
-#include "sockets.h"
+#include "mock_sockets.h"
 #include "msg_tcpip.h"
 
 

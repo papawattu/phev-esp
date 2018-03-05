@@ -11,7 +11,7 @@ struct sockaddr_in {
     int sin_addr;
 };
 
-//void bzero(int *x,size_t s);
+void bzero(int *x,size_t s);
 int htons(int a);
 void inet_aton(char *host, int* b);
 int socket(int a,int b,int c);
