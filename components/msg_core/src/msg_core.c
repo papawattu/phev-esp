@@ -31,7 +31,10 @@ void msg_core_call_subs(messagingClient_t *client, message_t *message)
     {
         for(int i = 0;i < client->numSubs;i++)
         {
-            client->subs[i][0](client, client->subs[i][1],message);
+            if(client->subs[i][0]) 
+            {
+                client->subs[i][0](client, client->subs[i][1],message);
+            }
         }
     }
 }

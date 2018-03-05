@@ -2,6 +2,7 @@
 #define _MSG_CORE_H_
 
 #define MAX_SUBSCRIPTIONS 10
+#define SIMPLE_MESSAGE_SIZE 6
 #include <stdint.h>
 
 typedef struct messagingClient_t messagingClient_t;

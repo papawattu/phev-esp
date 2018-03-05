@@ -19,6 +19,7 @@
 #include "apps/sntp/sntp.h"
 
 #include "ppp_client.h"
+#include "json_bin.h"
 
 #define CONFIG_WIFI_SSID "BTHub3-HSZ3"
 #define CONFIG_WIFI_PASSWORD "simpsons"
@@ -144,6 +145,12 @@ void start_app(void)
     vTaskDelay(1000 / portTICK_PERIOD_MS);
         
     msg_pipe_ctx_t *ctx = connect();
+
+    msg_pipe_transformer_t transformer = {
+        .input = NULL,
+        .output = transformLightsJSONToBin
+    };
+    msg_pipe_add_transformer(ctx, &transformer);
 
     main_loop(ctx);
 

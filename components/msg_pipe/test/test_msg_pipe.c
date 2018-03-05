@@ -283,3 +283,130 @@ void test_should_publish_message_incoming()
     
 
 } 
+static int inputTransformCalled = 0;
+message_t * inputTransform(message_t * message) 
+{
+    inputTransformCalled ++;
+    return message;
+}
+void test_should_set_input_transformer()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;
+    
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.loop = loopInStub;    
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.loop = loopOutStub;
+
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
+
+    inputTransformCalled = 0;
+        
+    msg_pipe_ctx_t * ctx = msg_pipe(in, out);
+
+    msg_pipe_transformer_t transformer = {
+        .input = inputTransform,
+        .output = NULL
+    };
+
+    msg_pipe_add_transformer(ctx, &transformer);
+
+    TEST_ASSERT_EQUAL(1,ctx->numTransformers);
+    TEST_ASSERT_EQUAL(inputTransform,ctx->transformers[0]->input);
+}
+static int outputTransformCalled = 0;
+message_t * outputTransform(message_t * message) 
+{
+    outputTransformCalled ++;
+    return message;
+}
+void test_should_set_output_transformer()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;   
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.loop = loopInStub;    
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.loop = loopOutStub;
+
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
+
+    outputTransformCalled = 0;
+        
+    msg_pipe_ctx_t * ctx = msg_pipe(in, out);
+
+    msg_pipe_transformer_t transformer = {
+        .input = NULL,
+        .output = outputTransform
+    };
+
+    msg_pipe_add_transformer(ctx, &transformer);
+
+    TEST_ASSERT_EQUAL(1,ctx->numTransformers);
+    TEST_ASSERT_EQUAL(outputTransform,ctx->transformers[0]->output);
+}
+void test_should_set_multiple_transformers()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;   
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.loop = loopInStub;    
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.loop = loopOutStub;
+
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    messagingClient_t *in = msg_core_createMessagingClient(settings);
+    messagingClient_t *out = msg_core_createMessagingClient(settings);
+
+    outputTransformCalled = 0;
+        
+    msg_pipe_ctx_t * ctx = msg_pipe(in, out);
+
+    msg_pipe_transformer_t transformer1 = {
+        .input = NULL,
+        .output = NULL
+    };
+
+    msg_pipe_transformer_t transformer2 = {
+        .input = NULL,
+        .output = NULL
+    };
+    msg_pipe_add_transformer(ctx, &transformer1);
+    msg_pipe_add_transformer(ctx, &transformer2);
+
+    TEST_ASSERT_EQUAL(2,ctx->numTransformers);
+    TEST_ASSERT_EQUAL(&transformer1,ctx->transformers[0]);
+    TEST_ASSERT_EQUAL(&transformer2,ctx->transformers[1]);
+}

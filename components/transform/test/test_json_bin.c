@@ -10,7 +10,7 @@ void test_bootstrap(void)
         .length = 4
     };
 
-    message_t * out = transform(&message);
+    message_t * out = transformLightsJSONToBin(&message);
     TEST_ASSERT_NOT_NULL(out);
 }
 void test_lights_on(void)
@@ -22,7 +22,7 @@ void test_lights_on(void)
         .length = sizeof(message.data)
     };
 
-    message_t * out = transform(&message);
+    message_t * out = transformLightsJSONToBin(&message);
     TEST_ASSERT_EQUAL_HEX8_ARRAY(data,out->data,6);
 }
 void test_lights_off(void)
@@ -34,6 +34,6 @@ void test_lights_off(void)
         .length = sizeof(message.data)
     };
 
-    message_t * out = transform(&message);
+    message_t * out = transformLightsJSONToBin(&message);
     TEST_ASSERT_EQUAL_HEX8_ARRAY(data,out->data,6);
 }

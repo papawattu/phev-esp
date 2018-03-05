@@ -5,6 +5,6 @@
 #include "msg_core.h" 
 
 
-message_t * transform(message_t *);
+message_t * transformLightsJSONToBin(message_t *);
 
 #endif
