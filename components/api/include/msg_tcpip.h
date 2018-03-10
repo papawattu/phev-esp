@@ -1,7 +1,6 @@
 #ifndef _MSG_TCPIP_H_
 #define _MSG_TCPIP_H_
 
-#include <stdlib.h>
 #include "msg_core.h"
 
 #define TCPIP_CLIENT_READ_BUF_SIZE 2048

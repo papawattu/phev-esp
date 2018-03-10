@@ -7,9 +7,11 @@ require "#{UNITY_DIR}/auto/generate_test_runner"
 CJSON_DIR = File.expand_path(ENV.fetch('CJSON_DIR', File.join(ABS_ROOT, '..','..')))
 SRC_DIR =  ENV.fetch('SRC_DIR','./src')
 INCLUDE_DIR = ENV.fetch('INCLUDE_DIR','./include')
+INCLUDES = ENV.fetch('INCLUDES','/usr/include/')
+LINUX = ENV.fetch('LINUX_HDR','/usr/include/linux')
 TEST_DIR = ENV.fetch('TEST_DIR', './**/test')
 UNITY_SRC = File.join(UNITY_DIR, 'src')
-CMOCK_SRC = 'File.join(CMOCK_DIR, 'src')'
+CMOCK_SRC = File.join(CMOCK_DIR, 'src')
 CJSON_SRC = File.join(CJSON_DIR, '')
 BUILD_DIR = ENV.fetch('BUILD_DIR', './build')
 TEST_BUILD_DIR = ENV.fetch('TEST_BUILD_DIR', File.join(BUILD_DIR, 'test'))
@@ -24,6 +26,8 @@ MOCK_PREFIX = ENV.fetch('TEST_MOCK_PREFIX', 'mock_')
 MOCK_SUFFIX = ENV.fetch('TEST_MOCK_SUFFIX', '')
 TEST_MAKEFILE = ENV.fetch('TEST_MAKEFILE', File.join(TEST_BUILD_DIR, 'MakefileTestSupport'))
 MOCK_MATCHER = /#{MOCK_PREFIX}[A-Za-z_][A-Za-z0-9_\-\.]+#{MOCK_SUFFIX}/
+
+ALL_INCLUDES = "-I #{INCLUDES} -I #{INCLUDE_DIR} -I #{CJSON_SRC}"
 
 [TEST_BUILD_DIR, OBJ_DIR, RUNNERS_DIR, MOCKS_DIR, TEST_BIN_DIR].each do |dir|
   FileUtils.mkdir_p dir
@@ -41,7 +45,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts "SRC_DIR ?= #{SRC_DIR}"
   mkfile.puts "INCLUDE_DIR ?= #{INCLUDE_DIR}"
   mkfile.puts "TEST_DIR ?= #{TEST_DIR}"
-  mkfile.puts "TEST_CFLAGS ?= -DTEST"
+  mkfile.puts "TEST_CFLAGS ?= -std=c99 -DTEST"
   mkfile.puts "CMOCK_DIR ?= #{CMOCK_DIR}"
   mkfile.puts "CJSON_DIR ?= #{CJSON_DIR}"
   mkfile.puts "UNITY_DIR ?= #{UNITY_DIR}"
@@ -63,9 +67,9 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts ""
 
   # Build cJSON
-  #mkfile.puts "#{CJSON_OBJ}: #{CJSON_SRC}/cJSON.c"
-  #mkfile.puts "\t${CC} -o $@ -c $< -I #{CJSON_SRC}"
-  #mkfile.puts ""
+  mkfile.puts "#{CJSON_OBJ}: #{CJSON_SRC}/cJSON.c"
+  mkfile.puts "\t${CC} -o $@ -c $< -I #{CJSON_SRC}"
+  mkfile.puts ""
 
   test_sources = Dir["#{TEST_DIR}/test_*.c"]
   test_targets = []
@@ -106,7 +110,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     if not makefile_targets.include? module_obj
         makefile_targets.push(module_obj)
         mkfile.puts "#{module_obj}: #{module_src}"
-        mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{INCLUDE_DIR} -I #{CJSON_SRC}"
+        mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} #{ALL_INCLUDES} "
         mkfile.puts ""
     end
 
@@ -122,7 +126,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
         if not makefile_targets.include? linkonlymodule_obj
             makefile_targets.push(linkonlymodule_obj)
             mkfile.puts "#{linkonlymodule_obj}: #{linkonlymodule_src}"
-            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{INCLUDE_DIR}"
+            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} #{ALL_INCLUDES}"
             mkfile.puts ""
         end
     end
@@ -134,7 +138,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build runner
     mkfile.puts "#{runner_obj}: #{runner_source}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{CJSON_SRC} -I #{INCLUDE_DIR}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{MOCKS_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} #{ALL_INCLUDES}"
     mkfile.puts ""
 
     # Collect mocks to generate
@@ -165,11 +169,11 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
 
     # Build test suite
     mkfile.puts "#{test_obj}: #{test} #{module_obj} #{mock_objs.join(' ')}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR} -I #{CJSON_SRC} -I #{INCLUDE_DIR}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{MOCKS_DIR} #{ALL_INCLUDES}"
     mkfile.puts ""
 
     # Build test suite executable
-    test_objs = "#{test_obj} #{runner_obj} #{module_obj} #{mock_objs.join(' ')} #{linkonly_objs.join(' ')} #{UNITY_OBJ} #{CMOCK_OBJ}"
+    test_objs = "#{test_obj} #{runner_obj} #{module_obj} #{mock_objs.join(' ')} #{linkonly_objs.join(' ')} #{UNITY_OBJ} #{CMOCK_OBJ} #{CJSON_OBJ}"
     mkfile.puts "#{test_bin}: #{test_objs}"
     mkfile.puts "\t${CC} -o $@ ${LDFLAGS} #{test_objs}"
     mkfile.puts ""
@@ -194,7 +198,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
     mkfile.puts ""
 
     mkfile.puts "#{mock_obj}: #{mock_src} #{mock_header}"
-    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} -I #{INCLUDE_DIR} -I #{CJSON_SRC}"
+    mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} -I #{MOCKS_DIR} -I #{SRC_DIR} -I #{UNITY_SRC} -I #{CMOCK_SRC} #{ALL_INCLUDES}"
     mkfile.puts ""
   end
 

@@ -1,7 +1,6 @@
 #include "unity.h"
 
 #include "mock_msg_core.h"
-#include "mock_sockets.h"
 #include "msg_tcpip.h"
 
 
@@ -21,7 +20,7 @@ void test_create_tcpip_client(void)
     messagingClient_t * client = msg_tcpip_createTcpIpClient(settings);
 
     TEST_ASSERT_NOT_NULL(client);
-} 
+} /*
 void test_tcpip_client_connect(void)
 {
     tcpIpSettings_t settings;

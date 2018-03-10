@@ -1,9 +1,15 @@
-#include "msg_tcpip.h"
 #ifndef TEST
 #include "lwip/sockets.h"
 #else
-#include "sockets.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
 #endif
+#include "msg_tcpip.h"
 
 int msg_tcpip_start(messagingClient_t *client)
 {
