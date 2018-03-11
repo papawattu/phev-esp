@@ -1,6 +1,6 @@
 #ifndef _MSG_GCP_MQTT_H_
 #define _MSG_GCP_MQTT_H_
-#include "sdkconfig.h"
+//#include "sdkconfig.h"
 typedef void *QueueHandle_t;
 #include "mqtt_client.h"
 #include "msg_core.h"

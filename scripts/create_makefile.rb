@@ -5,6 +5,7 @@ require "#{CMOCK_DIR}/lib/cmock"
 UNITY_DIR = File.join(CMOCK_DIR, 'vendor', 'unity')
 require "#{UNITY_DIR}/auto/generate_test_runner"
 CJSON_DIR = File.expand_path(ENV.fetch('CJSON_DIR', File.join(ABS_ROOT, '..','..')))
+JWT_DIR = ENV.fetch('JWT_DIR','./components/libjwt')
 SRC_DIR =  ENV.fetch('SRC_DIR','./src')
 INCLUDE_DIR = ENV.fetch('INCLUDE_DIR','./include')
 INCLUDES = ENV.fetch('INCLUDES','/usr/include/')
@@ -13,12 +14,16 @@ TEST_DIR = ENV.fetch('TEST_DIR', './**/test')
 UNITY_SRC = File.join(UNITY_DIR, 'src')
 CMOCK_SRC = File.join(CMOCK_DIR, 'src')
 CJSON_SRC = File.join(CJSON_DIR, '')
+MQTT_DIR = ENV.fetch('MQTT_DIR','./components/espmqtt')
+MQTT_HDR = File.join(MQTT_DIR,'include')
+JWT_SRC = File.join(JWT_DIR, '')
 BUILD_DIR = ENV.fetch('BUILD_DIR', './build')
 TEST_BUILD_DIR = ENV.fetch('TEST_BUILD_DIR', File.join(BUILD_DIR, 'test'))
 OBJ_DIR = File.join(TEST_BUILD_DIR, 'obj')
 UNITY_OBJ = File.join(OBJ_DIR, 'unity.o')
 CMOCK_OBJ = File.join(OBJ_DIR, 'cmock.o')
 CJSON_OBJ = File.join(OBJ_DIR, 'cjson.o')
+#JWT_OBJ = File.join(OBJ_DIR, 'jwt.o')
 RUNNERS_DIR = File.join(TEST_BUILD_DIR, 'runners')
 MOCKS_DIR = File.join(TEST_BUILD_DIR, 'mocks')
 TEST_BIN_DIR = TEST_BUILD_DIR
@@ -27,7 +32,7 @@ MOCK_SUFFIX = ENV.fetch('TEST_MOCK_SUFFIX', '')
 TEST_MAKEFILE = ENV.fetch('TEST_MAKEFILE', File.join(TEST_BUILD_DIR, 'MakefileTestSupport'))
 MOCK_MATCHER = /#{MOCK_PREFIX}[A-Za-z_][A-Za-z0-9_\-\.]+#{MOCK_SUFFIX}/
 
-ALL_INCLUDES = "-I #{INCLUDES} -I #{INCLUDE_DIR} -I #{CJSON_SRC}"
+ALL_INCLUDES = "-I #{INCLUDES} -I #{INCLUDE_DIR} -I #{CJSON_SRC} -I #{MQTT_HDR} -I #{JWT_SRC}/include"
 
 [TEST_BUILD_DIR, OBJ_DIR, RUNNERS_DIR, MOCKS_DIR, TEST_BIN_DIR].each do |dir|
   FileUtils.mkdir_p dir
@@ -70,6 +75,11 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
   mkfile.puts "#{CJSON_OBJ}: #{CJSON_SRC}/cJSON.c"
   mkfile.puts "\t${CC} -o $@ -c $< -I #{CJSON_SRC}"
   mkfile.puts ""
+
+  # Build libjwt
+  #mkfile.puts "#{JWT_OBJ}: #{JWT_SRC}/jwt.c"
+  #mkfile.puts "\t${CC} -o $@ -c $< -I #{JWT_SRC}/include "
+  #mkfile.puts ""
 
   test_sources = Dir["#{TEST_DIR}/test_*.c"]
   test_targets = []
@@ -126,7 +136,7 @@ File.open(TEST_MAKEFILE, "w") do |mkfile|
         if not makefile_targets.include? linkonlymodule_obj
             makefile_targets.push(linkonlymodule_obj)
             mkfile.puts "#{linkonlymodule_obj}: #{linkonlymodule_src}"
-            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} #{ALL_INCLUDES}"
+            mkfile.puts "\t${CC} -o $@ -c $< ${TEST_CFLAGS} ${ALL_INCLUDES}"
             mkfile.puts ""
         end
     end

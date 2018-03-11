@@ -32,10 +32,10 @@ igamI29JOVvLVHqmuQg2f1tsLn6vcg5tK1cRYp0ej4ArN1ND/f6xppCnMkb2zKlA\n\
 R+ADc4eTc3/d0R7ahXDXg2qL76PDuN4+si8bCoxBnqtaGPKzJpe5OAqMvZ4s47CK\n\
 jOAmKcVLejliuwOuflOncA==\n\
 -----END PRIVATE KEY-----"};
-
+/*
 void msg_gcp_data_cb(void * self, void * params)
 {
-    esp_mqtt_client_handle_t *client = (mqtt_client *)self;
+    esp_mqtt_client_handle_t *client = (esp_mqtt_client_handle_t *)self;
     esp_mqtt_event_t *event_data = (esp_mqtt_event_t *)params;
 
     if (event_data->data_offset == 0)
@@ -197,4 +197,4 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
 
     return msg_core_createMessagingClient(clientSettings);
 
-}
+} */

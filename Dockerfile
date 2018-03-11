@@ -6,7 +6,8 @@ RUN gem install bundler
 WORKDIR /usr/src
 RUN \ 
     git clone https://github.com/DaveGamble/cJSON.git && \
-    git clone --recursive https://github.com/throwtheswitch/cmock.git
+    git clone --recursive https://github.com/throwtheswitch/cmock.git && \
+    git clone --recursive https://github.com/espressif/esp-idf.git
 WORKDIR /usr/src/cmock
 RUN bundle install
 COPY . /usr/src/phev-esp
