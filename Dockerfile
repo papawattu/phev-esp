@@ -1,7 +1,7 @@
 FROM gcc:4.9
 RUN \
   apt-get update && \
-  apt-get install -y ruby
+  apt-get install -y ruby flex bison gperf
 RUN gem install bundler
 WORKDIR /usr/src
 RUN \ 
@@ -15,7 +15,5 @@ COPY . /usr/src/phev-esp
 WORKDIR /usr/src/phev-esp
 ENV CMOCK_DIR /usr/src/cmock
 ENV CJSON_DIR /usr/src/cJSON
-ENV IDF_PATH /usr/src/esp-idf
 RUN make setup
 RUN make local
-RUN make all

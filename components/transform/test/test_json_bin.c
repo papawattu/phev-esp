@@ -18,7 +18,7 @@ void test_lights_on(void)
     const unsigned char data[] = {0xf6,0x04,0x00,0x0a,0x01,0x05};
 
     message_t message = {
-        .data = "{ \"lights\" : \"on\" }",
+        .data = "{ \"lights\" : \"off\" }",
         .length = sizeof(message.data)
     };
 
