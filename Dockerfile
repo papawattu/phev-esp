@@ -15,6 +15,7 @@ COPY . /usr/src/phev-esp
 WORKDIR /usr/src/phev-esp
 ENV CMOCK_DIR /usr/src/cmock
 ENV CJSON_DIR /usr/src/cJSON
+ENV IDF_PATH /usr/src/esp-idf
 RUN make setup
 RUN make local
 RUN make all
