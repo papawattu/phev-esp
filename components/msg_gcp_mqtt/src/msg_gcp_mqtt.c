@@ -78,7 +78,7 @@ void msg_gcp_connected_cb(void *self, void *params)
 
     esp_mqtt_subscribe(client, "/devices/my-device/config", 0);
  
-}
+} 
 
 void getIatExp(char *iat, char *exp, int time_size)
 {
@@ -137,7 +137,7 @@ char *createJwt(const char *project_id)
     jwt_free(jwt);
     return out;
 }
-
+/*
 int msg_gcp_start(messagingClient_t *client) 
 {
     return MSG_GCP_OK;
