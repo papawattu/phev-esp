@@ -1,6 +1,6 @@
 #include "unity.h"
 #include "json_bin.h"
-
+/*
 
 void test_bootstrap(void)
 {
@@ -37,3 +37,4 @@ void test_lights_off(void)
     message_t * out = transformLightsJSONToBin(&message);
     TEST_ASSERT_EQUAL_HEX8_ARRAY(data,out->data,6);
 }
+*/

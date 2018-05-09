@@ -9,7 +9,7 @@
 #define LIGHTS_CMD      "lights"
 #define ON              "on"
 #define OFF             "off"
-
+/*
 message_t *transformLightsJSONToBin(message_t *message)
 {
     message_t *bin = malloc(sizeof(message_t));
@@ -38,4 +38,4 @@ message_t *transformLightsJSONToBin(message_t *message)
     bin->length = SIMPLE_MESSAGE_SIZE;
 
     return bin;
-}
+} */
