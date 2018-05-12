@@ -1,7 +1,10 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <time.h>
 #include "msg_gcp_mqtt.h"
+#include "msg_mqtt.h"
+
 //#include "jwt.h"
 
 const char priv_key[] = {"-----BEGIN PRIVATE KEY-----\n\
@@ -35,8 +38,8 @@ jOAmKcVLejliuwOuflOncA==\n\
 /*
 void msg_gcp_data_cb(void * self, void * params)
 {
-    esp_mqtt_client_handle_t *client = (esp_mqtt_client_handle_t *)self;
-    esp_mqtt_event_t *event_data = (esp_mqtt_event_t *)params;
+    //esp_mqtt_client_handle_t *client = (esp_mqtt_client_handle_t *)self;
+    //esp_mqtt_event_t *event_data = (esp_mqtt_event_t *)params;
 
     if (event_data->data_offset == 0)
     {
@@ -73,10 +76,10 @@ esp_mqtt_client_config_t mqttsettings = {
 
 void msg_gcp_connected_cb(void *self, void *params)
 {
-    esp_mqtt_client_handle_t * client = (esp_mqtt_client_handle_t *) self;
-    ((messagingClient_t *) client->settings->params)->connected = 1;
+//    esp_mqtt_client_handle_t * client = (esp_mqtt_client_handle_t *) self;
+//    ((messagingClient_t *) client->settings->params)->connected = 1;
 
-    esp_mqtt_subscribe(client, "/devices/my-device/config", 0);
+//    esp_mqtt_subscribe(client, "/devices/my-device/config", 0);
  
 } 
 
@@ -102,7 +105,7 @@ char *createJwt(const char *project_id)
     const uint8_t *key = (uint8_t *) priv_key;
     size_t key_len = sizeof(priv_key);
     jwt_t *jwt = NULL;
-    int ret = 0;
+    int ret = 0; 
     char *out = NULL;
 
     getIatExp(iat_time, exp_time, sizeof(iat_time));
@@ -127,17 +130,16 @@ char *createJwt(const char *project_id)
         printf("Error adding audience: %d", ret);
         return NULL;
     }
-    ret = jwt_set_alg(jwt, JWT_ALG_RS256, key, key_len);
+  //  ret = jwt_set_alg(jwt, JWT_ALG_RS256, key, key_len);
     if (ret)
     {
         printf("Error during set alg: %d", ret);
         return NULL;
     }
     out = jwt_encode_str(jwt);
-    jwt_free(jwt);
+    jwt_free(jwt); 
     return out;
 } */
-
 int msg_gcp_start(messagingClient_t *client) 
 {
     return MSG_GCP_OK;
@@ -146,10 +148,10 @@ int msg_gcp_stop(messagingClient_t *client)
 {
     return MSG_GCP_OK;
 }
-/*
+
 int msg_gcp_connect(messagingClient_t *client)
 {
-    const char *clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device";
+/*    const char *clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device";
     const char *password = createJwt("phev-db3fa");
 
     if(password != NULL) 
@@ -159,12 +161,12 @@ int msg_gcp_connect(messagingClient_t *client)
     
         mqttsettings.params = client;
 
-        mqtt_client * mqttclient = mqtt_start(&mqttsettings);
+       // mqtt_client * mqttclient = mqtt_start(&mqttsettings);
 
-        ((gcp_ctx_t *) client->ctx)->client = mqttclient;
+     //   ((gcp_ctx_t *) client->ctx)->client = mqttclient;
         return MSG_GCP_OK;
     }
-    return MSG_GCP_FAIL;
+*/    return MSG_GCP_FAIL;
 }
 message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 {
@@ -172,9 +174,9 @@ message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 }
 void msg_gcp_outgoingHandler(messagingClient_t *client, message_t *message)
 {
-    esp_mqtt_publish(((gcp_ctx_t *) client->ctx)->client, "/devices/my-device/events",  message->data, message->length,0,0);
+    ((gcp_ctx_t *) client->ctx)->mqttClient->publish(((gcp_ctx_t *) client->ctx)->mqttClient,  message->data, message->length);
 }
-*/
+
 messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
 {
     messagingSettings_t clientSettings;
@@ -183,6 +185,9 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
 
     ctx->host = settings.host;
     ctx->port = settings.port;
+    ctx->mqttClient = settings.mqttClient;
+    ctx->clientId = settings.clientId;
+    ctx->jwt = settings.jwt;
 
     ctx->readBuffer = malloc(GCP_CLIENT_READ_BUF_SIZE);
     

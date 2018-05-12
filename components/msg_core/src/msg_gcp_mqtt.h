@@ -13,23 +13,41 @@ typedef void *QueueHandle_t;
 
 #define GCP_CLIENT_READ_BUF_SIZE 2048
 //#define CONFIG_MQTT_SECURITY_ON
+typedef uint32_t msg_gcp_err_t;
+typedef struct msg_gcp_mqtt_t msg_gcp_mqtt_t;
+typedef struct msg_gcp_client_handle_t msg_gcp_client_handle_t;
+
+typedef struct event_t event_t;
+
+typedef event_t* event_handle_t; 
+typedef char * (* msg_gcp_jwt_t)(void);
+typedef struct msg_gcp_mqtt_t
+{
+    void * handle;
+    void (* publish)(msg_gcp_mqtt_t *, uint8_t *, size_t);
+    uint8_t * (* receive)(void);
+} msg_gcp_mqtt_t;
 
 typedef struct gcpSettings_t
 {
     char host[CONFIG_MQTT_MAX_HOST_LEN];
     uint32_t port;
-    char client_id[CONFIG_MQTT_MAX_CLIENT_LEN];
+    char clientId[CONFIG_MQTT_MAX_CLIENT_LEN];
     char username[CONFIG_MQTT_MAX_USERNAME_LEN];
-    char password[CONFIG_MQTT_MAX_PASSWORD_LEN];
+    msg_gcp_jwt_t jwt;
+    msg_gcp_mqtt_t * mqttClient;
+
 } gcpSettings_t;
 
 typedef struct gcp_ctx_t
 {
     int socket;
     char *host;
+    char *clientId;
     uint16_t port;
     uint8_t *readBuffer;
-    void * client;
+    msg_gcp_mqtt_t * mqttClient;
+    msg_gcp_jwt_t jwt;
 } gcp_ctx_t;
 
 messagingClient_t *msg_gcp_createGcpClient(gcpSettings_t);

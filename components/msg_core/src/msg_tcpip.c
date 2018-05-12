@@ -1,14 +1,8 @@
-#ifndef TEST
-#include "lwip/sockets.h"
-#else
-#include <stddef.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
-#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
-
-#endif
+#include <netinet/in.h>
 #include "msg_tcpip.h"
 
 int msg_tcpip_start(messagingClient_t *client)
@@ -20,8 +14,8 @@ int msg_tcpip_stop(messagingClient_t *client)
     return 0;   
 }
 int msg_tcpip_connect(messagingClient_t *client)
-{
-    struct sockaddr_in remote_ip;
+{ 
+    /*struct sockaddr_in remote_ip;
     tcpip_ctx_t *ctx = (tcpip_ctx_t *) client->ctx;
     bzero(&remote_ip, sizeof(struct sockaddr_in));
     remote_ip.sin_family = AF_INET;
@@ -40,14 +34,14 @@ int msg_tcpip_connect(messagingClient_t *client)
         //log_error("Cannot connect to socket");
         return -1;
     }
-    //log_info("Connected");
-    client->connected = 1;
+    //log_info("Connected"); */
+    client->connected = 1; 
     return 0;    
 }
 message_t * msg_tcpip_incomingHandler(messagingClient_t *client)
 {
     tcpip_ctx_t * ctx = (tcpip_ctx_t *) client->ctx;
-    int len = read(ctx->socket,ctx->readBuffer,TCPIP_CLIENT_READ_BUF_SIZE);
+    int len = ctx->read(ctx->socket,ctx->readBuffer,TCPIP_CLIENT_READ_BUF_SIZE);
 
     if(len)
     {
@@ -64,7 +58,7 @@ void msg_tcpip_outgoingHandler(messagingClient_t *client, message_t *message)
     tcpip_ctx_t * ctx = (tcpip_ctx_t *) client->ctx;
     if(message->data && message->length) 
     {   
-        write(ctx->socket,message->data,message->length);
+        ctx->write(ctx->socket,message->data,message->length);
     }
 }
 messagingClient_t * msg_tcpip_createTcpIpClient(tcpIpSettings_t settings)
@@ -73,8 +67,8 @@ messagingClient_t * msg_tcpip_createTcpIpClient(tcpIpSettings_t settings)
     
     tcpip_ctx_t * ctx = malloc(sizeof(tcpip_ctx_t));
 
-    ctx->host = settings.host;
-    ctx->port = settings.port;
+    ctx->read = settings.read;
+    ctx->write = settings.write;
 
     ctx->readBuffer = malloc(TCPIP_CLIENT_READ_BUF_SIZE);
     

@@ -5,15 +5,17 @@
 
 #define TCPIP_CLIENT_READ_BUF_SIZE 2048
 
+
 typedef struct tcpIpSettings_t {
-    char * host;
-    uint16_t port;
+    int socket;
+    int (* read)(int,uint8_t*,size_t);
+    int (* write)(int,uint8_t*,size_t);
 } tcpIpSettings_t;
 typedef struct tcpip_ctx_t {
     int socket;
-    char * host;
-    uint16_t port;
     uint8_t * readBuffer;
+    int (* read)(int,uint8_t*,size_t);
+    int (* write)(int,uint8_t*,size_t);
 } tcpip_ctx_t;
 
 messagingClient_t * msg_tcpip_createTcpIpClient(tcpIpSettings_t);
