@@ -2,15 +2,14 @@
 
 #include "msg_core.h"
 #include "msg_mqtt.h"
-#include "esp_log.h"
-#include "mqtt_client.h"
+//#include "mqtt_client.h"
 
 //static const char *TAG = "MQTT_SAMPLE";
 
 //static EventGroupHandle_t wifi_event_group;
 //const static int CONNECTED_BIT = BIT0;
 
-void eventData(esp_mqtt_event_handle_t event)
+void eventData(mqtt_event_handle_t event)
 {
     char *topic = malloc(event->topic_len + 1);
     memcpy(topic, event->topic, event->topic_len);
@@ -31,7 +30,7 @@ void eventData(esp_mqtt_event_handle_t event)
 
 }
 
-static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
+static err_t mqtt_event_handler(mqtt_event_handle_t event)
 {
     handle_t client = event->client;
     int msg_id;
@@ -59,7 +58,7 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
     }
     
     
-    return ESP_OK;
+    return OK;
 }
 
 int publish(msg_mqtt_t * mqtt, uint8_t * data,  size_t len)

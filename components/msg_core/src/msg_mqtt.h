@@ -2,11 +2,36 @@
 #define MSG_MQTT_H_
 
 #include "msg_core.h"
-#include "mqtt_client.h"
 
+typedef void * mqtt_client_handle_t;
+
+typedef enum {
+    MQTT_EVENT_ERROR = 0,
+    MQTT_EVENT_CONNECTED,
+    MQTT_EVENT_DISCONNECTED,
+    MQTT_EVENT_SUBSCRIBED,
+    MQTT_EVENT_UNSUBSCRIBED,
+    MQTT_EVENT_PUBLISHED,
+    MQTT_EVENT_DATA,
+} mqtt_event_id_t;
+
+typedef struct {
+    mqtt_event_id_t event_id;
+    mqtt_client_handle_t client;
+    void *user_context;
+    char *data;
+    int data_len;
+    int total_data_len;
+    int current_data_offset;
+    char *topic;
+    int topic_len;
+    int msg_id;
+} mqtt_event_t;
+#define OK 0
 typedef uint16_t err_t;
 typedef void *handle_t;
 
+typedef mqtt_event_t * mqtt_event_handle_t;
 typedef struct config_t 
 {
     handle_t event_handle;
