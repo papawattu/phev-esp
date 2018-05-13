@@ -6,6 +6,7 @@ typedef void *QueueHandle_t;
 //#include "mqtt_client.h"
 //#endif
 #include "msg_core.h"
+#include "msg_mqtt.h"
 #include "config.h"
 
 #define MSG_GCP_OK 0
@@ -31,23 +32,24 @@ typedef struct msg_gcp_mqtt_t
 typedef struct gcpSettings_t
 {
     char host[CONFIG_MQTT_MAX_HOST_LEN];
-    uint32_t port;
+    uint16_t port;
     char clientId[CONFIG_MQTT_MAX_CLIENT_LEN];
-    char username[CONFIG_MQTT_MAX_USERNAME_LEN];
-    msg_gcp_jwt_t jwt;
-    msg_gcp_mqtt_t * mqttClient;
-
+    char device[CONFIG_MQTT_MAX_DEVICE_LEN];
+    char projectId[CONFIG_MQTT_MAX_PROJECT_ID_LEN];
+    msg_mqtt_t * mqtt;
 } gcpSettings_t;
 
 typedef struct gcp_ctx_t
 {
-    int socket;
     char *host;
     char *clientId;
     uint16_t port;
     uint8_t *readBuffer;
-    msg_gcp_mqtt_t * mqttClient;
-    msg_gcp_jwt_t jwt;
+    char * (* createJwt)(const char *);
+    char *device;
+    char *projectId;
+    void *client;
+    msg_mqtt_t * mqtt;
 } gcp_ctx_t;
 
 messagingClient_t *msg_gcp_createGcpClient(gcpSettings_t);

@@ -97,10 +97,10 @@ void getIatExp(char *iat, char *exp, int time_size)
     }
     snprintf(iat, time_size, "%lu", now);
     snprintf(exp, time_size, "%lu", now + 3600);
-}
+} */
 char *createJwt(const char *project_id)
 {
-    char iat_time[sizeof(time_t) * 3 + 2];
+ /*   char iat_time[sizeof(time_t) * 3 + 2];
     char exp_time[sizeof(time_t) * 3 + 2];
     const uint8_t *key = (uint8_t *) priv_key;
     size_t key_len = sizeof(priv_key);
@@ -137,9 +137,9 @@ char *createJwt(const char *project_id)
         return NULL;
     }
     out = jwt_encode_str(jwt);
-    jwt_free(jwt); 
-    return out;
-} */
+    jwt_free(jwt); */ 
+    return "1234";
+} 
 int msg_gcp_start(messagingClient_t *client) 
 {
     return MSG_GCP_OK;
@@ -151,22 +151,24 @@ int msg_gcp_stop(messagingClient_t *client)
 
 int msg_gcp_connect(messagingClient_t *client)
 {
-/*    const char *clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device";
-    const char *password = createJwt("phev-db3fa");
+    gcp_ctx_t * ctx = (gcp_ctx_t *) client->ctx;
 
-    if(password != NULL) 
-    {
-        strcpy(mqttsettings.client_id, clientId);
-        strcpy(mqttsettings.password, password);
     
-        mqttsettings.params = client;
+    msg_mqtt_settings_t settings = {
+        .host = ctx->host, //"mqtt.googleapis.com",
+        .port = ctx->port, //8883,
+        .clientId = ctx->clientId, //"projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device",
+        .username = ctx->device, //"my-device",
+        .password = ctx->createJwt(ctx->projectId), //"phev-db3fa")
+        .mqtt = ctx->mqtt
+    };
+    
+    settings.mqtt->client = client;
+    
+    ctx->mqtt->client = mqtt_start(&settings);
 
-       // mqtt_client * mqttclient = mqtt_start(&mqttsettings);
-
-     //   ((gcp_ctx_t *) client->ctx)->client = mqttclient;
-        return MSG_GCP_OK;
-    }
-*/    return MSG_GCP_FAIL;
+    return MSG_GCP_OK;
+   
 }
 message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 {
@@ -174,7 +176,8 @@ message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 }
 void msg_gcp_outgoingHandler(messagingClient_t *client, message_t *message)
 {
-    ((gcp_ctx_t *) client->ctx)->mqttClient->publish(((gcp_ctx_t *) client->ctx)->mqttClient,  message->data, message->length);
+    
+    publish(((gcp_ctx_t *) client->ctx)->mqtt,  message->data, message->length);
 }
 
 messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
@@ -182,15 +185,18 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
     messagingSettings_t clientSettings;
     
     gcp_ctx_t * ctx = malloc(sizeof(gcp_ctx_t));
+    //msg_mqtt_t * mqtt_ctx = malloc(sizeof(msg_mqtt_t));
 
     ctx->host = settings.host;
     ctx->port = settings.port;
-    ctx->mqttClient = settings.mqttClient;
+    ctx->device = settings.device;
     ctx->clientId = settings.clientId;
-    ctx->jwt = settings.jwt;
+    ctx->createJwt = createJwt;
 
     ctx->readBuffer = malloc(GCP_CLIENT_READ_BUF_SIZE);
     
+    ctx->mqtt = settings.mqtt;
+
     clientSettings.incomingHandler = msg_gcp_incomingHandler;
     clientSettings.outgoingHandler = msg_gcp_outgoingHandler;
     

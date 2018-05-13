@@ -24,8 +24,6 @@ void test_createGcpClient(void)
         .host = "1.1.1.1",
         .port = 8080,
         .clientId = "client",
-        .jwt = dummyJwt,
-        .mqttClient = NULL
     };
     
     messagingClient_t * client = msg_gcp_createGcpClient(settings);
