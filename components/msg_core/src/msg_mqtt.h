@@ -4,6 +4,7 @@
 #include "msg_core.h"
 
 typedef void * mqtt_client_handle_t;
+typedef char * topic_t;
 
 typedef enum {
     MQTT_EVENT_ERROR = 0,
@@ -46,6 +47,7 @@ typedef struct msg_mqtt_t
 {
     messagingClient_t * client;
     handle_t handle;
+    void (* incoming_cb)(messagingClient_t *, message_t *);
     handle_t (*init)(const config_t *config);
     err_t (*set_uri)(handle_t client, const char *uri);
     err_t (*start)(handle_t client);
@@ -70,6 +72,6 @@ typedef struct msg_mqtt_settings_t
 
 handle_t mqtt_start(msg_mqtt_settings_t * settings);
 
-int publish(msg_mqtt_t *mqtt, uint8_t *data, size_t len);
+int publish(msg_mqtt_t *mqtt, topic_t topic, message_t * message);
 
 #endif

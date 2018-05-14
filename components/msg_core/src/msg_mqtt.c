@@ -2,12 +2,6 @@
 
 #include "msg_core.h"
 #include "msg_mqtt.h"
-//#include "mqtt_client.h"
-
-//static const char *TAG = "MQTT_SAMPLE";
-
-//static EventGroupHandle_t wifi_event_group;
-//const static int CONNECTED_BIT = BIT0;
 
 void eventData(mqtt_event_handle_t event)
 {
@@ -26,7 +20,7 @@ void eventData(mqtt_event_handle_t event)
         .length = event->data_len
     };
 
-    msg_core_call_subs(((msg_mqtt_t *) event->user_context)->client, &message);
+    ((msg_mqtt_t *) event->user_context)->incoming_cb(((msg_mqtt_t *) event->user_context)->client, &message);
 
 }
 
@@ -61,10 +55,9 @@ static err_t mqtt_event_handler(mqtt_event_handle_t event)
     return OK;
 }
 
-int publish(msg_mqtt_t * mqtt, uint8_t * data,  size_t len)
+int publish(msg_mqtt_t * mqtt, topic_t topic, message_t *message)
 {
-    mqtt->publish((handle_t *) mqtt->handle, "/topic/qos0", data, 0, 0, 0);
-    return 0;
+    return mqtt->publish((handle_t *) mqtt->handle, topic, message->data, message->length, 0, 0);
 }
 handle_t mqtt_start(msg_mqtt_settings_t * settings)
 {

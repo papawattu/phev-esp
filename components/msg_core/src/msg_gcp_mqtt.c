@@ -149,6 +149,10 @@ int msg_gcp_stop(messagingClient_t *client)
     return MSG_GCP_OK;
 }
 
+void msg_gcp_asyncIncomingHandler(messagingClient_t *client, message_t *message)
+{
+    msg_core_call_subs(client, message);
+}
 int msg_gcp_connect(messagingClient_t *client)
 {
     gcp_ctx_t * ctx = (gcp_ctx_t *) client->ctx;
@@ -164,6 +168,7 @@ int msg_gcp_connect(messagingClient_t *client)
     };
     
     settings.mqtt->client = client;
+    settings.mqtt->incoming_cb = msg_gcp_asyncIncomingHandler;
     
     ctx->mqtt->client = mqtt_start(&settings);
 
@@ -176,10 +181,9 @@ message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 }
 void msg_gcp_outgoingHandler(messagingClient_t *client, message_t *message)
 {
-    
-    publish(((gcp_ctx_t *) client->ctx)->mqtt,  message->data, message->length);
+    gcp_ctx_t * ctx = (gcp_ctx_t *) client->ctx;
+    publish(ctx->mqtt, ctx->topic, message);
 }
-
 messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
 {
     messagingSettings_t clientSettings;
@@ -191,6 +195,7 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
     ctx->port = settings.port;
     ctx->device = settings.device;
     ctx->clientId = settings.clientId;
+    ctx->topic = settings.topic;
     ctx->createJwt = createJwt;
 
     ctx->readBuffer = malloc(GCP_CLIENT_READ_BUF_SIZE);

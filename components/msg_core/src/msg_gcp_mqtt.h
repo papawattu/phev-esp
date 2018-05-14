@@ -37,6 +37,7 @@ typedef struct gcpSettings_t
     char device[CONFIG_MQTT_MAX_DEVICE_LEN];
     char projectId[CONFIG_MQTT_MAX_PROJECT_ID_LEN];
     msg_mqtt_t * mqtt;
+    char *topic;
 } gcpSettings_t;
 
 typedef struct gcp_ctx_t
@@ -49,6 +50,7 @@ typedef struct gcp_ctx_t
     char *device;
     char *projectId;
     void *client;
+    char *topic;
     msg_mqtt_t * mqtt;
 } gcp_ctx_t;
 
