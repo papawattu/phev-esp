@@ -113,7 +113,7 @@ void test_event_data(void)
 
     
     mqtt_event_t event = {
-        .event_id = MQTT_EVENT_DATA,
+        .event_id = MSG_MQTT_EVENT_DATA,
         .data = DATA,
         .data_len = DATA_LEN,
         .topic = TOPIC,

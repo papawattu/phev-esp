@@ -1,4 +1,5 @@
-
+#include <stdlib.h>
+#include <string.h>
 
 #include "msg_core.h"
 #include "msg_mqtt.h"
@@ -26,23 +27,23 @@ void eventData(mqtt_event_handle_t event)
 static err_t mqtt_event_handler(mqtt_event_handle_t event)
 {
     switch (event->event_id) {
-        case MQTT_EVENT_CONNECTED:
+        case MSG_MQTT_EVENT_CONNECTED:
             /*msg_id = ctx->subscribe(client, "/topic/qos0", 0);
             msg_id = ctx->subscribe(client, "/topic/qos1", 1);
             msg_id = ctx->unsubscribe(client, "/topic/qos1"); */
             break;
-        case MQTT_EVENT_DISCONNECTED:
+        case MSG_MQTT_EVENT_DISCONNECTED:
             break;
-        case MQTT_EVENT_SUBSCRIBED:
+        case MSG_MQTT_EVENT_SUBSCRIBED:
             break;
-        case MQTT_EVENT_UNSUBSCRIBED:
+        case MSG_MQTT_EVENT_UNSUBSCRIBED:
             break;
-        case MQTT_EVENT_PUBLISHED:
+        case MSG_MQTT_EVENT_PUBLISHED:
             break;
-        case MQTT_EVENT_DATA:
+        case MSG_MQTT_EVENT_DATA:
             eventData(event);
             break;
-        case MQTT_EVENT_ERROR:
+        case MSG_MQTT_EVENT_ERROR:
             break;
     }
     
@@ -51,13 +52,14 @@ static err_t mqtt_event_handler(mqtt_event_handle_t event)
 
 int publish(msg_mqtt_t * mqtt, topic_t topic, message_t *message)
 {
-    message_t *m = msg_core_copyMessage(message);
-    int id = mqtt->publish((handle_t *) mqtt->handle, topic, m->data, m->length, 0, 0);
+    //message_t *m = msg_core_copyMessage(message);
+    int id = mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) message->data, message->length, 0, 0);
     return id;
 }
 handle_t mqtt_start(msg_mqtt_settings_t * settings)
 {
     const config_t mqtt_cfg = {
+        .uri = "mqtt://iot.eclipse.org",
         .event_handle = mqtt_event_handler,
         .user_context = (void *) settings->mqtt,
         .host = settings->host,
@@ -68,5 +70,6 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings)
 
     handle_t client = settings->mqtt->init(&mqtt_cfg);
     settings->mqtt->start(client);
+    settings->mqtt->handle = client;
     return client;
 }

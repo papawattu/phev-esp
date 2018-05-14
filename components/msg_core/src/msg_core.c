@@ -1,4 +1,5 @@
-#include "stdlib.h"
+#include <stdlib.h>
+#include <string.h>
 #include "msg_core.h"
 
 int msg_core_start(messagingClient_t *client)
@@ -68,14 +69,12 @@ int msg_core_messagingClientInit(messagingClient_t **client)
 
 message_t * msg_core_copyMessage(message_t * message)
 {
-    message_t * out;
-    uint8_t * data = malloc(message->length);
+    message_t * out = malloc(sizeof(message_t));
 
-    out = malloc(sizeof(message_t));
+    out->data = malloc(message->length);
     out->length = message->length;
-    memcpy(data,message->data,message->length);
-
-    out->data = data;
+    
+    memcpy(out->data,message->data,message->length);
     return out;
 }
 messagingClient_t * msg_core_createMessagingClient(messagingSettings_t settings)

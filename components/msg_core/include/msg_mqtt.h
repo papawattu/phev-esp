@@ -1,19 +1,21 @@
 #ifndef MSG_MQTT_H_
 #define MSG_MQTT_H_
 
+#include <stdbool.h>
+
 #include "msg_core.h"
 
 typedef void * mqtt_client_handle_t;
 typedef char * topic_t;
 
 typedef enum {
-    MQTT_EVENT_ERROR = 0,
-    MQTT_EVENT_CONNECTED,
-    MQTT_EVENT_DISCONNECTED,
-    MQTT_EVENT_SUBSCRIBED,
-    MQTT_EVENT_UNSUBSCRIBED,
-    MQTT_EVENT_PUBLISHED,
-    MQTT_EVENT_DATA,
+    MSG_MQTT_EVENT_ERROR = 0,
+    MSG_MQTT_EVENT_CONNECTED,
+    MSG_MQTT_EVENT_DISCONNECTED,
+    MSG_MQTT_EVENT_SUBSCRIBED,
+    MSG_MQTT_EVENT_UNSUBSCRIBED,
+    MSG_MQTT_EVENT_PUBLISHED,
+    MSG_MQTT_EVENT_DATA,
 } mqtt_event_id_t;
 
 typedef struct {
@@ -32,15 +34,38 @@ typedef struct {
 typedef uint16_t err_t;
 typedef void *handle_t;
 
+typedef enum {
+    MSG_MQTT_TRANSPORT_UNKNOWN = 0x0,
+    MSG_MQTT_TRANSPORT_OVER_TCP,
+    MSG_MQTT_TRANSPORT_OVER_SSL,
+    MSG_MQTT_TRANSPORT_OVER_WS,
+    MSG_MQTT_TRANSPORT_OVER_WSS
+} mqtt_transport_t;
+
 typedef mqtt_event_t * mqtt_event_handle_t;
 typedef struct config_t 
 {
     handle_t event_handle;
-    void * user_context ;
-    char * host;
+    const char * host;
+    const char *uri;
     uint16_t port;
-    char * client_id;
-    char * username;
+    const char * client_id;
+    const char * username;
+    const char *password;
+    const char *lwt_topic;
+    const char *lwt_msg;
+    int lwt_qos;
+    int lwt_retain;
+    int lwt_msg_len;
+    int disable_clean_session;
+    int keepalive;
+    bool disable_auto_reconnect;
+    void *user_context;
+    int task_prio;
+    int task_stack;
+    int buffer_size;
+    const char *cert_pem;
+    mqtt_transport_t transport;
 } config_t;
 
 typedef struct msg_mqtt_t

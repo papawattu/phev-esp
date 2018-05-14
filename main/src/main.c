@@ -12,27 +12,23 @@
 #include "freertos/queue.h"
 #include "freertos/event_groups.h"
 
-#include "msg_pipe.h"
-#include "msg_tcpip.h"
-#include "msg_gcp_mqtt.h"
-
 #include "apps/sntp/sntp.h"
 
-#include "ppp_client.h"
-#include "json_bin.h"
+#include "msg_mqtt.h"
+#include "mqtt_client.h"
 
-//#define CONFIG_WIFI_SSID "BTHub3-HSZ3"
-//#define CONFIG_WIFI_PASSWORD "simpsons"
+#define CONFIG_WIFI_SSID "BTHub3-HSZ3"
+#define CONFIG_WIFI_PASSWORD "simpsons"
 
-#define CONFIG_WIFI_SSID "REMOTE45cfsc"
-#define CONFIG_WIFI_PASSWORD "fhcm852767"
+//#define CONFIG_WIFI_SSID "REMOTE45cfsc"
+//#define CONFIG_WIFI_PASSWORD "fhcm852767"
 
 static EventGroupHandle_t wifi_event_group;
 
 const static int CONNECTED_BIT = BIT0;
 
 const static char * APP_TAG = "Main";
-
+/*
 msg_pipe_ctx_t * connect(void)
 {
     gcpSettings_t inSettings = {
@@ -72,7 +68,7 @@ void main_loop(msg_pipe_ctx_t * ctx)
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     ESP_LOGI(APP_TAG,"Restarting...");
     esp_restart();
-}
+} */
 static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 {
     switch (event->event_id)
@@ -82,7 +78,7 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-        ESP_LOGI(APP_TAG, "Wifi started")
+        ESP_LOGI(APP_TAG, "Wifi started");
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         /* This is a workaround as ESP32 WiFi libs don't currently
@@ -139,13 +135,37 @@ static void sntp_task(void)
     ESP_LOGI(APP_TAG, "Time synced");
 }
 
+void setupClient(void)
+{
+    msg_mqtt_t mqtt = {
+        .init = &esp_mqtt_client_init,
+        .start = &esp_mqtt_client_start,
+        .publish = &esp_mqtt_client_publish
+    };
+    msg_mqtt_settings_t settings = {
+        .host = NULL,
+        .port = 0,
+        .username = NULL,
+        .password = NULL,
+        .mqtt = &mqtt,
+        .clientId = NULL,
+        .username = NULL,
+    };
+    handle_t handle = mqtt_start(&settings);
+
+    message_t message = {
+        .data = {1,2,3,4},
+        .length = 4
+    };
+    publish(&mqtt,"test",&message);
+}
 void start_app(void)
 {
     ESP_LOGI(APP_TAG,"Application starting...");
     uint8_t new_mac[8] = {0x24,0x0d,0xc2,0xc2,0x91,0x85};
     esp_base_mac_addr_set(new_mac);
     wifi_conn_init();
-    ppp_main();
+    /* ppp_main();
     sntp_task();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
         
@@ -156,8 +176,10 @@ void start_app(void)
         .output = transformLightsJSONToBin
     };
     msg_pipe_add_transformer(ctx, &transformer);
+*/
+    //main_loop(ctx);
 
-    main_loop(ctx);
+    setupClient();
 
 }
 void app_main(void)
