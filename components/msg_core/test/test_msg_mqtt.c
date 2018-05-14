@@ -3,6 +3,13 @@
 #include "mock_msg_core.h"
 #include "msg_mqtt.h"
 
+
+#define TOPIC "topic"
+#define MSG_ID 1234
+#define DATA_LEN 4
+
+uint8_t DATA[] = {1,2,3,4};
+
 static int mock_init_Called = 0;
 static int mock_start_Called = 0;
 static int mock_publish_Called = 0;
@@ -11,7 +18,8 @@ static int mock_publish_Called = 0;
 handle_t mock_init(const config_t *config) 
 {
     mock_init_Called ++;
-    return 1;
+    msg_mqtt_t * mqtt = config->user_context;
+    return NULL;
 }
 err_t mock_start(handle_t client) 
 {
@@ -19,10 +27,15 @@ err_t mock_start(handle_t client)
     return OK;
 }
 
-int mock_publish(msg_mqtt_t *mqtt,topic_t topic, message_t *message) 
+int mock_publish(handle_t client, const char *topic, const char *data, int len, int qos, int retain)
 {
     mock_publish_Called++;
-    return 1234;
+
+    TEST_ASSERT_EQUAL_STRING(TOPIC,topic);
+    TEST_ASSERT_EQUAL(4, len);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(&DATA,data,4);
+    
+    return MSG_ID;
 }
 
     
@@ -49,16 +62,67 @@ void test_start(void)
 void test_publish(void)
 {
     msg_mqtt_t mqtt = {
-        .publish = mock_publish
+        .publish = &mock_publish
     };
 
     message_t message = {
-        .data = {1,2,3,4},
+        .data = (uint8_t *) DATA,
         .length = 4
     };
 
-    int msgId = publish(&mqtt, "my topic", &message);
+    message_t out = {
+        .data = DATA,
+        .length = 4
+    };
+
+    msg_core_copyMessage_ExpectAndReturn(&message,&out);
+    
+    int msgId = publish(&mqtt, TOPIC, &message);
 
     TEST_ASSERT_EQUAL(1,mock_publish_Called);
-    TEST_ASSERT_EQUAL(1234,msgId);
+    TEST_ASSERT_EQUAL(MSG_ID,msgId);
+}
+
+static int mock_incoming_Called = 0;
+
+messagingClient_t * msg_client = NULL;
+
+void mock_incoming(messagingClient_t * client, message_t * message) 
+{
+    mock_incoming_Called ++;
+
+    TEST_ASSERT_EQUAL(DATA_LEN, message->length);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(DATA, message->data,DATA_LEN);
+    TEST_ASSERT_EQUAL(msg_client, client);
+
+}
+
+void test_event_data(void)
+{
+
+    messagingClient_t client = {
+
+    };
+
+    msg_client = &client;
+
+    msg_mqtt_t mqtt = {
+        .incoming_cb = &mock_incoming,
+        .client = msg_client
+    };
+
+    
+    mqtt_event_t event = {
+        .event_id = MQTT_EVENT_DATA,
+        .data = DATA,
+        .data_len = DATA_LEN,
+        .topic = TOPIC,
+        .topic_len = 5,
+        .user_context = &mqtt
+    };
+
+    eventData(&event);
+
+    TEST_ASSERT_EQUAL(1,mock_incoming_Called);
+
 }

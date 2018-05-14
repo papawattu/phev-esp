@@ -10,7 +10,7 @@ DEPS := $(OBJS:.o=.d)
 INC_DIRS := $(shell find $(SRC_DIR) -type d)
 LIB_DIRS := $(shell find $(IDF_PATH)/components -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-INC_FLAGS += $(addprefix -I,$(LIB_DIRS))
+#INC_FLAGS += $(addprefix -I,$(LIB_DIRS))
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 TEST_BUILD_DIR ?= $(BUILD_DIR)/test
 TEST_MAKEFILE = $(TEST_BUILD_DIR)/MakefileTestSupport
