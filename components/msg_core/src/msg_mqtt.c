@@ -4,7 +4,7 @@
 #include "msg_core.h"
 #include "msg_mqtt.h"
 
-void eventData(mqtt_event_handle_t event)
+void dataEvent(mqtt_event_handle_t event)
 {
     char *topic = malloc(event->topic_len + 1);
     uint8_t *data = malloc(event->data_len + 1);
@@ -41,7 +41,7 @@ static err_t mqtt_event_handler(mqtt_event_handle_t event)
             if(mqtt->published_cb) mqtt->published_cb(event);
             break;
         case MSG_MQTT_EVENT_DATA:
-            if(mqtt->incoming_cb) eventData(event);
+            if(mqtt->incoming_cb) dataEvent(event);
             break;
         case MSG_MQTT_EVENT_ERROR:
             if(mqtt->error_cb) mqtt->error_cb(event);
@@ -54,9 +54,7 @@ static err_t mqtt_event_handler(mqtt_event_handle_t event)
 int publish(msg_mqtt_t * mqtt, topic_t topic, message_t *message)
 {
     message_t *msg = msg_core_copyMessage(message);
-    int id = mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) msg->data, msg->length, 0, 0);
-    
-    return id;
+    return mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) msg->data, msg->length, 0, 0);
 }
 
 void subscribe(msg_mqtt_t * mqtt, topic_t topic)
@@ -65,25 +63,28 @@ void subscribe(msg_mqtt_t * mqtt, topic_t topic)
 }
 handle_t mqtt_start(msg_mqtt_settings_t * settings)
 {
+
+    msg_mqtt_t * mqtt = settings->mqtt;
+
     const config_t mqtt_cfg = {
         //.uri = "mqtt://iot.eclipse.org",
         .event_handle = mqtt_event_handler,
-        .user_context = (void *) settings->mqtt,
+        .user_context = (void *) mqtt,
         .host = settings->host,
         .port = settings->port,
         .client_id = settings->clientId,
         .username = settings->username,
     };
 
-    handle_t client = settings->mqtt->init(&mqtt_cfg);
-    settings->mqtt->start(client);
-    settings->mqtt->handle = client;
-    settings->mqtt->incoming_cb = settings->incoming_cb;
-    settings->mqtt->connected_cb = settings->connected_cb;
-    settings->mqtt->disconnected_cb = settings->disconnected_cb;
-    settings->mqtt->subscribed_cb = settings->subscribed_cb;
-    settings->mqtt->error_cb = settings->error_cb;
-    settings->mqtt->published_cb = settings->published_cb;
+    handle_t client = mqtt->init(&mqtt_cfg);
+    mqtt->start(client);
+    mqtt->handle = client;
+    mqtt->incoming_cb = settings->incoming_cb;
+    mqtt->connected_cb = settings->connected_cb;
+    mqtt->disconnected_cb = settings->disconnected_cb;
+    mqtt->subscribed_cb = settings->subscribed_cb;
+    mqtt->error_cb = settings->error_cb;
+    mqtt->published_cb = settings->published_cb;
     
     return client;
 }
