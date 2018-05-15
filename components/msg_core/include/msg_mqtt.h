@@ -73,6 +73,13 @@ typedef struct msg_mqtt_t
     messagingClient_t * client;
     handle_t handle;
     void (* incoming_cb)(messagingClient_t *, message_t *);
+    void (* connected_cb)(mqtt_event_handle_t *);
+    void (* disconnected_cb)(mqtt_event_handle_t *);
+    void (* subscribed_cb)(mqtt_event_handle_t *);
+    void (* error_cb)(mqtt_event_handle_t *);
+    void (* published_cb)(mqtt_event_handle_t *);
+    
+
     handle_t (*init)(const config_t *config);
     err_t (*set_uri)(handle_t client, const char *uri);
     err_t (*start)(handle_t client);
@@ -92,11 +99,19 @@ typedef struct msg_mqtt_settings_t
     char *username;
     char *password;
     msg_mqtt_t * mqtt;
+    void (* incoming_cb)(messagingClient_t *, message_t *);
+    void (* connected_cb)(mqtt_event_handle_t *);
+    void (* disconnected_cb)(mqtt_event_handle_t *);
+    void (* subscribed_cb)(mqtt_event_handle_t *);
+    void (* error_cb)(mqtt_event_handle_t *);
+    void (* published_cb)(mqtt_event_handle_t *);
+    
 
 } msg_mqtt_settings_t;
 
 handle_t mqtt_start(msg_mqtt_settings_t * settings);
 
 int publish(msg_mqtt_t *mqtt, topic_t topic, message_t * message);
+void subscribe(msg_mqtt_t *mqtt, topic_t topic);
 
 #endif

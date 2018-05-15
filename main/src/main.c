@@ -27,7 +27,7 @@ static EventGroupHandle_t wifi_event_group;
 
 const static int CONNECTED_BIT = BIT0;
 
-const static char * APP_TAG = "Main";
+const static char *APP_TAG = "Main";
 /*
 msg_pipe_ctx_t * connect(void)
 {
@@ -110,8 +110,7 @@ static void wifi_conn_init(void)
     ESP_LOGI(APP_TAG, "start the WIFI SSID:[%s] password:[%s]", CONFIG_WIFI_SSID, "******");
     ESP_ERROR_CHECK(esp_wifi_start());
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
-                       false, true, portMAX_DELAY);
-    
+                        false, true, portMAX_DELAY);
 }
 static void sntp_task(void)
 {
@@ -135,34 +134,60 @@ static void sntp_task(void)
     ESP_LOGI(APP_TAG, "Time synced");
 }
 
+void connected(mqtt_event_handle_t *event)
+{
+    ESP_LOGI(APP_TAG, "MQTT Connected");
+
+    subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/topic/test");
+}
+void published(mqtt_event_handle_t *event)
+{
+    ESP_LOGI(APP_TAG, "MQTT published");
+}
+void incoming(msg_mqtt_t *mqtt, message_t *message)
+{
+    ESP_LOGI(APP_TAG, "MQTT Incoming message %s", message->data);
+    printf("DATA=%.*s\r\n", message->length, message->data);
+}
+void subscribed(mqtt_event_handle_t *event)
+{
+    ESP_LOGI(APP_TAG, "MQTT subscribed");
+
+    message_t message = {
+        .data = (uint8_t *)"1234",
+        .length = 4};
+    message_t *msg = msg_core_copyMessage(&message);
+
+    publish((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/topic/test", msg);
+}
+msg_mqtt_t mqtt = {
+    .init = &esp_mqtt_client_init,
+    .start = &esp_mqtt_client_start,
+    .publish = &esp_mqtt_client_publish,
+    .subscribe = &esp_mqtt_client_subscribe
+};
+
 void setupClient(void)
 {
-    msg_mqtt_t mqtt = {
-        .init = &esp_mqtt_client_init,
-        .start = &esp_mqtt_client_start,
-        .publish = &esp_mqtt_client_publish
-    };
     msg_mqtt_settings_t settings = {
-        .host = NULL,
+        .host = "iot.eclipse.org",
         .port = 0,
         .username = NULL,
         .password = NULL,
         .mqtt = &mqtt,
         .clientId = NULL,
         .username = NULL,
+        .subscribed_cb = &subscribed,
+        .connected_cb = &connected,
+        .published_cb = &published,
+        .incoming_cb = &incoming
     };
     handle_t handle = mqtt_start(&settings);
-
-    message_t message = {
-        .data = {1,2,3,4},
-        .length = 4
-    };
-    publish(&mqtt,"test",&message);
 }
 void start_app(void)
 {
-    ESP_LOGI(APP_TAG,"Application starting...");
-    uint8_t new_mac[8] = {0x24,0x0d,0xc2,0xc2,0x91,0x85};
+    ESP_LOGI(APP_TAG, "Application starting...");
+    uint8_t new_mac[8] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
     esp_base_mac_addr_set(new_mac);
     wifi_conn_init();
     /* ppp_main();
@@ -180,12 +205,11 @@ void start_app(void)
     //main_loop(ctx);
 
     setupClient();
-
 }
 void app_main(void)
 {
     nvs_flash_init();
     tcpip_adapter_init();
-    
+
     start_app();
 }
