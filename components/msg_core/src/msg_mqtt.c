@@ -22,7 +22,7 @@ void dataEvent(mqtt_event_handle_t event)
 
 }
 
-static err_t mqtt_event_handler(mqtt_event_handle_t event)
+static msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
 {
     msg_mqtt_t * mqtt = (msg_mqtt_t *) event->user_context;
     switch (event->event_id) {
@@ -86,6 +86,7 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings)
     mqtt->subscribed_cb = settings->subscribed_cb;
     mqtt->error_cb = settings->error_cb;
     mqtt->published_cb = settings->published_cb;
+    mqtt->client = settings->client;
     
     return client;
 }

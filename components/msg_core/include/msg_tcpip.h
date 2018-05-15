@@ -7,13 +7,18 @@
 
 
 typedef struct tcpIpSettings_t {
-    int socket;
+    char * host;
+    uint16_t port;
+    int (* connect)(const char*, uint16_t);
     int (* read)(int,uint8_t*,size_t);
     int (* write)(int,uint8_t*,size_t);
 } tcpIpSettings_t;
 typedef struct tcpip_ctx_t {
+    char *host;
+    uint16_t port;
     int socket;
     uint8_t * readBuffer;
+    int (* connect)(const char*, uint16_t);
     int (* read)(int,uint8_t*,size_t);
     int (* write)(int,uint8_t*,size_t);
 } tcpip_ctx_t;

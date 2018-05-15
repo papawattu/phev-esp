@@ -12,10 +12,13 @@
 #include "freertos/queue.h"
 #include "freertos/event_groups.h"
 
+#include "lwip/sockets.h"
 #include "apps/sntp/sntp.h"
 
 #include "msg_mqtt.h"
 #include "msg_gcp_mqtt.h"
+#include "msg_pipe.h"
+#include "msg_tcpip.h"
 
 #include "mqtt_client.h"
 
@@ -64,25 +67,115 @@ static EventGroupHandle_t wifi_event_group;
 const static int CONNECTED_BIT = BIT0;
 
 const static char *APP_TAG = "Main";
-/*
-msg_pipe_ctx_t * connect(void)
+
+msg_mqtt_t mqtt = {
+    .init = &esp_mqtt_client_init,
+    .start = &esp_mqtt_client_start,
+    .publish = &esp_mqtt_client_publish,
+    .subscribe = &esp_mqtt_client_subscribe
+};
+
+void getIatExp(char *iat, char *exp, int time_size)
+{
+    time_t now;
+    struct tm timeinfo;
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    
+    while (timeinfo.tm_year < (2016 - 1900))
+    {
+        time(&now);
+        localtime_r(&now, &timeinfo);
+    }
+    snprintf(iat, time_size, "%lu", now);
+    snprintf(exp, time_size, "%lu", now + 3600);
+} 
+char *createJwt(const char *project_id)
+{
+    char iat_time[sizeof(time_t) * 3 + 2];
+    char exp_time[sizeof(time_t) * 3 + 2];
+    const uint8_t *key = (unsigned char *) rsa_private_pem_start;
+    size_t key_len = rsa_private_pem_end - rsa_private_pem_start;
+    jwt_t *jwt = NULL;
+    int ret = 0; 
+    char *out = NULL;
+
+    getIatExp(iat_time, exp_time, sizeof(iat_time));
+    
+    jwt_new(&jwt);
+
+    ret = jwt_add_grant(jwt, "iat", iat_time);
+    if (ret)
+    {
+        printf("Error setting issue timestamp: %d", ret);
+        return NULL;
+    }
+    ret = jwt_add_grant(jwt, "exp", exp_time);
+    if (ret)
+    {
+        printf("Error setting expiration: %d", ret);
+        return NULL;
+    }
+    ret = jwt_add_grant(jwt, "aud", project_id);
+    if (ret)
+    {
+        printf("Error adding audience: %d", ret);
+        return NULL;
+    }
+    ret = jwt_set_alg(jwt, JWT_ALG_RS256, key, key_len);
+    if (ret)
+    {
+        printf("Error during set alg: %d", ret);
+        return NULL;
+    }
+    out = jwt_encode_str(jwt);
+    jwt_free(jwt);  
+    return out;
+}
+
+int connectSocket(const char *host, uint16_t port) 
+{
+    struct sockaddr_in remote_ip;
+    bzero(&remote_ip, sizeof(struct sockaddr_in));
+    remote_ip.sin_family = AF_INET;
+    remote_ip.sin_port = htons(port);
+
+    inet_aton(host, &(remote_ip.sin_addr));
+
+    int sock = socket(PF_INET, SOCK_STREAM, 0);
+    if (sock == -1)
+    {
+        return -1;
+    }
+    if (connect(sock, (struct sockaddr *)(&remote_ip), sizeof(struct sockaddr)) != 0)
+    {
+        return -1;
+    }
+    return sock;
+}
+msg_pipe_ctx_t * connectPipe(void)
 {
     gcpSettings_t inSettings = {
-        .host = "192.168.1.103",
-        .port = 8080
-    };
+        .host = "mqtt.googleapis.com",
+        .port = 8883,
+        .clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device",
+        .device = "my-device",
+        .createJwt = createJwt,
+        .mqtt = &mqtt,
+        .projectId = "phev-db3fa",
+    }; 
+    
     tcpIpSettings_t outSettings = {
         .host = "192.168.8.46",
-        .port = 8080
+        .port = 8080,
+        .connect = connectSocket, 
+        .read = read,
+        .write = write,
     };
     
     messagingClient_t * in = msg_gcp_createGcpClient(inSettings);
     messagingClient_t * out = msg_tcpip_createTcpIpClient(outSettings);
 
-
-    ESP_LOGI(APP_TAG,"Outgoing Host %s",((tcpip_ctx_t *) out->ctx)->host);
-    ESP_LOGI(APP_TAG,"Outgoing Port %d",((tcpip_ctx_t *) out->ctx)->port);
-    
     return msg_pipe(in, out);
 }
 
@@ -104,7 +197,7 @@ void main_loop(msg_pipe_ctx_t * ctx)
     vTaskDelay(5000 / portTICK_PERIOD_MS);
     ESP_LOGI(APP_TAG,"Restarting...");
     esp_restart();
-} */
+} 
 static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 {
     switch (event->event_id)
@@ -196,70 +289,7 @@ void subscribed(mqtt_event_handle_t *event)
 
     publish((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/topic/test", msg);
 }
-msg_mqtt_t mqtt = {
-    .init = &esp_mqtt_client_init,
-    .start = &esp_mqtt_client_start,
-    .publish = &esp_mqtt_client_publish,
-    .subscribe = &esp_mqtt_client_subscribe
-};
 
-void getIatExp(char *iat, char *exp, int time_size)
-{
-    time_t now;
-    struct tm timeinfo;
-    time(&now);
-    localtime_r(&now, &timeinfo);
-    
-    while (timeinfo.tm_year < (2016 - 1900))
-    {
-        time(&now);
-        localtime_r(&now, &timeinfo);
-    }
-    snprintf(iat, time_size, "%lu", now);
-    snprintf(exp, time_size, "%lu", now + 3600);
-} 
-char *createJwt(const char *project_id)
-{
-    char iat_time[sizeof(time_t) * 3 + 2];
-    char exp_time[sizeof(time_t) * 3 + 2];
-    const uint8_t *key = (unsigned char *) rsa_private_pem_start;
-    size_t key_len = rsa_private_pem_end - rsa_private_pem_start;
-    jwt_t *jwt = NULL;
-    int ret = 0; 
-    char *out = NULL;
-
-    getIatExp(iat_time, exp_time, sizeof(iat_time));
-    
-    jwt_new(&jwt);
-
-    ret = jwt_add_grant(jwt, "iat", iat_time);
-    if (ret)
-    {
-        printf("Error setting issue timestamp: %d", ret);
-        return NULL;
-    }
-    ret = jwt_add_grant(jwt, "exp", exp_time);
-    if (ret)
-    {
-        printf("Error setting expiration: %d", ret);
-        return NULL;
-    }
-    ret = jwt_add_grant(jwt, "aud", project_id);
-    if (ret)
-    {
-        printf("Error adding audience: %d", ret);
-        return NULL;
-    }
-    ret = jwt_set_alg(jwt, JWT_ALG_RS256, key, key_len);
-    if (ret)
-    {
-        printf("Error during set alg: %d", ret);
-        return NULL;
-    }
-    out = jwt_encode_str(jwt);
-    jwt_free(jwt);  
-    return out;
-}
 
 void setupGCPClient(void)
 {
@@ -278,7 +308,7 @@ void setupGCPClient(void)
     msg_gcp_connect(client);
 
 }
-/*void setupClient(void)
+void setupClient(void)
 {
     msg_mqtt_settings_t settings = {
         .host = "iot.eclipse.org",
@@ -294,7 +324,7 @@ void setupGCPClient(void)
         .incoming_cb = &incoming
     };
     handle_t handle = mqtt_start(&settings);
-} */
+} 
 void start_app(void)
 {
     ESP_LOGI(APP_TAG, "Application starting...");
@@ -304,18 +334,18 @@ void start_app(void)
     // ppp_main();
     sntp_task();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-  /*      
-    msg_pipe_ctx_t *ctx = connect();
+        
+    msg_pipe_ctx_t *ctx = connectPipe();
 
     msg_pipe_transformer_t transformer = {
         .input = NULL,
-        .output = transformLightsJSONToBin
+        .output = NULL, //transformLightsJSONToBin
     };
     msg_pipe_add_transformer(ctx, &transformer);
-*/
-    //main_loop(ctx);
 
-    setupGCPClient();
+    main_loop(ctx);
+
+    //setupGCPClient();
 }
 void app_main(void)
 {

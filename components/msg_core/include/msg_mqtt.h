@@ -31,7 +31,7 @@ typedef struct {
     int msg_id;
 } mqtt_event_t;
 #define OK 0
-typedef uint16_t err_t;
+typedef uint16_t msg_mqtt_err_t;
 typedef void *handle_t;
 
 typedef enum {
@@ -81,13 +81,13 @@ typedef struct msg_mqtt_t
     
 
     handle_t (*init)(const config_t *config);
-    err_t (*set_uri)(handle_t client, const char *uri);
-    err_t (*start)(handle_t client);
-    err_t (*stop)(handle_t client);
-    err_t (*subscribe)(handle_t client, const char *topic, int qos);
-    err_t (*unsubscribe)(handle_t client, const char *topic);
+    msg_mqtt_err_t (*set_uri)(handle_t client, const char *uri);
+    msg_mqtt_err_t (*start)(handle_t client);
+    msg_mqtt_err_t (*stop)(handle_t client);
+    msg_mqtt_err_t (*subscribe)(handle_t client, const char *topic, int qos);
+    msg_mqtt_err_t (*unsubscribe)(handle_t client, const char *topic);
     int (*publish)(handle_t client, const char *topic, const char *data, int len, int qos, int retain);
-    err_t (*destroy)(handle_t client);
+    msg_mqtt_err_t (*destroy)(handle_t client);
 } msg_mqtt_t;
 
 typedef struct msg_mqtt_settings_t

@@ -5,72 +5,6 @@
 #include <time.h>
 #include "msg_gcp_mqtt.h"
 #include "msg_mqtt.h"
-
-//#include "jwt.h"
-
-/*
-void msg_gcp_data_cb(void * self, void * params)
-{
-    //esp_mqtt_client_handle_t *client = (esp_mqtt_client_handle_t *)self;
-    //esp_mqtt_event_t *event_data = (esp_mqtt_event_t *)params;
-
-    if (event_data->data_offset == 0)
-    {
-
-        char *topic = malloc(event_data->topic_length + 1);
-        memcpy(topic, event_data->topic, event_data->topic_length);
-        topic[event_data->topic_length] = 0;
-        free(topic);
-    }
-
-    uint8_t *data = malloc(event_data->data_length + 1);
-    memcpy(data, event_data->data, event_data->data_length);
-    data[event_data->data_length] = 0;
-    
-    message_t message = {
-        .data = data,
-        .length = event_data->data_length
-    };
-
-    msg_core_call_subs((messagingClient_t *) client->settings->params, &message);
-}
-esp_mqtt_client_config_t mqttsettings = {
-    .host = "mqtt.googleapis.com",
-    .port = 8883,
-    .client_id = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device",
-    .username = "my-device",
-    .clean_session = 0,
-    .keepalive = 120,
-    .connected_cb = msg_gcp_connected_cb,
-    .disconnected_cb = NULL,
-    .subscribe_cb = NULL,
-    .publish_cb = NULL,
-    .data_cb = msg_gcp_data_cb};
-
-void msg_gcp_connected_cb(void *self, void *params)
-{
-//    esp_mqtt_client_handle_t * client = (esp_mqtt_client_handle_t *) self;
-//    ((messagingClient_t *) client->settings->params)->connected = 1;
-
-//    esp_mqtt_subscribe(client, "/devices/my-device/config", 0);
- 
-} 
-
-void getIatExp(char *iat, char *exp, int time_size)
-{
-    time_t now;
-    struct tm timeinfo;
-    time(&now);
-    localtime_r(&now, &timeinfo);
-    
-    while (timeinfo.tm_year < (2016 - 1900))
-    {
-        time(&now);
-        localtime_r(&now, &timeinfo);
-    }
-    snprintf(iat, time_size, "%lu", now);
-    snprintf(exp, time_size, "%lu", now + 3600);
-} */
  
 int msg_gcp_start(messagingClient_t *client) 
 {
@@ -88,7 +22,12 @@ void msg_gcp_asyncIncomingHandler(messagingClient_t *client, message_t *message)
 
 void msg_gcp_connected(mqtt_event_handle_t *event)
 {    
-    //subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/devices/my-device/config");
+    ((msg_mqtt_t *)((mqtt_event_t *)event)->user_context)->client->connected = 1;
+    subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/devices/my-device/config");
+}
+void msg_gcp_disconnected(mqtt_event_handle_t *event)
+{    
+    ((msg_mqtt_t *)((mqtt_event_t *)event)->user_context)->client->connected = 0;
 }
 
 int msg_gcp_connect(messagingClient_t *client)
@@ -105,12 +44,13 @@ int msg_gcp_connect(messagingClient_t *client)
         .subscribed_cb = NULL,
         .connected_cb = msg_gcp_connected,
         .published_cb = NULL,
+        .disconnected_cb = msg_gcp_disconnected,
         .incoming_cb = msg_gcp_asyncIncomingHandler,
         .client = client,
         .transport = MSG_MQTT_TRANSPORT_OVER_SSL
     };
     
-    ctx->mqtt->client = mqtt_start(&settings);
+    ctx->mqtt->handle = mqtt_start(&settings);
 
     return MSG_GCP_OK;
    
