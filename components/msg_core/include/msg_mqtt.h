@@ -99,14 +99,13 @@ typedef struct msg_mqtt_settings_t
     char *username;
     char *password;
     msg_mqtt_t * mqtt;
+    mqtt_transport_t transport;
     void (* incoming_cb)(messagingClient_t *, message_t *);
     void (* connected_cb)(mqtt_event_handle_t *);
     void (* disconnected_cb)(mqtt_event_handle_t *);
     void (* subscribed_cb)(mqtt_event_handle_t *);
     void (* error_cb)(mqtt_event_handle_t *);
     void (* published_cb)(mqtt_event_handle_t *);
-    
-
 } msg_mqtt_settings_t;
 
 handle_t mqtt_start(msg_mqtt_settings_t * settings);

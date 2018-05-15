@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
@@ -7,34 +8,6 @@
 
 //#include "jwt.h"
 
-const char priv_key[] = {"-----BEGIN PRIVATE KEY-----\n\
-MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDnoS3ICNP1y9c5\n\
-DrY8StB2lAAyKh3tI+fYx85KHS3gixWRMF37GPzhN3FVwMdIGZrP7DWrmqLItIIT\n\
-PP29dF3t/bhc1ByrzXlYCgdfzpZSwt839jkCENJznYWm2YfPW3Hq9ERm+mzZdOA5\n\
-XuTVTx++in8kK9EjzOWwkeLiLdAcgVpeOrChP83sCx1gpQiIOMJh3pnSKMwZXTOx\n\
-LGQQqtueip0OvY56Tm+6k0f8RmDpo65tPAVUFnVn0HbO0sbcZp7M7NeOWrKxjQ5w\n\
-MSadQ8xd2jRAeUJ1OgFm9i27k+E2UjgwaG3b0eLtQ1RoJCOEgrfVrYIN1TeNhJkb\n\
-pZXJy+kxAgMBAAECggEAWoLACf9xHAYoNrKKAWtWpE9W+EM+6HB0Y2BIOuvGBo0y\n\
-w0Y8IydzgWoRzmmDNahTt1Xc7w6A956ZiXz2xfZX0eyoAxYbkgK7nOxmT0jBsttV\n\
-MF/1jNoX8nemRzmPeTaJgD8tD3Rh3mNuTtzG3JeLlwA1iGPa2HtzcZjAKJOwU8J1\n\
-wxJUlRkJkn+sMgdj7iVtVxiNVKOSidxRtyc6PLGmXuIsL2nNHnwAwfaroNtu7xKE\n\
-UvgSygty9HHGHvYL6IXlCeBy8aReuCkzKoZTk516ALzmEaLAMKmfaanmmxflN9Ja\n\
-aR2iIK6axN5f4XMboVbvmeUv/WE+BcguoCv2UR5yAQKBgQD2xRwNzssjqD2Q+rM/\n\
-hrrHqihiEKJPF7eWv+bTbFUfcwcXH5vjAAYy4IhyFIPd1Kit8Bmazbq4cJi3VQMa\n\
-mkxvon1A0g9y2HahkVK/sIjm6YLg4ptRFow+RO7Xi8IGHgdIqU7+Una4AlpTidR9\n\
-uZymRgipwvWGYWV+saIvSfA/EQKBgQDwSxifIQ1I5Ms7eDtwj8IuNtuwu0S9WXes\n\
-Zv2tJxcOchp/2bL+UNDG+8a0HzWvAu6sGoZu8S2soeujmSiVOwlnjufbuvilE7zf\n\
-nO1Q19OucRAxTaT8D9u8PhNep2SH+hj9qwa61kBz2OUjI1th+NEgZcffrJjc6q61\n\
-Z/VHzKdIIQKBgA5iNtxnLVgKumv08PXG+KQiuu/cYFmT3FOhI+c27U9D+SnT4dY9\n\
-bh8RD2L25yjK+HoLALMRQsz1YzFsdx3Z2JK5OevJUrUzANcyDUy3EYPEIKjTDJKR\n\
-aeNHSVSvBMQug+YsWDpivCDFolY0NnqNkx/t/RtIDd+jVbMoz3dKLALBAoGAW6Bn\n\
-DRavWCJWFKEuGSfYJYMplmRyO7mH1qeXB5WmRw3faOz8QdlTIu0SwdA8yjVWCS48\n\
-IMW6Yt+DWOin/u96EJD/fFv5QAkcti/CllcWEqhuQj6XML5jTY5mGGu/+9G0AdZb\n\
-RJc6EHKePR3YVK1qIO5unq3TxDmA0Q+JCg3Ro8ECgYAeq4fk/bHvHV3zL93D8EqK\n\
-igamI29JOVvLVHqmuQg2f1tsLn6vcg5tK1cRYp0ej4ArN1ND/f6xppCnMkb2zKlA\n\
-R+ADc4eTc3/d0R7ahXDXg2qL76PDuN4+si8bCoxBnqtaGPKzJpe5OAqMvZ4s47CK\n\
-jOAmKcVLejliuwOuflOncA==\n\
------END PRIVATE KEY-----"};
 /*
 void msg_gcp_data_cb(void * self, void * params)
 {
@@ -98,48 +71,7 @@ void getIatExp(char *iat, char *exp, int time_size)
     snprintf(iat, time_size, "%lu", now);
     snprintf(exp, time_size, "%lu", now + 3600);
 } */
-char *createJwt(const char *project_id)
-{
- /*   char iat_time[sizeof(time_t) * 3 + 2];
-    char exp_time[sizeof(time_t) * 3 + 2];
-    const uint8_t *key = (uint8_t *) priv_key;
-    size_t key_len = sizeof(priv_key);
-    jwt_t *jwt = NULL;
-    int ret = 0; 
-    char *out = NULL;
-
-    getIatExp(iat_time, exp_time, sizeof(iat_time));
-    
-    jwt_new(&jwt);
-
-    ret = jwt_add_grant(jwt, "iat", iat_time);
-    if (ret)
-    {
-        printf("Error setting issue timestamp: %d", ret);
-        return NULL;
-    }
-    ret = jwt_add_grant(jwt, "exp", exp_time);
-    if (ret)
-    {
-        printf("Error setting expiration: %d", ret);
-        return NULL;
-    }
-    ret = jwt_add_grant(jwt, "aud", project_id);
-    if (ret)
-    {
-        printf("Error adding audience: %d", ret);
-        return NULL;
-    }
-  //  ret = jwt_set_alg(jwt, JWT_ALG_RS256, key, key_len);
-    if (ret)
-    {
-        printf("Error during set alg: %d", ret);
-        return NULL;
-    }
-    out = jwt_encode_str(jwt);
-    jwt_free(jwt); */ 
-    return "1234";
-} 
+ 
 int msg_gcp_start(messagingClient_t *client) 
 {
     return MSG_GCP_OK;
@@ -153,22 +85,30 @@ void msg_gcp_asyncIncomingHandler(messagingClient_t *client, message_t *message)
 {
     msg_core_call_subs(client, message);
 }
+
+void msg_gcp_connected(mqtt_event_handle_t *event)
+{    
+    //subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/devices/my-device/config");
+}
+
 int msg_gcp_connect(messagingClient_t *client)
 {
     gcp_ctx_t * ctx = (gcp_ctx_t *) client->ctx;
 
-    
     msg_mqtt_settings_t settings = {
         .host = ctx->host, //"mqtt.googleapis.com",
         .port = ctx->port, //8883,
         .clientId = ctx->clientId, //"projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device",
         .username = ctx->device, //"my-device",
         .password = ctx->createJwt(ctx->projectId), //"phev-db3fa")
-        .mqtt = ctx->mqtt
+        .mqtt = ctx->mqtt,
+        .subscribed_cb = NULL,
+        .connected_cb = msg_gcp_connected,
+        .published_cb = NULL,
+        .incoming_cb = msg_gcp_asyncIncomingHandler,
+        .client = client,
+        .transport = MSG_MQTT_TRANSPORT_OVER_SSL
     };
-    
-    settings.mqtt->client = client;
-    settings.mqtt->incoming_cb = msg_gcp_asyncIncomingHandler;
     
     ctx->mqtt->client = mqtt_start(&settings);
 
@@ -196,7 +136,8 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
     ctx->device = settings.device;
     ctx->clientId = settings.clientId;
     ctx->topic = settings.topic;
-    ctx->createJwt = createJwt;
+    ctx->createJwt = settings.createJwt;
+    ctx->projectId = settings.projectId;
 
     ctx->readBuffer = malloc(GCP_CLIENT_READ_BUF_SIZE);
     

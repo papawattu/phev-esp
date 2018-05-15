@@ -67,13 +67,14 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings)
     msg_mqtt_t * mqtt = settings->mqtt;
 
     const config_t mqtt_cfg = {
-        //.uri = "mqtt://iot.eclipse.org",
         .event_handle = mqtt_event_handler,
         .user_context = (void *) mqtt,
         .host = settings->host,
         .port = settings->port,
         .client_id = settings->clientId,
         .username = settings->username,
+        .password = settings->password,
+        .transport = settings->transport,
     };
 
     handle_t client = mqtt->init(&mqtt_cfg);

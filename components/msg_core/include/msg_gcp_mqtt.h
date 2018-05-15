@@ -31,13 +31,15 @@ typedef struct msg_gcp_mqtt_t
 
 typedef struct gcpSettings_t
 {
-    char host[CONFIG_MQTT_MAX_HOST_LEN];
+    char * host;
     uint16_t port;
-    char clientId[CONFIG_MQTT_MAX_CLIENT_LEN];
-    char device[CONFIG_MQTT_MAX_DEVICE_LEN];
-    char projectId[CONFIG_MQTT_MAX_PROJECT_ID_LEN];
+    char * clientId;
+    char * device;
+    char * projectId;
     msg_mqtt_t * mqtt;
-    char *topic;
+    char * topic;
+    char * (* createJwt)(const char *);
+    
 } gcpSettings_t;
 
 typedef struct gcp_ctx_t
