@@ -5,6 +5,7 @@
 static int dummyReadNoMessageCalled = 0;
 static int dummyReadCalled = 0;
 static int dummyWriteCalled = 0;
+static int dummyConnectCalled = 0;
 
 
 int dummyRead_noMessage(int socket,uint8_t* buf, size_t size)
@@ -14,7 +15,7 @@ int dummyRead_noMessage(int socket,uint8_t* buf, size_t size)
 }
 int dummyRead(int socket,uint8_t* buf, size_t size)
 {
-    uint8_t * readBuffer = malloc(TCPIP_CLIENT_READ_BUF_SIZE);
+    //uint8_t * readBuffer = malloc(TCPIP_CLIENT_READ_BUF_SIZE);
     dummyReadCalled ++;
     return size;
 }
@@ -23,6 +24,12 @@ int dummyWrite(int socket,uint8_t* buf, size_t size)
 {
     dummyWriteCalled ++;
     return size;
+}
+
+int dummyConnect(messagingClient_t *client)
+{
+    dummyConnectCalled ++;
+    return 1;
 }
 
 void setUp(void)
@@ -41,15 +48,17 @@ void test_create_tcpip_client(void)
 } 
 void test_tcpip_client_connect(void)
 {
-    tcpIpSettings_t settings;
+    tcpip_ctx_t ctx = {
+        .connect = dummyConnect,
+    };
     messagingClient_t client;
-    client.ctx = (void *) &settings;
+    client.ctx = (void *) &ctx;
     msg_core_createMessagingClient_IgnoreAndReturn(&client);
     
     TEST_ASSERT_EQUAL(0,msg_tcpip_connect(&client));
 
     TEST_ASSERT_EQUAL(1,client.connected);
-} 
+}  
 void test_tcpip_client_outgoing_handler(void)
 {
     uint8_t buffer[4];
@@ -78,8 +87,10 @@ void test_tcpip_client_incoming_handler_no_message(void)
         .read = dummyRead_noMessage,
     };
     
-    messagingClient_t client;
-    client.ctx = (void *) &ctx;
+    messagingClient_t client = {
+        .ctx = &ctx,
+        .connected = 1,
+    };
     message_t *message = msg_tcpip_incomingHandler(&client);
     TEST_ASSERT_NULL(message);
     TEST_ASSERT_EQUAL(1,dummyReadNoMessageCalled);
@@ -93,9 +104,11 @@ void test_tcpip_client_incoming_handler(void)
         .write = dummyWrite,
         .read = dummyRead
     };
-    
-    messagingClient_t client;
+    messagingClient_t client = {
+        .ctx = &ctx,
+        .connected = 1,
+    };
     client.ctx = (void *) &ctx;
     message_t *message = msg_tcpip_incomingHandler(&client);
     TEST_ASSERT_EQUAL(1,dummyReadCalled);
-}
+} 

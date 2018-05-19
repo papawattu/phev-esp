@@ -21,7 +21,7 @@ handle_t mock_init(const config_t *config)
     msg_mqtt_t * mqtt = config->user_context;
     return NULL;
 }
-err_t mock_start(handle_t client) 
+msg_mqtt_err_t mock_start(handle_t client) 
 {
     mock_start_Called++;
     return OK;
@@ -121,7 +121,7 @@ void test_event_data(void)
         .user_context = &mqtt
     };
 
-    eventData(&event);
+    dataEvent(&event);
 
     TEST_ASSERT_EQUAL(1,mock_incoming_Called);
 

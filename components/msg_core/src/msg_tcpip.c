@@ -15,26 +15,6 @@ int msg_tcpip_stop(messagingClient_t *client)
 }
 int msg_tcpip_connect(messagingClient_t *client)
 {
-    /*struct sockaddr_in remote_ip;
-    tcpip_ctx_t *ctx = (tcpip_ctx_t *) client->ctx;
-    bzero(&remote_ip, sizeof(struct sockaddr_in));
-    remote_ip.sin_family = AF_INET;
-    remote_ip.sin_port = htons(ctx->port);
-
-    inet_aton(ctx->host, &(remote_ip.sin_addr));
-
-    ctx->socket = socket(PF_INET, SOCK_STREAM, 0);
-    if (ctx->socket == -1)
-    {
-        //log_error("Cannot create socket");
-        return -1;
-    }
-    if (connect(ctx->socket, (struct sockaddr *)(&remote_ip), sizeof(struct sockaddr)) != 0)
-    {
-        //log_error("Cannot connect to socket");
-        return -1;
-    }
-    //log_info("Connected"); */
     tcpip_ctx_t * ctx = (tcpip_ctx_t *) client->ctx;
     int s = 0;
     if((s = ctx->connect(ctx->host,ctx->port))) 
