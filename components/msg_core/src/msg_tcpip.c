@@ -17,13 +17,16 @@ int msg_tcpip_connect(messagingClient_t *client)
 {
     tcpip_ctx_t * ctx = (tcpip_ctx_t *) client->ctx;
     int s = 0;
-    if((s = ctx->connect(ctx->host,ctx->port))) 
+    if((s = ctx->connect(ctx->host,ctx->port)) > -1) 
     {
         ctx->socket = s;
         client->connected = 1;
+        return OK;
+    } else {
+        ctx->socket = -1;
+        client->connected = 0;
+        return -1;
     }
-
-    return 0;
 }
 message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
 {
@@ -32,7 +35,7 @@ message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
         tcpip_ctx_t *ctx = (tcpip_ctx_t *)client->ctx;
         int len = ctx->read(ctx->socket, ctx->readBuffer, TCPIP_CLIENT_READ_BUF_SIZE);
 
-        if (len)
+        if (len > 0 && len < TCPIP_CLIENT_READ_BUF_SIZE)
         {
             message_t *message = malloc(sizeof(message_t));
             message->data = malloc(len);

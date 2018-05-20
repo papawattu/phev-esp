@@ -12,7 +12,10 @@
 #include "freertos/queue.h"
 #include "freertos/event_groups.h"
 
+#include "lwip/opt.h"
+
 #include "lwip/sockets.h"
+#include "lwip/sys.h"
 #include "apps/sntp/sntp.h"
 
 #include "msg_mqtt.h"
@@ -106,23 +109,49 @@ char *createJwt(const char *project_id)
 
 int connectSocket(const char *host, uint16_t port) 
 {
-    struct sockaddr_in remote_ip;
+    /*struct sockaddr_in remote_ip;
     bzero(&remote_ip, sizeof(struct sockaddr_in));
     remote_ip.sin_family = AF_INET;
     remote_ip.sin_port = htons(port);
 
     inet_aton(host, &(remote_ip.sin_addr));
+*/
+    struct sockaddr_in addr;
+    /* set up address to connect to */
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_len = sizeof(addr);
+    addr.sin_family = AF_INET;
+    addr.sin_port = PP_HTONS(port);
+    addr.sin_addr.s_addr = inet_addr(host);
 
-    int sock = socket(PF_INET, SOCK_STREAM, 0);
+    ESP_LOGI(APP_TAG,"Host %s Port %d",host,port);
+  /* create the sockets */
+    int sock = lwip_socket(AF_INET, SOCK_STREAM, 0);
+    LWIP_ASSERT("sock >= 0", sock >= 0);
+
     if (sock == -1)
     {
         return -1;
     }
-    if (connect(sock, (struct sockaddr *)(&remote_ip), sizeof(struct sockaddr)) != 0)
-    {
-        return -1;
-    }
+    int ret = lwip_connect(sock, (struct sockaddr *)(&addr), sizeof(addr));
+    
+    LWIP_ASSERT("ret == 0", ret == 0);
+    ESP_LOGI(APP_TAG,"Connected to host %s port %d",host,port);
     return sock;
+}
+int dummyRead(int soc, uint8_t * buf, size_t len)
+{
+    //ESP_LOGI(APP_TAG,"Socket %d",socket);
+    //ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,len);
+    const char * buffer = "Hello\0";
+    memcpy(buf,buffer,6);
+    return 0  ;
+}
+int dummyWrite(int soc, uint8_t * buf, size_t len)
+{
+    ESP_LOGI(APP_TAG,"Socket %d",soc);
+    ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,len,ESP_LOG_INFO);
+    return len;
 }
 msg_pipe_ctx_t * connectPipe(void)
 {
@@ -134,14 +163,15 @@ msg_pipe_ctx_t * connectPipe(void)
         .createJwt = createJwt,
         .mqtt = &mqtt,
         .projectId = "phev-db3fa",
+        .topic = "/devices/my-device/events"
     }; 
     
     tcpIpSettings_t outSettings = {
-        .host = "192.168.8.46",
+        .host = "192.168.1.115",
         .port = 8080,
         .connect = connectSocket, 
-        .read = read,
-        .write = write,
+        .read = lwip_read,
+        .write = lwip_write,
     };
     
     messagingClient_t * in = msg_gcp_createGcpClient(inSettings);
@@ -152,12 +182,13 @@ msg_pipe_ctx_t * connectPipe(void)
 
 void main_loop(msg_pipe_ctx_t * ctx)
 {
-    
+    ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->out->connected,ctx->in->connected);
     while(!(ctx->in->connected && ctx->out->connected))
     {
         ESP_LOGI(APP_TAG,"Waiting to connect...");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+    ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->out->connected,ctx->in->connected);
     while(ctx->in->connected && ctx->out->connected)
     {
         msg_pipe_loop(ctx);
@@ -272,6 +303,7 @@ void setupGCPClient(void)
         .createJwt = createJwt,
         .mqtt = &mqtt,
         .projectId = "phev-db3fa",
+        .topic = "/devices/my-device/events"
     };
 
     messagingClient_t * client = msg_gcp_createGcpClient(settings);
@@ -312,7 +344,7 @@ void start_app(void)
         .input = NULL,
         .output = NULL, //transformLightsJSONToBin
     };
-    msg_pipe_add_transformer(ctx, &transformer);
+    //msg_pipe_add_transformer(ctx, &transformer);
 
     main_loop(ctx);
 

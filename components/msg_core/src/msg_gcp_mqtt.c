@@ -62,6 +62,7 @@ message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 void msg_gcp_outgoingHandler(messagingClient_t *client, message_t *message)
 {
     gcp_ctx_t * ctx = (gcp_ctx_t *) client->ctx;
+    printf("topic %s\n",ctx->topic);
     publish(ctx->mqtt, ctx->topic, message);
 }
 messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
@@ -71,13 +72,13 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
     gcp_ctx_t * ctx = malloc(sizeof(gcp_ctx_t));
     //msg_mqtt_t * mqtt_ctx = malloc(sizeof(msg_mqtt_t));
 
-    ctx->host = settings.host;
+    ctx->host = strdup(settings.host);
     ctx->port = settings.port;
-    ctx->device = settings.device;
-    ctx->clientId = settings.clientId;
-    ctx->topic = settings.topic;
+    ctx->device = strdup(settings.device);
+    ctx->clientId = strdup(settings.clientId);
+    ctx->topic = strdup(settings.topic);
     ctx->createJwt = settings.createJwt;
-    ctx->projectId = settings.projectId;
+    ctx->projectId = strdup(settings.projectId);
 
     ctx->readBuffer = malloc(GCP_CLIENT_READ_BUF_SIZE);
     
