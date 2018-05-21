@@ -3,7 +3,7 @@
 
 void test_bootstrap(void)
 {
-    
+    TEST_IGNORE();
     message_t message = {
         .data = "{ \"lights\" : \"on\" }",
         .length = 4
@@ -14,6 +14,7 @@ void test_bootstrap(void)
 }
 void test_lights_on(void)
 {
+    TEST_IGNORE();
     const unsigned char data[] = {0xf6,0x04,0x00,0x0a,0x01,0x05};
 
     message_t message = {
@@ -27,6 +28,7 @@ void test_lights_on(void)
 }
 void test_lights_off(void)
 {
+    TEST_IGNORE();
     const unsigned char data[] = {0xf6,0x04,0x00,0x0a,0x02,0x05};
 
     message_t message = {
