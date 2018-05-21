@@ -35,11 +35,11 @@ int msg_gcp_connect(messagingClient_t *client)
     gcp_ctx_t * ctx = (gcp_ctx_t *) client->ctx;
 
     msg_mqtt_settings_t settings = {
-        .host = ctx->host, //"mqtt.googleapis.com",
-        .port = ctx->port, //8883,
-        .clientId = ctx->clientId, //"projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device",
-        .username = ctx->device, //"my-device",
-        .password = ctx->createJwt(ctx->projectId), //"phev-db3fa")
+        .host = ctx->host, 
+        .port = ctx->port, 
+        .clientId = ctx->clientId, 
+        .username = ctx->device, 
+        .password = ctx->createJwt(ctx->projectId), 
         .mqtt = ctx->mqtt,
         .subscribed_cb = NULL,
         .connected_cb = msg_gcp_connected,
@@ -62,7 +62,6 @@ message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 void msg_gcp_outgoingHandler(messagingClient_t *client, message_t *message)
 {
     gcp_ctx_t * ctx = (gcp_ctx_t *) client->ctx;
-    printf("topic %s\n",ctx->topic);
     publish(ctx->mqtt, ctx->topic, message);
 }
 messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)

@@ -27,6 +27,8 @@
 
 #include "jwt.h"
 
+#include "json_bin.h"
+
 extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private_pem_start");
 extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 
@@ -109,13 +111,6 @@ char *createJwt(const char *project_id)
 
 int connectSocket(const char *host, uint16_t port) 
 {
-    /*struct sockaddr_in remote_ip;
-    bzero(&remote_ip, sizeof(struct sockaddr_in));
-    remote_ip.sin_family = AF_INET;
-    remote_ip.sin_port = htons(port);
-
-    inet_aton(host, &(remote_ip.sin_addr));
-*/
     struct sockaddr_in addr;
     /* set up address to connect to */
     memset(&addr, 0, sizeof(addr));
@@ -127,7 +122,7 @@ int connectSocket(const char *host, uint16_t port)
     ESP_LOGI(APP_TAG,"Host %s Port %d",host,port);
   /* create the sockets */
     int sock = lwip_socket(AF_INET, SOCK_STREAM, 0);
-    LWIP_ASSERT("sock >= 0", sock >= 0);
+  //  LWIP_ASSERT("sock >= 0", sock >= 0);
 
     if (sock == -1)
     {
@@ -135,7 +130,7 @@ int connectSocket(const char *host, uint16_t port)
     }
     int ret = lwip_connect(sock, (struct sockaddr *)(&addr), sizeof(addr));
     
-    LWIP_ASSERT("ret == 0", ret == 0);
+  //  LWIP_ASSERT("ret == 0", ret == 0);
     ESP_LOGI(APP_TAG,"Connected to host %s port %d",host,port);
     return sock;
 }
@@ -180,8 +175,39 @@ msg_pipe_ctx_t * connectPipe(void)
     return msg_pipe(in, out);
 }
 
-void main_loop(msg_pipe_ctx_t * ctx)
+message_t *addInput(message_t *message)
 {
+    const char * input = "INPUT";
+    const uint8_t * data = malloc(message->length + 5);
+    
+    strncpy(data,input,5);
+    strncpy(data + 5,(char *) message->data,message->length);
+    message->length += 5;
+    message->data  = data;
+    return msg_core_copyMessage(message);
+}
+message_t *addOutput(message_t *message)
+{
+    const char * output = "OUTPUT";
+    const uint8_t * data = malloc(message->length + 6);
+    
+    strncpy(data,output,6);
+    strncpy(data + 6,(char *) message->data,message->length);
+    message->length += 6;
+    message->data  = data;
+    return msg_core_copyMessage(message);
+}
+void main_loop(void)
+{
+    msg_pipe_ctx_t *ctx = connectPipe();
+
+    msg_pipe_transformer_t transformer = {
+        .input = NULL,
+        .output = transformLightsJSONToBin,
+    };
+    
+    msg_pipe_add_transformer(ctx, &transformer);
+
     ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->out->connected,ctx->in->connected);
     while(!(ctx->in->connected && ctx->out->connected))
     {
@@ -264,70 +290,6 @@ static void sntp_task(void)
     }
     ESP_LOGI(APP_TAG, "Time synced");
 }
-
-void connected(mqtt_event_handle_t *event)
-{
-    ESP_LOGI(APP_TAG, "MQTT Connected");
-
-    subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/topic/test");
-}
-void published(mqtt_event_handle_t *event)
-{
-    ESP_LOGI(APP_TAG, "MQTT published");
-}
-void incoming(msg_mqtt_t *mqtt, message_t *message)
-{
-    ESP_LOGI(APP_TAG, "MQTT Incoming message %s", message->data);
-    printf("DATA=%.*s\r\n", message->length, message->data);
-}
-void subscribed(mqtt_event_handle_t *event)
-{
-    ESP_LOGI(APP_TAG, "MQTT subscribed");
-
-    message_t message = {
-        .data = (uint8_t *)"1234",
-        .length = 4};
-    message_t *msg = msg_core_copyMessage(&message);
-
-    publish((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/topic/test", msg);
-}
-
-
-void setupGCPClient(void)
-{
-    gcpSettings_t settings = {
-        .host = "mqtt.googleapis.com",
-        .port = 8883,
-        .clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device",
-        .device = "my-device",
-        .createJwt = createJwt,
-        .mqtt = &mqtt,
-        .projectId = "phev-db3fa",
-        .topic = "/devices/my-device/events"
-    };
-
-    messagingClient_t * client = msg_gcp_createGcpClient(settings);
-
-    msg_gcp_connect(client);
-
-}
-void setupClient(void)
-{
-    msg_mqtt_settings_t settings = {
-        .host = "iot.eclipse.org",
-        .port = 0,
-        .username = NULL,
-        .password = NULL,
-        .mqtt = &mqtt,
-        .clientId = NULL,
-        .username = NULL,
-        .subscribed_cb = &subscribed,
-        .connected_cb = &connected,
-        .published_cb = &published,
-        .incoming_cb = &incoming
-    };
-    handle_t handle = mqtt_start(&settings);
-} 
 void start_app(void)
 {
     ESP_LOGI(APP_TAG, "Application starting...");
@@ -338,17 +300,8 @@ void start_app(void)
     sntp_task();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
         
-    msg_pipe_ctx_t *ctx = connectPipe();
+    main_loop();
 
-    msg_pipe_transformer_t transformer = {
-        .input = NULL,
-        .output = NULL, //transformLightsJSONToBin
-    };
-    //msg_pipe_add_transformer(ctx, &transformer);
-
-    main_loop(ctx);
-
-    //setupGCPClient();
 }
 void app_main(void)
 {

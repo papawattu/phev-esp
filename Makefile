@@ -1,16 +1,17 @@
 PROJECT_NAME := phev-esp
 SHELL := /bin/bash
 BUILD_DIR ?= ./build
-COMP_DIR := ./components/msg_core
+COMP_DIR := ./components/**
 SRC_DIR := $(COMP_DIR)/src
 TEST_DIR ?= $(COMP_DIR)/test
-
+CJSON_DIR ?= ${CJSON_DIR}
 INC_DIRS := $(shell find $(COMP_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
+CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -DTEST
 TEST_BUILD_DIR ?= $(BUILD_DIR)/test
 TEST_MAKEFILE = $(TEST_BUILD_DIR)/MakefileTestSupport
-INCLUDE_PATH += -I$(SRC_DIR)/include 
+#INCLUDE_PATH += -I$(SRC_DIR)/include 
+INCLUDE_PATH += -I$(INC_FLAGS)
 CMOCK_DIR := ${CMOCK_DIR}
 RM := rm
 
