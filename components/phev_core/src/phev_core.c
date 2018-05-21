@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <string.h>
 #include "phev_core.h"
 
 int phev_core_firstMessage(const uint8_t * data, phevMessage_t *msg)

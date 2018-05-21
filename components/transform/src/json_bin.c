@@ -9,8 +9,8 @@
 #define LIGHTS_CMD      "lights"
 #define ON              "on"
 #define OFF             "off"
-
-#ifdef TEST
+/*
+#ifdef _TEST_
 typedef struct cJSON 
 {
     char * valuestring;
@@ -22,7 +22,7 @@ cJSON * cJSON_Parse(const char* data)
     return NULL;
 }
 
-char * cJSON_GetObjectItemCaseSensitive(char * a, cJSON *b)
+cJSON * cJSON_GetObjectItemCaseSensitive(cJSON *b, char *a)
 {
     return NULL;
 }
@@ -55,4 +55,4 @@ message_t *transformLightsJSONToBin(message_t *message)
     bin->length = SIMPLE_MESSAGE_SIZE;
 
     return bin;
-} 
+} */

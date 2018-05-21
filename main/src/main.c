@@ -203,7 +203,7 @@ void main_loop(void)
 
     msg_pipe_transformer_t transformer = {
         .input = NULL,
-        .output = transformLightsJSONToBin,
+        .output = NULL, //transformLightsJSONToBin,
     };
     
     msg_pipe_add_transformer(ctx, &transformer);
