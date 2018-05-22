@@ -35,7 +35,7 @@ typedef struct phevMessage_t
     uint8_t checksum;
 } phevMessage_t;
 
-int phev_core_firstMessage(const uint8_t *data, phevMessage_t *message);
+int phev_core_extractMessage(const uint8_t *data, size_t len, phevMessage_t *message);
 
 int phev_core_encodeMessage(phevMessage_t *message,uint8_t **data);
 

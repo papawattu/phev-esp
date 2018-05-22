@@ -2,16 +2,39 @@
 #include <string.h>
 #include "phev_core.h"
 
-int phev_core_firstMessage(const uint8_t *data, phevMessage_t *msg)
+const uint8_t allowedCommands[] = {0xf2, 0x2f, 0xf6, 0x6f, 0xf9, 0x9f};
+
+int phev_core_validate_buffer(uint8_t * msg, size_t len)
 {
-    msg->command = data[0];
-    msg->length = data[1];
-    msg->type = data[2];
-    msg->reg = data[3];
-    msg->data = malloc(msg->length - 3);
-    memcpy(msg->data, data + 4, msg->length - 3);
-    msg->checksum = data[5 + msg->length];
-    return msg->length + 2;
+    for(int i = 0;i < sizeof(allowedCommands); i++)
+    {
+        if(msg[0] == allowedCommands[i])
+        {
+            if((msg[1] + 2) > len)
+            {
+                return 0;  // length goes past end of message
+            }
+            return 1; //valid message
+        }
+    }
+    return 0;  // invalid command
+}
+int phev_core_extractMessage(const uint8_t *data, const size_t len, phevMessage_t *msg)
+{
+    if(phev_core_validate_buffer(data, len) != 0)
+    {
+
+        msg->command = data[0];
+        msg->length = data[1];
+        msg->type = data[2];
+        msg->reg = data[3];
+        msg->data = malloc(msg->length - 3);
+        memcpy(msg->data, data + 4, msg->length - 3);
+        msg->checksum = data[5 + msg->length];
+        return msg->length + 2;
+    } else {
+        return 0;
+    }
 }
 
 int phev_core_encodeMessage(phevMessage_t *message,uint8_t ** data)

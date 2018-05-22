@@ -36,7 +36,7 @@ extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 #define CONFIG_WIFI_SSID "BTHub3-HSZ3"
 #define CONFIG_WIFI_PASSWORD "simpsons"
 
-#define HOST_IP "192.168.8.46"
+#define HOST_IP "192.168.1.115"
 #define HOST_PORT 8080
 
 //#define CONFIG_WIFI_SSID "REMOTE45cfsc"
@@ -198,27 +198,11 @@ message_t *addInput(message_t *message)
 }
 message_t *addOutput(message_t *message)
 {
-    char buf[255];
     phevMessage_t phevMsg;
 
-    int remain = phev_core_firstMessage(message->data, &phevMsg);
+    int remain = phev_core_extractMessage(message->data, message->length, &phevMsg);
 
-//    while(remain > 0)
-//    {
-        uint8_t * buffer;
-        phevMessage_t * msg = phev_core_responseHandler(&phevMsg);
-        int len = phev_core_encodeMessage(msg, &buffer);
-        lwip_write(global_sock,buffer,len);
-//        remain = phev_core_firstMessage(message->data + remain, &phevMsg);
-//    }
-    snprintf(buf,255,"RESPONSE : Command %02X Length %d Type %d Register %d Data %02X Checksum %02X\n", phevMsg.command, phevMsg.length, phevMsg.type, phevMsg.reg, *phevMsg.data, phevMsg.checksum);
-    snprintf(buf + strlen(buf),255,"RESPONSE : Command %02X Length %d Type %d Register %d Data %02X Checksum %02X\n", msg->command, msg->length, msg->type, msg->reg, *msg->data, msg->checksum);
-    ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buffer,len,ESP_LOG_INFO);
-    message_t m = {
-        .data = &buf,
-        .length = strlen(buf),
-    }; 
-    return msg_core_copyMessage(&m);
+    return NULL; 
 }
 void main_loop(void)
 {
@@ -226,7 +210,7 @@ void main_loop(void)
     {
         ESP_LOGI(APP_TAG,"Waiting to connect...");
         ctx = connectPipe();
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
     } while(!(ctx->in->connected && ctx->out->connected));
     
     ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->out->connected,ctx->in->connected);
