@@ -33,11 +33,14 @@
 extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private_pem_start");
 extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 
-//#define CONFIG_WIFI_SSID "BTHub3-HSZ3"
-//#define CONFIG_WIFI_PASSWORD "simpsons"
+#define CONFIG_WIFI_SSID "BTHub3-HSZ3"
+#define CONFIG_WIFI_PASSWORD "simpsons"
 
-#define CONFIG_WIFI_SSID "REMOTE45cfsc"
-#define CONFIG_WIFI_PASSWORD "fhcm852767"
+#define HOST_IP "192.168.8.46"
+#define HOST_PORT 8080
+
+//#define CONFIG_WIFI_SSID "REMOTE45cfsc"
+//#define CONFIG_WIFI_PASSWORD "fhcm852767"
 
 static EventGroupHandle_t wifi_event_group;
 
@@ -174,8 +177,8 @@ msg_pipe_ctx_t * connectPipe(void)
     }; 
     
     tcpIpSettings_t outSettings = {
-        .host = "192.168.8.46",
-        .port = 8080,
+        .host = HOST_IP,
+        .port = HOST_PORT,
         .connect = connectSocket, 
         .read = logRead,
         .write = logWrite,
