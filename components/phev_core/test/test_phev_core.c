@@ -48,7 +48,7 @@ void test_split_message_single_correct_reg(void)
 void test_split_message_single_correct_data(void)
 {
     phevMessage_t msg;
-    uint8_t data[] = {0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01}; 
+    uint8_t data[] = {0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01};
 
     int ret = phev_core_firstMessage(singleMessage, &msg);
 
@@ -57,18 +57,18 @@ void test_split_message_single_correct_data(void)
 void test_split_message_double_correct(void)
 {
     phevMessage_t msg;
-    uint8_t data[] = {0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01}; 
+    uint8_t data[] = {0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01};
 
     int ret = phev_core_firstMessage(doubleMessage, &msg);
 
     ret = phev_core_firstMessage(doubleMessage + ret, &msg);
 
-    TEST_ASSERT_EQUAL(0x12, msg.reg);    
+    TEST_ASSERT_EQUAL(0x12, msg.reg);
 }
 
 void test_encode_message_single(void)
 {
-    uint8_t data[] = {0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01}; 
+    uint8_t data[] = {0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01};
 
     phevMessage_t msg = {
         .command = 0x6f,
@@ -78,18 +78,74 @@ void test_encode_message_single(void)
         .data = &data,
         .checksum = 0xff,
     };
-    
-    uint8_t * out = phev_core_encodeMessage(&msg);
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(singleMessage, out, 12);    
-}
-void test_simple_command_message(void)
-{
-     phevMessage_t *msg = phev_core_simpleCommandMessage(0x01, 0xff);
 
-     TEST_ASSERT_EQUAL(0xf6, msg->command);
-     TEST_ASSERT_EQUAL(0x4, msg->length);
-     TEST_ASSERT_EQUAL(REQUEST_TYPE, msg->type);
-     TEST_ASSERT_EQUAL(0x1, msg->reg);
-     TEST_ASSERT_EQUAL(0xff, msg->data[0]);
+    uint8_t *out = phev_core_encodeMessage(&msg);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(singleMessage, out, 12);
 }
-     
+void test_simple_command_request_message(void)
+{
+    phevMessage_t *msg = phev_core_simpleRequestCommandMessage(0x01, 0xff);
+
+    TEST_ASSERT_EQUAL(0xf6, msg->command);
+    TEST_ASSERT_EQUAL(0x4, msg->length);
+    TEST_ASSERT_EQUAL(REQUEST_TYPE, msg->type);
+    TEST_ASSERT_EQUAL(0x1, msg->reg);
+    TEST_ASSERT_EQUAL(0xff, msg->data[0]);
+}
+void test_simple_command_response_message(void)
+{
+    phevMessage_t *msg = phev_core_simpleResponseCommandMessage(0x01, 0xff);
+
+    TEST_ASSERT_EQUAL(0xf6, msg->command);
+    TEST_ASSERT_EQUAL(0x4, msg->length);
+    TEST_ASSERT_EQUAL(RESPONSE_TYPE, msg->type);
+    TEST_ASSERT_EQUAL(0x1, msg->reg);
+    TEST_ASSERT_EQUAL(0xff, msg->data[0]);
+}
+void test_command_message(void)
+{
+    const uint8_t data[] = {0, 1, 2, 3, 4, 5};
+
+    phevMessage_t *msg = phev_core_commandMessage(0x10, &data, sizeof(data));
+
+    TEST_ASSERT_EQUAL(0xf6, msg->command);
+    TEST_ASSERT_EQUAL(0x9, msg->length);
+    TEST_ASSERT_EQUAL(REQUEST_TYPE, msg->type);
+    TEST_ASSERT_EQUAL(0x10, msg->reg);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(&data, msg->data, sizeof(data));
+}
+void test_ack_message(void)
+{
+    const uint8_t reg = 0x10;
+    const phevMessage_t *msg = phev_core_ackMessage(reg);
+
+    TEST_ASSERT_EQUAL(0xf6, msg->command);
+    TEST_ASSERT_EQUAL(0x4, msg->length);
+    TEST_ASSERT_EQUAL(RESPONSE_TYPE, msg->type);
+    TEST_ASSERT_EQUAL(0x10, msg->reg);
+    TEST_ASSERT_EQUAL(0x00, *msg->data);
+}
+void test_start_message(void)
+{
+    const uint8_t mac[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
+    const phevMessage_t *msg = phev_core_startMessage(&mac);
+
+    TEST_ASSERT_EQUAL(START_SEND, msg->command);
+    TEST_ASSERT_EQUAL(0x0a, msg->length);
+    TEST_ASSERT_EQUAL(REQUEST_TYPE, msg->type);
+    TEST_ASSERT_EQUAL(0x02, msg->reg);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(&mac, msg->data, sizeof(mac));
+}
+void test_ping_message(void)
+{
+    const uint8_t num = 1;
+
+    const phevMessage_t * msg = phev_core_pingMessage(num);
+
+    TEST_ASSERT_EQUAL(PING_SEND_CMD, msg->command);
+    TEST_ASSERT_EQUAL(0x04, msg->length);
+    TEST_ASSERT_EQUAL(REQUEST_TYPE, msg->type);
+    TEST_ASSERT_EQUAL(num, msg->reg);
+    TEST_ASSERT_EQUAL(0, *msg->data);
+    
+}
