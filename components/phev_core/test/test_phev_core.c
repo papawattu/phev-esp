@@ -82,3 +82,14 @@ void test_encode_message_single(void)
     uint8_t * out = phev_core_encodeMessage(&msg);
     TEST_ASSERT_EQUAL_HEX8_ARRAY(singleMessage, out, 12);    
 }
+void test_simple_command_message(void)
+{
+     phevMessage_t *msg = phev_core_simpleCommandMessage(0x01, 0xff);
+
+     TEST_ASSERT_EQUAL(0xf6, msg->command);
+     TEST_ASSERT_EQUAL(0x4, msg->length);
+     TEST_ASSERT_EQUAL(REQUEST_TYPE, msg->type);
+     TEST_ASSERT_EQUAL(0x1, msg->reg);
+     TEST_ASSERT_EQUAL(0xff, msg->data[0]);
+}
+     

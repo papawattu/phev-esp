@@ -27,3 +27,18 @@ uint8_t * phev_core_encodeMessage(phevMessage_t * message)
 
     return data;
 }
+
+ phevMessage_t * phev_core_simpleCommandMessage(uint8_t reg, uint8_t value) 
+ {
+     phevMessage_t * message = malloc(sizeof(phevMessage_t));
+     message->data = malloc(1);
+
+     message->command = SEND_CMD;
+     message->length = DEFAULT_CMD_LENGTH;
+     message->type = REQUEST_TYPE;
+     message->reg = reg;
+     *message->data = value;
+     message->checksum = 0;
+
+     return message;
+ }

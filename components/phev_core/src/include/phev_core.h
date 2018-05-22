@@ -6,6 +6,16 @@
 #define REQUEST_TYPE 0
 #define RESPONSE_TYPE 1
 
+#define DEFAULT_CMD_LENGTH 4
+
+#define PING_SEND_CMD 0xf9
+#define PING_RESP_CMD 0x9f
+
+#define START_SEND 0xf2
+#define START_RESP 0x2f 
+#define SEND_CMD 0xf6
+#define RESP_CMD 0x6f 
+/*
 enum commands_t  {
     PING_SEND_CMD = 0xf9, 
     PING_RESP_CMD = 0x9f, 
@@ -14,7 +24,7 @@ enum commands_t  {
     SEND_CMD = 0xf6,
     RESP_CMD = 0x6f 
 };
-
+*/
 typedef struct phevMessage_t {
     uint8_t command;
     uint8_t length;
@@ -26,6 +36,18 @@ typedef struct phevMessage_t {
 
 int phev_core_firstMessage(const uint8_t * data, phevMessage_t *message);
 
-uint8_t * phev_core_encodeMessage(phevMessage_t * message);
+uint8_t * phev_core_encodeMessage(phevMessage_t *);
+
+phevMessage_t * phev_core_simpleCommandMessage(uint8_t reg, uint8_t value);
+
+phevMessage_t * phev_core_commandMessage(uint8_t reg, uint8_t * data, size_t length);
+
+phevMessage_t * phev_core_ackMessage(uint8_t reg);
+
+phevMessage_t * phev_core_startMessage(void);
+
+phevMessage_t * phev_core_pingMessage(uint8_t * number);
+
+phevMessage_t * phev_core_responseHandler(phevMessage_t message);
 
 #endif

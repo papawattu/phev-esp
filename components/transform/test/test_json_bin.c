@@ -1,6 +1,6 @@
 #include "unity.h"
 #include "json_bin.h"
-/*
+
 void test_bootstrap(void)
 {
     TEST_IGNORE();
@@ -9,9 +9,9 @@ void test_bootstrap(void)
         .length = 4
     };
 
-    message_t * out = transformLightsJSONToBin(&message);
-    TEST_ASSERT_NOT_NULL(out);
-}
+    //message_t * out = transformLightsJSONToBin(&message);
+    //TEST_ASSERT_NOT_NULL(out);
+} /*
 void test_lights_on(void)
 {
     TEST_IGNORE();
