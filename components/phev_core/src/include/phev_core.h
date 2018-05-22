@@ -37,7 +37,7 @@ typedef struct phevMessage_t
 
 int phev_core_firstMessage(const uint8_t *data, phevMessage_t *message);
 
-uint8_t *phev_core_encodeMessage(phevMessage_t *);
+int phev_core_encodeMessage(phevMessage_t *message,uint8_t **data);
 
 phevMessage_t *phev_core_requestMessage(uint8_t command, uint8_t reg, uint8_t *data, size_t length);
 
@@ -57,6 +57,8 @@ phevMessage_t *phev_core_startMessage(uint8_t *mac);
 
 phevMessage_t *phev_core_pingMessage(uint8_t *number);
 
-phevMessage_t *phev_core_responseHandler(phevMessage_t message);
+phevMessage_t *phev_core_responseHandler(phevMessage_t * message);
+
+uint8_t phev_core_checksum(const uint8_t * data); 
 
 #endif

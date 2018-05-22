@@ -71,6 +71,7 @@ void test_tcpip_client_outgoing_handler(void)
     };
     messagingClient_t client;
     client.ctx = (void *) &ctx;
+    client.connected = 1;
     message_t message;
     uint8_t data[] = {1,2,3,4}; 
     message.data = &data;

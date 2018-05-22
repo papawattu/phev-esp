@@ -63,11 +63,12 @@ msg_pipe_ctx_t * msg_pipe(messagingClient_t *in, messagingClient_t *out)
     ctx->out->subscribe(ctx->out, ctx, msg_pipe_outboundSubscription);
 
     ctx->in->start(ctx->in);
+    
     ctx->in->connect(ctx->in);
-
     ctx->out->start(ctx->out);
+    
     ctx->out->connect(ctx->out);
-
+    
     ctx->numTransformers = 0;
 
     return ctx;    

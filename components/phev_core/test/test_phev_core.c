@@ -1,7 +1,7 @@
 #include "unity.h"
 #include "phev_core.h"
 
-const uint8_t singleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff};
+const uint8_t singleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xdd};
 const uint8_t doubleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff, 0x6f, 0x0a, 0x00, 0x12, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff};
 
 void test_split_message_single_correct_size(void)
@@ -76,11 +76,29 @@ void test_encode_message_single(void)
         .type = REQUEST_TYPE,
         .reg = 0x12,
         .data = &data,
-        .checksum = 0xff,
+        .checksum = 0xdd,
     };
 
-    uint8_t *out = phev_core_encodeMessage(&msg);
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(singleMessage, out, 12);
+    uint8_t * out;
+    int num = phev_core_encodeMessage(&msg, &out);
+    TEST_ASSERT_EQUAL(12, num);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(singleMessage, out, num);
+}
+void test_encode_message_single_checksum(void)
+{
+    uint8_t data[] = {0x00};
+
+    phevMessage_t msg = {
+        .command = 0x6f,
+        .length = 0x04,
+        .type = RESPONSE_TYPE,
+        .reg = 0xaa,
+        .data = &data,
+    };
+
+    uint8_t * out;
+    int num = phev_core_encodeMessage(&msg, &out);
+    TEST_ASSERT_EQUAL(0x1e, out[5]);
 }
 void test_simple_command_request_message(void)
 {
@@ -147,5 +165,28 @@ void test_ping_message(void)
     TEST_ASSERT_EQUAL(REQUEST_TYPE, msg->type);
     TEST_ASSERT_EQUAL(num, msg->reg);
     TEST_ASSERT_EQUAL(0, *msg->data);
-    
+}
+void test_response_handler_start(void)
+{
+    const uint8_t value = 0;
+    phevMessage_t request = {
+        .command = RESP_CMD,
+        .length = 4,
+        .type = REQUEST_TYPE,
+        .reg = 0x29,
+        .data = &value,  
+    };
+    phevMessage_t * msg = phev_core_responseHandler(&request);
+
+    TEST_ASSERT_EQUAL(SEND_CMD, msg->command);
+    TEST_ASSERT_EQUAL(0x04, msg->length);
+    TEST_ASSERT_EQUAL(RESPONSE_TYPE, msg->type);
+    TEST_ASSERT_EQUAL(0x29, msg->reg);
+    TEST_ASSERT_EQUAL(0, *msg->data);   
+}
+void test_calc_checksum(void)
+{
+    const uint8_t data[] = {0x2f,0x04,0x00,0x01,0x01,0x00};
+    uint8_t checksum = phev_core_checksum(data);
+    TEST_ASSERT_EQUAL(0x35,checksum);
 }

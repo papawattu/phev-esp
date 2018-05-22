@@ -42,6 +42,8 @@ message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
             memcpy(message->data, ctx->readBuffer, len);
             message->length = len;
             return message;
+        } else {
+            client->connected = 0;
         }
     }
     return NULL;
@@ -49,9 +51,16 @@ message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
 void msg_tcpip_outgoingHandler(messagingClient_t *client, message_t *message)
 {
     tcpip_ctx_t *ctx = (tcpip_ctx_t *)client->ctx;
-    if (message->data && message->length)
+    if(client->connected)
     {
-        ctx->write(ctx->socket, message->data, message->length);
+        if (message->data && message->length)
+        {
+            int num = ctx->write(ctx->socket, message->data, message->length);
+            if(num != message->length)
+            {
+                client->connected = 0;
+            }
+        }
     }
 }
 messagingClient_t *msg_tcpip_createTcpIpClient(tcpIpSettings_t settings)

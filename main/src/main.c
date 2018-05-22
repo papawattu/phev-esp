@@ -23,6 +23,7 @@
 #include "msg_pipe.h"
 #include "msg_tcpip.h"
 
+#include "phev_core.h"
 #include "mqtt_client.h"
 
 #include "jwt.h"
@@ -32,11 +33,11 @@
 extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private_pem_start");
 extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 
-#define CONFIG_WIFI_SSID "BTHub3-HSZ3"
-#define CONFIG_WIFI_PASSWORD "simpsons"
+//#define CONFIG_WIFI_SSID "BTHub3-HSZ3"
+//#define CONFIG_WIFI_PASSWORD "simpsons"
 
-//#define CONFIG_WIFI_SSID "REMOTE45cfsc"
-//#define CONFIG_WIFI_PASSWORD "fhcm852767"
+#define CONFIG_WIFI_SSID "REMOTE45cfsc"
+#define CONFIG_WIFI_PASSWORD "fhcm852767"
 
 static EventGroupHandle_t wifi_event_group;
 
@@ -109,6 +110,8 @@ char *createJwt(const char *project_id)
     return out;
 }
 
+int global_sock = 0;
+
 int connectSocket(const char *host, uint16_t port) 
 {
     struct sockaddr_in addr;
@@ -129,24 +132,33 @@ int connectSocket(const char *host, uint16_t port)
         return -1;
     }
     int ret = lwip_connect(sock, (struct sockaddr *)(&addr), sizeof(addr));
-    
+    if(ret == -1)
+    {
+        return -1;
+    }
   //  LWIP_ASSERT("ret == 0", ret == 0);
     ESP_LOGI(APP_TAG,"Connected to host %s port %d",host,port);
+    
+    global_sock = sock;
     return sock;
 }
-int dummyRead(int soc, uint8_t * buf, size_t len)
+int logRead(int soc, uint8_t * buf, size_t len)
 {
-    //ESP_LOGI(APP_TAG,"Socket %d",socket);
-    //ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,len);
-    const char * buffer = "Hello\0";
-    memcpy(buf,buffer,6);
-    return 0  ;
+    int num = lwip_read(soc,buf,len);
+    ESP_LOGI(APP_TAG, "Read %d bytes",num);
+    if(num > 0) 
+    {
+        ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,num,ESP_LOG_INFO);
+    }
+    return num;
 }
-int dummyWrite(int soc, uint8_t * buf, size_t len)
+int logWrite(int soc, uint8_t * buf, size_t len)
 {
-    ESP_LOGI(APP_TAG,"Socket %d",soc);
     ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,len,ESP_LOG_INFO);
-    return len;
+    int num = lwip_write(soc,buf,len);
+    ESP_LOGI(APP_TAG, "Written %d bytes",num);
+    
+    return num;
 }
 msg_pipe_ctx_t * connectPipe(void)
 {
@@ -162,11 +174,11 @@ msg_pipe_ctx_t * connectPipe(void)
     }; 
     
     tcpIpSettings_t outSettings = {
-        .host = "192.168.1.115",
+        .host = "192.168.8.46",
         .port = 8080,
         .connect = connectSocket, 
-        .read = lwip_read,
-        .write = lwip_write,
+        .read = logRead,
+        .write = logWrite,
     };
     
     messagingClient_t * in = msg_gcp_createGcpClient(inSettings);
@@ -177,44 +189,52 @@ msg_pipe_ctx_t * connectPipe(void)
 
 message_t *addInput(message_t *message)
 {
-    const char * input = "INPUT";
-    const uint8_t * data = malloc(message->length + 5);
-    
-    strncpy(data,input,5);
-    strncpy(data + 5,(char *) message->data,message->length);
-    message->length += 5;
-    message->data  = data;
-    return msg_core_copyMessage(message);
+    message_t msg;
+    msg.length = phev_core_encodeMessage(phev_core_simpleRequestCommandMessage(0x0a,0x01),&msg.data);
+    return msg_core_copyMessage(&msg);
 }
 message_t *addOutput(message_t *message)
 {
-    const char * output = "OUTPUT";
-    const uint8_t * data = malloc(message->length + 6);
-    
-    strncpy(data,output,6);
-    strncpy(data + 6,(char *) message->data,message->length);
-    message->length += 6;
-    message->data  = data;
-    return msg_core_copyMessage(message);
+    char buf[255];
+    phevMessage_t phevMsg;
+
+    int remain = phev_core_firstMessage(message->data, &phevMsg);
+
+//    while(remain > 0)
+//    {
+        uint8_t * buffer;
+        phevMessage_t * msg = phev_core_responseHandler(&phevMsg);
+        int len = phev_core_encodeMessage(msg, &buffer);
+        lwip_write(global_sock,buffer,len);
+//        remain = phev_core_firstMessage(message->data + remain, &phevMsg);
+//    }
+    snprintf(buf,255,"RESPONSE : Command %02X Length %d Type %d Register %d Data %02X Checksum %02X\n", phevMsg.command, phevMsg.length, phevMsg.type, phevMsg.reg, *phevMsg.data, phevMsg.checksum);
+    snprintf(buf + strlen(buf),255,"RESPONSE : Command %02X Length %d Type %d Register %d Data %02X Checksum %02X\n", msg->command, msg->length, msg->type, msg->reg, *msg->data, msg->checksum);
+    ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buffer,len,ESP_LOG_INFO);
+    message_t m = {
+        .data = &buf,
+        .length = strlen(buf),
+    }; 
+    return msg_core_copyMessage(&m);
 }
 void main_loop(void)
 {
-    msg_pipe_ctx_t *ctx = connectPipe();
-
-    msg_pipe_transformer_t transformer = {
-        .input = NULL,
-        .output = NULL, //transformLightsJSONToBin,
-    };
-    
-    msg_pipe_add_transformer(ctx, &transformer);
-
-    ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->out->connected,ctx->in->connected);
-    while(!(ctx->in->connected && ctx->out->connected))
+    msg_pipe_ctx_t *ctx = NULL;
     {
         ESP_LOGI(APP_TAG,"Waiting to connect...");
+        ctx = connectPipe();
         vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+    } while(!(ctx->in->connected && ctx->out->connected));
+    
     ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->out->connected,ctx->in->connected);
+
+    msg_pipe_transformer_t transformer = {
+        .input = addInput,
+        .output = addOutput, //transformLightsJSONToBin,
+    };
+
+    msg_pipe_add_transformer(ctx, &transformer);
+
     while(ctx->in->connected && ctx->out->connected)
     {
         msg_pipe_loop(ctx);
