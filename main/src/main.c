@@ -33,10 +33,10 @@
 extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private_pem_start");
 extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 
-#define CONFIG_WIFI_SSID "BTHub3-HSZ3"
-#define CONFIG_WIFI_PASSWORD "simpsons"
+#define CONFIG_WIFI_SSID "BTHub6-P535"
+#define CONFIG_WIFI_PASSWORD "S1mpsons"
 
-#define HOST_IP "192.168.1.115"
+#define HOST_IP "192.168.1.67"
 #define HOST_PORT 8080
 
 //#define CONFIG_WIFI_SSID "REMOTE45cfsc"
@@ -184,12 +184,14 @@ msg_pipe_ctx_t * connectPipe(void)
         .write = logWrite,
     };
     
-    messagingClient_t * in = msg_gcp_createGcpClient(inSettings);
-    messagingClient_t * out = msg_tcpip_createTcpIpClient(outSettings);
+    msg_pipe_settings_t pipe_settings = {
+        .in = msg_gcp_createGcpClient(inSettings),
+        .out = msg_tcpip_createTcpIpClient(outSettings),
+    };
 
-    return msg_pipe(in, out);
+    return msg_pipe(pipe_settings);
 }
-
+/*
 message_t *addInput(message_t *message)
 {
     message_t msg;
@@ -203,7 +205,7 @@ message_t *addOutput(message_t *message)
     int remain = phev_core_extractMessage(message->data, message->length, &phevMsg);
 
     return NULL; 
-}
+} */
 void main_loop(void)
 {
     msg_pipe_ctx_t *ctx = NULL;
@@ -214,14 +216,14 @@ void main_loop(void)
     } while(!(ctx->in->connected && ctx->out->connected));
     
     ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->out->connected,ctx->in->connected);
-
+/*
     msg_pipe_transformer_t transformer = {
         .input = addInput,
         .output = addOutput, //transformLightsJSONToBin,
     };
 
     msg_pipe_add_transformer(ctx, &transformer);
-
+*/
     while(ctx->in->connected && ctx->out->connected)
     {
         msg_pipe_loop(ctx);

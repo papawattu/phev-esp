@@ -9,29 +9,18 @@ void msg_pipe_loop(msg_pipe_ctx_t * ctx)
 message_t * msg_pipe_callInputTransformers(msg_pipe_ctx_t * ctx, message_t *message)
 {
     message_t * last = message;
-    for(int i = 0;i < ctx->numTransformers;i++) {
-        if(ctx->transformers[i]) 
-        {   
-            if(ctx->transformers[i]->input)
-            {
-                last = ctx->transformers[i]->input(last);
-            }
-        }
+    if(ctx->in_inputTransformer != NULL) 
+    {
+        last = ctx->in_inputTransformer(last);
     }
     return last;
 }
 message_t * msg_pipe_callOutputTransformers(msg_pipe_ctx_t *ctx, message_t *message)
 {
     message_t * last = message;
-    for(int i = 0;i < ctx->numTransformers;i++) {
-        if(ctx->transformers[i]) 
-        {   
-            if(ctx->transformers[i]->output)
-            {
-                last = ctx->transformers[i]->output(last);
-                if(last == NULL) return NULL;
-            }
-        }
+    if(ctx->out_outputTransformer != NULL) 
+    {
+        last = ctx->out_outputTransformer(last);
     }
     return last;
 }
@@ -50,12 +39,12 @@ void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, mes
     if(out) inboundClient->publish(inboundClient, out);
 }
 
-msg_pipe_ctx_t * msg_pipe(messagingClient_t *in, messagingClient_t *out) 
+msg_pipe_ctx_t * msg_pipe(msg_pipe_settings_t settings) 
 {
     msg_pipe_ctx_t * ctx = malloc(sizeof(msg_pipe_ctx_t));
 
-    ctx->in = in;
-    ctx->out = out;
+    ctx->in = settings.in;
+    ctx->out = settings.out;
 
     ctx->loop = msg_pipe_loop;
 
@@ -69,15 +58,23 @@ msg_pipe_ctx_t * msg_pipe(messagingClient_t *in, messagingClient_t *out)
     
     ctx->out->connect(ctx->out);
     
-    ctx->numTransformers = 0;
+    ctx->in_splitter = settings.in_splitter;
+    ctx->out_splitter = settings.out_splitter;
+    
+    
+    ctx->in_outputTransformer = settings.in_outputTransformer;
+    ctx->in_inputTransformer = settings.in_inputTransformer;
+
+    ctx->out_outputTransformer = settings.out_outputTransformer;
+    ctx->out_inputTransformer = settings.out_inputTransformer;
 
     return ctx;    
 }
-
+/*
 void msg_pipe_add_transformer(msg_pipe_ctx_t * ctx, msg_pipe_transformer_t * transformer)
 {
     if(ctx->numTransformers < MAX_TRANSFORMERS)
     {
         ctx->transformers[ctx->numTransformers++] = transformer; 
     }
-}
+} */
