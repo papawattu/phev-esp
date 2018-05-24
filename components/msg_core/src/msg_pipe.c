@@ -119,15 +119,26 @@ message_t * msg_pipe_callOutputTransformers(msg_pipe_ctx_t *ctx, message_t *mess
 void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, message_t * message)
 {
     messagingClient_t *outboundClient = ((msg_pipe_ctx_t *) params)->out;
+    message_t * out = message;
 
-    message_t * out = msg_pipe_callInputTransformers((msg_pipe_ctx_t *) params, message);
+    if(((msg_pipe_ctx_t *) params)->in_chain != NULL)
+    {
+        out = msg_pipe_callInputTransformers((msg_pipe_ctx_t *) params, message);
+    }
+        
     if(out != NULL) outboundClient->publish(outboundClient, out);
+    
 }
 void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, message_t * message)
 {
     messagingClient_t *inboundClient = ((msg_pipe_ctx_t *) params)->in;
+    message_t * out = message;
 
-    message_t * out = msg_pipe_callOutputTransformers((msg_pipe_ctx_t *) params, message);
+    if(((msg_pipe_ctx_t *) params)->out_chain != NULL)
+    {
+        out = msg_pipe_callOutputTransformers((msg_pipe_ctx_t *) params, message);
+    }
+    
     if(out != NULL) inboundClient->publish(inboundClient, out);
 }
 

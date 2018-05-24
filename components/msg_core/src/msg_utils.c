@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <string.h>
 #include "msg_utils.h"
 
 message_t * msg_utils_createMsg(uint8_t * data, size_t length)
