@@ -68,16 +68,6 @@ int msg_core_messagingClientInit(messagingClient_t **client)
     return 0;
 }
 
-message_t * msg_core_copyMessage(message_t * message)
-{
-    message_t * out = malloc(sizeof(message_t));
-    
-    out->data = malloc(message->length);
-    out->length = message->length;
-    
-    memcpy(out->data,message->data,message->length);
-    return out;
-}
 messagingClient_t * msg_core_createMessagingClient(messagingSettings_t settings)
 {
     messagingClient_t * client;

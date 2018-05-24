@@ -297,7 +297,6 @@ void test_should_publish_message_incoming()
 
     ctx->loop(ctx);
     
-
 } 
 static int inputTransformCalled = 0;
 message_t * inputTransform(message_t * message) 
@@ -326,15 +325,18 @@ void test_should_set_in_input_transformer_in_settings()
     
     inputTransformCalled = 0;
         
+    msg_pipe_chain_t chain = {
+        .inputTransformer = inputTransform,
+    };    
     msg_pipe_settings_t pipe_settings = {
         .in = msg_core_createMessagingClient(settings),
         .out = msg_core_createMessagingClient(settings),
-        .in_inputTransformer = inputTransform,
+        .in_chain = &chain,
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
     
-    TEST_ASSERT_EQUAL(inputTransform,ctx->in_inputTransformer);
+    TEST_ASSERT_EQUAL(inputTransform,ctx->in_chain->inputTransformer);
 }
 void test_should_set_out_input_transformer_in_settings()
 {
@@ -356,16 +358,19 @@ void test_should_set_out_input_transformer_in_settings()
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
     inputTransformCalled = 0;
-        
+    msg_pipe_chain_t chain = {
+        .inputTransformer = inputTransform,
+    };
+
     msg_pipe_settings_t pipe_settings = {
         .in = msg_core_createMessagingClient(settings),
         .out = msg_core_createMessagingClient(settings),
-        .out_inputTransformer = inputTransform,
+        .out_chain = &chain,
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
     
-    TEST_ASSERT_EQUAL(inputTransform,ctx->out_inputTransformer);
+    TEST_ASSERT_EQUAL(inputTransform,ctx->out_chain->inputTransformer);
 }
  
 static int outputTransformCalled = 0;
@@ -394,15 +399,18 @@ void test_should_set_out_output_transformer()
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
     outputTransformCalled = 0;
-    
+    msg_pipe_chain_t chain = {
+        .outputTransformer = outputTransform,
+    };
+
     msg_pipe_settings_t pipe_settings = {
         .in = msg_core_createMessagingClient(settings),
         .out = msg_core_createMessagingClient(settings),
-        .out_outputTransformer = outputTransform,
+        .out_chain = &chain,
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
-    TEST_ASSERT_EQUAL(outputTransform,ctx->out_outputTransformer);
+    TEST_ASSERT_EQUAL(outputTransform,ctx->out_chain->outputTransformer);
 } 
 void test_should_set_in_output_transformer()
 {
@@ -424,20 +432,24 @@ void test_should_set_in_output_transformer()
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
     outputTransformCalled = 0;
-    
+    msg_pipe_chain_t chain = {
+        .outputTransformer = outputTransform,
+    };
+
     msg_pipe_settings_t pipe_settings = {
         .in = msg_core_createMessagingClient(settings),
         .out = msg_core_createMessagingClient(settings),
-        .in_outputTransformer = outputTransform,
+        .in_chain = &chain,
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
-    TEST_ASSERT_EQUAL(outputTransform,ctx->in_outputTransformer);
-} 
+    TEST_ASSERT_EQUAL(outputTransform,ctx->in_chain->outputTransformer);
+}  
 static int splitterCalled = 0;
-void splitter(message_t * message, void (* next)(message_t *))
+message_t * splitter_no_message(message_t * message)
 {
     splitterCalled ++;
+    return NULL;
 }
 void test_should_set_up_in_splitter()
 {
@@ -460,15 +472,19 @@ void test_should_set_up_in_splitter()
     
     splitterCalled = 0;
     
+    msg_pipe_chain_t chain = {
+        .splitter = splitter_no_message,
+    };
+
     msg_pipe_settings_t pipe_settings = {
         .in = msg_core_createMessagingClient(settings),
         .out = msg_core_createMessagingClient(settings),
-        .in_splitter = splitter,
+        .in_chain = &chain,
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
-    TEST_ASSERT_EQUAL(splitter,ctx->in_splitter);
-}
+    TEST_ASSERT_EQUAL(splitter_no_message,ctx->in_chain->splitter);
+} 
 void test_should_set_up_out_splitter()
 {
     messagingSettings_t settings;
@@ -489,19 +505,21 @@ void test_should_set_up_out_splitter()
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
     splitterCalled = 0;
-    
+    msg_pipe_chain_t chain = {
+        .splitter = splitter_no_message,
+    };
+
     msg_pipe_settings_t pipe_settings = {
         .in = msg_core_createMessagingClient(settings),
         .out = msg_core_createMessagingClient(settings),
-        .out_splitter = splitter,
+        .out_chain = &chain,
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
-    TEST_ASSERT_EQUAL(splitter,ctx->out_splitter);
-}  
+    TEST_ASSERT_EQUAL(splitter_no_message,ctx->out_chain->splitter);
+} 
 void test_should_call_out_splitter()
 {
-    TEST_IGNORE("Not yet implemented");
     messagingSettings_t settings;
     messagingClient_t mockIn;
     messagingClient_t mockOut;   
@@ -520,15 +538,318 @@ void test_should_call_out_splitter()
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
     splitterCalled = 0;
-    
+    msg_pipe_chain_t chain = {
+        .splitter = splitter_no_message,
+    };
+
     msg_pipe_settings_t pipe_settings = {
         .in = msg_core_createMessagingClient(settings),
         .out = msg_core_createMessagingClient(settings),
-        .out_splitter = splitter,
+        .out_chain = &chain,
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
     
-    //msg_pipe_outboundSubscription(ctxclient, void * params, message_t * messagectx->out->in
+    const uint8_t data[] = {1,2,3,4};
+    message_t message = {
+        .data = &data,
+        .length = 4,
+    };
+    msg_pipe_outboundSubscription(ctx->out, (void *) ctx, &message);
+    
     TEST_ASSERT_EQUAL(1,splitterCalled);
+}
+static int splitterOneMessageCalled = 0;
+message_t * splitter_one_message(message_t * message)
+{
+    const uint8_t data[] = {1,2,3,4};
+
+    splitterOneMessageCalled ++;
+    
+    message_t * msg = malloc(sizeof(message_t));
+    msg->data = malloc(4);
+    memcpy(msg->data, data, 4);
+    msg->length = 4;
+    
+    return msg;
+}
+
+static int splitterTwoMessagesCalled = 0;
+
+message_t * splitter_two_messages(message_t * message)
+{
+    const uint8_t data[] = {1,2,3,4};
+    const uint8_t data2[] = {5,6,7,8};
+
+    if(splitterTwoMessagesCalled == 0) 
+    {
+        message_t * msg = malloc(sizeof(message_t));
+        msg->data = malloc(4);
+        memcpy(msg->data, data, 4);    
+        msg->length = 4;
+        splitterTwoMessagesCalled =1;
+    } else {
+        message_t * msg = malloc(sizeof(message_t));
+        msg->data = malloc(4);
+        memcpy(msg->data, data2, 4);    
+        msg->length = 4;
+        splitterTwoMessagesCalled =2;
+        return msg;
+    }
+}
+void test_should_call_out_splitter_two_messages()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;   
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.loop = loopInStub;    
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.loop = loopOutStub;
+
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+
+    msg_pipe_chain_t chain = {
+        .splitter = splitter_two_messages,
+    };    
+    msg_pipe_settings_t pipe_settings = {
+        .in = msg_core_createMessagingClient(settings),
+        .out = msg_core_createMessagingClient(settings),
+        .out_chain = &chain,
+    };
+
+    msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
+    
+    const uint8_t data[] = {1,2,3,4,5,6,7,8};
+
+    message_t * message = malloc(sizeof(message_t));
+    message->data = malloc(8);
+    memcpy(message->data, data, 8);
+    message->length = 8;
+
+    splitterTwoMessagesCalled = 0;
+    msg_pipe_outboundSubscription(ctx->out, (void *) ctx, message);
+    
+    TEST_ASSERT_EQUAL(2,splitterTwoMessagesCalled);
+}
+void splitter_two_messages_publish(messagingClient_t * client, message_t * message) 
+{
+    const uint8_t data[] = {1,2,3,4,5,6,7,8};
+    TEST_ASSERT_EQUAL(8, message->length);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(&data, message->data,8);
+} 
+void test_should_call_out_splitter_two_messages_and_get_back_both()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;   
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.loop = loopInStub;  
+    mockIn.publish = splitter_two_messages_publish;  
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.loop = loopOutStub;
+
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    msg_pipe_chain_t chain = {
+        .splitter = splitter_two_messages,
+    };
+    msg_pipe_settings_t pipe_settings = {
+        .in = msg_core_createMessagingClient(settings),
+        .out = msg_core_createMessagingClient(settings),
+        .out_chain = &chain,
+    };
+
+    msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
+    
+    const uint8_t data[] = {1,2,3,4,5,6,7,8};
+    message_t message = {
+        .data = &data,
+        .length = 8,
+    };
+    splitterTwoMessagesCalled = 0;
+    
+    msg_pipe_outboundSubscription(ctx->out, (void *) ctx, &message);
+    
+    TEST_ASSERT_EQUAL(2,splitterTwoMessagesCalled);
+}
+
+static int all_splitterCalled = 0;
+static int all_inputTransformerCalled = 0;
+static int all_filterCalled = 0;
+static int all_responderCalled = 0;
+static int all_outputTransformerCalled = 0;
+static int all_aggregatorCalled = 0;
+
+
+message_t * all_splitter(message_t * message) 
+{
+    all_splitterCalled ++;
+    return message;
+}
+message_t * all_inputTransformer(message_t * message)
+{
+    all_inputTransformerCalled ++;
+    return message;
+}
+message_t * all_filter(message_t * message)
+{
+    all_filterCalled ++;
+    return message;
+}
+message_t * all_responder(message_t * message)
+{
+    all_responderCalled ++;
+    return message;
+}
+message_t * all_outputTransformer(message_t * message)
+{
+    all_outputTransformerCalled ++;
+    return message;
+}
+message_t * all_aggregator(message_t * message)
+{
+    all_aggregatorCalled ++;
+    return message;
+}
+
+void all_publish(messagingClient_t * client, message_t * message) 
+{
+    const uint8_t data[] = {1,2,3,4,5,6,7,8};
+    TEST_ASSERT_NOT_NULL(client);
+    TEST_ASSERT_EQUAL(8, message->length);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(&data, message->data,8);
+} 
+    
+void test_should_call_all_output_transformers()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;   
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.loop = loopInStub;  
+    mockIn.publish = splitter_two_messages_publish;  
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.loop = loopOutStub;
+    mockOut.publish = all_publish;
+
+    all_splitterCalled = 0;
+    all_inputTransformerCalled = 0;
+    all_filterCalled = 0;
+    all_responderCalled = 0;
+    all_outputTransformerCalled = 0;
+    all_aggregatorCalled = 0;
+    
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    msg_pipe_chain_t chain = {
+        .splitter = all_splitter,
+        .inputTransformer = all_inputTransformer,
+        .filter = all_filter,
+        .responder = all_responder,
+        .outputTransformer = all_outputTransformer,
+        .aggregator = all_aggregator,
+    };
+    msg_pipe_settings_t pipe_settings = {
+        .in = msg_core_createMessagingClient(settings),
+        .out = msg_core_createMessagingClient(settings),
+        .out_chain = &chain,
+    };
+
+    msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
+    
+    const uint8_t data[] = {1,2,3,4,5,6,7,8};
+    message_t message = {
+        .data = &data,
+        .length = 8,
+    };
+    
+    msg_pipe_outboundSubscription(ctx->out, (void *) ctx, &message);
+    
+    TEST_ASSERT_EQUAL(1, all_splitterCalled);
+    TEST_ASSERT_EQUAL(1, all_inputTransformerCalled);
+    TEST_ASSERT_EQUAL(1, all_filterCalled);
+    TEST_ASSERT_EQUAL(1, all_responderCalled);
+    TEST_ASSERT_EQUAL(1, all_outputTransformerCalled);
+    TEST_ASSERT_EQUAL(0, all_aggregatorCalled);    
+}
+void test_should_call_all_input_transformers()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;   
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.loop = loopInStub;  
+    mockIn.publish = splitter_two_messages_publish;  
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.loop = loopOutStub;
+    mockOut.publish = all_publish;
+
+    all_splitterCalled = 0;
+    all_inputTransformerCalled = 0;
+    all_filterCalled = 0;
+    all_responderCalled = 0;
+    all_outputTransformerCalled = 0;
+    all_aggregatorCalled = 0;
+    
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    msg_pipe_chain_t chain = {
+        .splitter = all_splitter,
+        .inputTransformer = all_inputTransformer,
+        .filter = all_filter,
+        .responder = all_responder,
+        .outputTransformer = all_outputTransformer,
+        .aggregator = all_aggregator,
+    };
+    msg_pipe_settings_t pipe_settings = {
+        .in = msg_core_createMessagingClient(settings),
+        .out = msg_core_createMessagingClient(settings),
+        .in_chain = &chain,
+    };
+
+    msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
+    
+    const uint8_t data[] = {1,2,3,4,5,6,7,8};
+    message_t message = {
+        .data = &data,
+        .length = 8,
+    };
+    
+    msg_pipe_inboundSubscription(ctx->in, (void *) ctx, &message);
+    
+    TEST_ASSERT_EQUAL(1, all_splitterCalled);
+    TEST_ASSERT_EQUAL(1, all_inputTransformerCalled);
+    TEST_ASSERT_EQUAL(1, all_filterCalled);
+    TEST_ASSERT_EQUAL(1, all_responderCalled);
+    TEST_ASSERT_EQUAL(1, all_outputTransformerCalled);
+    TEST_ASSERT_EQUAL(0, all_aggregatorCalled);   
 }

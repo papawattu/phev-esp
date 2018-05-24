@@ -11,7 +11,7 @@ typedef struct messagingClient_t messagingClient_t;
 typedef uint8_t data_t;
 
 typedef struct message_t {
-    data_t * data;
+    const data_t * data;
     size_t length;
 }  message_t;
 typedef void (* messagingClientHandler_t)(messagingClient_t *client, message_t *message);
@@ -45,5 +45,4 @@ struct messagingClient_t {
 
 messagingClient_t * msg_core_createMessagingClient(messagingSettings_t); 
 void msg_core_call_subs(messagingClient_t *, message_t*);
-message_t * msg_core_copyMessage(message_t *message);
 #endif

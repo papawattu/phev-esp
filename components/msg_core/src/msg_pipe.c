@@ -1,4 +1,7 @@
+#include <stdio.h>
+#include <string.h>
 #include "msg_pipe.h"
+#include "msg_utils.h"
 
 void msg_pipe_loop(msg_pipe_ctx_t * ctx)
 {
@@ -6,37 +9,126 @@ void msg_pipe_loop(msg_pipe_ctx_t * ctx)
     ctx->out->loop(ctx->out);
 }
 
-message_t * msg_pipe_callInputTransformers(msg_pipe_ctx_t * ctx, message_t *message)
+message_t * msg_pipe_concat(message_t * messages[], size_t size)
 {
-    message_t * last = message;
-    if(ctx->in_inputTransformer != NULL) 
+    size_t total = 0;
+    
+    uint8_t * data = malloc(total);
+
+    for(int i = 0;i < size; i++)
     {
-        last = ctx->in_inputTransformer(last);
+        if(messages[i] == NULL) break;
+        data = realloc(data, total + messages[i]->length);
+        memcpy(data + total,messages[i]->data, messages[i]->length);
+        total += messages[i]->length;
     }
-    return last;
+
+    if(total == 0) return NULL;
+
+    message_t * message = malloc(sizeof(message_t));
+
+    message->data = malloc(total);
+    memcpy(message->data, data, total);
+    message->length = total;
+
+    return message;
+}
+message_t * msg_pipe_aggregrator(message_t * messages[], size_t size)
+{
+    return msg_pipe_concat(messages,size);
+}
+#define MAX_MESSAGES 100
+
+message_t * msg_pipe_splitter(msg_pipe_ctx_t *ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t *message)
+{
+    size_t totalBytesRead = 0;
+    message_t * next = NULL; 
+    message_t * messages[MAX_MESSAGES];
+
+    if(message == NULL) return NULL;
+
+    message_t * msg = message;
+
+    int numMessages = 0;
+
+    while(totalBytesRead < message->length && numMessages < MAX_MESSAGES && msg != NULL)
+    {
+        next = chain->splitter(message);
+
+        if(next == NULL) break;
+
+        totalBytesRead += next->length;
+        
+        message_t * msg = msg_pipe_transformChain(ctx, client, chain, next);
+        if(msg != NULL) {
+            messages[numMessages ++] = msg;
+        }
+    }
+    
+    return msg_pipe_aggregrator(messages,numMessages);    
+}
+message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message) 
+{
+    message_t * msg = message;
+
+    if(chain->inputTransformer != NULL) 
+    {
+        msg = chain->inputTransformer(msg);
+    }
+    if(chain->filter != NULL)
+    {
+        msg = chain->filter(msg);
+        if(msg == NULL)
+        {
+            return NULL;
+        }
+    }
+    if(chain->responder != NULL)
+    {
+        message_t * response = chain->responder(msg);
+        if(response != NULL)
+        {
+           client->publish(client,response);
+        }
+    }
+    if(chain->outputTransformer != NULL)
+    {
+        msg = chain->outputTransformer(msg);
+    }
+
+    return msg;
+}
+message_t * msg_pipe_callInputTransformers(msg_pipe_ctx_t *ctx, message_t *message)
+{
+    if(ctx->in_chain->splitter != NULL)
+    {
+        return msg_pipe_splitter(ctx, ctx->in, ctx->in_chain, message);
+    }  else {
+        return msg_pipe_transformChain(ctx, ctx->in, ctx->in_chain, message);
+    }
 }
 message_t * msg_pipe_callOutputTransformers(msg_pipe_ctx_t *ctx, message_t *message)
 {
-    message_t * last = message;
-    if(ctx->out_outputTransformer != NULL) 
+    if(ctx->out_chain->splitter != NULL)
     {
-        last = ctx->out_outputTransformer(last);
+        return msg_pipe_splitter(ctx, ctx->out, ctx->out_chain, message);
+    }  else {
+        return msg_pipe_transformChain(ctx, ctx->out, ctx->out_chain, message);
     }
-    return last;
 }
 void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, message_t * message)
 {
     messagingClient_t *outboundClient = ((msg_pipe_ctx_t *) params)->out;
 
     message_t * out = msg_pipe_callInputTransformers((msg_pipe_ctx_t *) params, message);
-    if(out) outboundClient->publish(outboundClient, out);
+    if(out != NULL) outboundClient->publish(outboundClient, out);
 }
 void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, message_t * message)
 {
     messagingClient_t *inboundClient = ((msg_pipe_ctx_t *) params)->in;
 
     message_t * out = msg_pipe_callOutputTransformers((msg_pipe_ctx_t *) params, message);
-    if(out) inboundClient->publish(inboundClient, out);
+    if(out != NULL) inboundClient->publish(inboundClient, out);
 }
 
 msg_pipe_ctx_t * msg_pipe(msg_pipe_settings_t settings) 
@@ -46,6 +138,9 @@ msg_pipe_ctx_t * msg_pipe(msg_pipe_settings_t settings)
     ctx->in = settings.in;
     ctx->out = settings.out;
 
+    ctx->in_chain = settings.in_chain;
+    ctx->out_chain = settings.out_chain;
+    
     ctx->loop = msg_pipe_loop;
 
     ctx->in->subscribe(ctx->in, ctx, msg_pipe_inboundSubscription);
@@ -58,23 +153,6 @@ msg_pipe_ctx_t * msg_pipe(msg_pipe_settings_t settings)
     
     ctx->out->connect(ctx->out);
     
-    ctx->in_splitter = settings.in_splitter;
-    ctx->out_splitter = settings.out_splitter;
     
-    
-    ctx->in_outputTransformer = settings.in_outputTransformer;
-    ctx->in_inputTransformer = settings.in_inputTransformer;
-
-    ctx->out_outputTransformer = settings.out_outputTransformer;
-    ctx->out_inputTransformer = settings.out_inputTransformer;
-
     return ctx;    
 }
-/*
-void msg_pipe_add_transformer(msg_pipe_ctx_t * ctx, msg_pipe_transformer_t * transformer)
-{
-    if(ctx->numTransformers < MAX_TRANSFORMERS)
-    {
-        ctx->transformers[ctx->numTransformers++] = transformer; 
-    }
-} */

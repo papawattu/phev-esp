@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "msg_core.h"
+#include "msg_utils.h"
 #include "msg_mqtt.h"
 
 void dataEvent(mqtt_event_handle_t event)
@@ -53,7 +54,7 @@ static msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
 
 int publish(msg_mqtt_t * mqtt, topic_t topic, message_t *message)
 {
-    message_t *msg = msg_core_copyMessage(message);
+    message_t *msg = msg_utils_copyMsg(message);
     return mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) msg->data, msg->length, 0, 0);
 }
 

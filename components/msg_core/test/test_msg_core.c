@@ -247,7 +247,7 @@ void test_messaging_pub_sub()
     TEST_ASSERT_EQUAL(1, mock_sub_called);
     TEST_ASSERT_EQUAL(1, subscriptionCalled);
 }
-
+/*
 void test_copy_message(void)
 {
     uint8_t data[] = {1,2,3,4};
@@ -260,4 +260,4 @@ void test_copy_message(void)
 
     TEST_ASSERT_EQUAL(4,copied->length);
     TEST_ASSERT_EQUAL_HEX8_ARRAY(message.data, copied->data, 4);
-}
+} */
