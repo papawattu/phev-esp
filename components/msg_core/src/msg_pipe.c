@@ -119,10 +119,10 @@ void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, mess
 {
     messagingClient_t *outboundClient = ((msg_pipe_ctx_t *) params)->out;
     message_t * out = message;
-
+    
     if(((msg_pipe_ctx_t *) params)->in_chain != NULL)
     {
-        out = msg_pipe_callInputTransformers((msg_pipe_ctx_t *) params, message);
+          out = msg_pipe_callInputTransformers((msg_pipe_ctx_t *) params, message);
     }
         
     if(out != NULL) outboundClient->publish(outboundClient, out);

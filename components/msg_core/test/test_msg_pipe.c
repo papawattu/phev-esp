@@ -298,8 +298,64 @@ void test_should_subscribe_both_clients()
     TEST_ASSERT_EQUAL(1,subscribeOutStubNum);
     
 } 
-void test_should_publish_message_incoming()
+static int incomingPublishCalled = 0;
+void incomingPublish(messagingClient_t *client, message_t * message)
 {
+    incomingPublishCalled ++;
+    TEST_ASSERT_NOT_NULL(message);
+}
+void test_should_publish_message_incoming()
+{ 
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.loop = loopInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.publish = incomingPublish;
+        
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.loop = loopOutStub;
+    mockOut.subscribe = subscribeOutStub;
+
+    incomingPublishCalled = 0;
+    
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    messagingClient_t * in = msg_core_createMessagingClient(settings);
+    msg_pipe_settings_t pipe_settings = {
+        .in = in,
+        .out = msg_core_createMessagingClient(settings),
+    };
+
+    msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
+
+    const uint8_t data[] = {1,2,3,4};
+
+    message_t * message = malloc(sizeof(message_t));
+    message->data = malloc(4);
+    memcpy(message->data, data, 4);
+    message->length = 4;
+    
+    msg_pipe_outboundSubscription(in, ctx, message);
+
+    ctx->loop(ctx);
+
+    TEST_ASSERT_EQUAL(1, incomingPublishCalled);
+    
+}
+static int outgoingPublishCalled = 0;
+void outgoingPublish(messagingClient_t *client, message_t * message)
+{
+    outgoingPublishCalled ++;
+    TEST_ASSERT_NOT_NULL(message);
+}
+void test_should_publish_message_outgoing()
+{ 
     messagingSettings_t settings;
     messagingClient_t mockIn;
     messagingClient_t mockOut;
@@ -313,18 +369,35 @@ void test_should_publish_message_incoming()
     mockOut.connect = connectOutStub;
     mockOut.loop = loopOutStub;
     mockOut.subscribe = subscribeOutStub;
+    mockOut.publish = outgoingPublish;
+
+    outgoingPublishCalled = 0;
     
-    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    
+    messagingClient_t * out = msg_core_createMessagingClient(settings);
     
     msg_pipe_settings_t pipe_settings = {
         .in = msg_core_createMessagingClient(settings),
-        .out = msg_core_createMessagingClient(settings),
+        .out = out,
+
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
+    
+    const uint8_t data[] = {1,2,3,4};
 
+    message_t * message = malloc(sizeof(message_t));
+    message->data = malloc(4);
+    memcpy(message->data, data, 4);
+    message->length = 4;
+    
+    msg_pipe_inboundSubscription(out, ctx, message);
+    
     ctx->loop(ctx);
+    
+    TEST_ASSERT_EQUAL(1, outgoingPublishCalled);
     
 } 
 static int inputTransformCalled = 0;
@@ -351,8 +424,6 @@ void test_should_set_in_input_transformer_in_settings()
 
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
-    
-    inputTransformCalled = 0;
         
     msg_pipe_chain_t chain = {
         .inputTransformer = inputTransform,
