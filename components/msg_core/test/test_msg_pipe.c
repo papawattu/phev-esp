@@ -158,7 +158,36 @@ void test_should_call_connect_outgoing()
     msg_pipe(pipe_settings);
 
     TEST_ASSERT_EQUAL(1,connectOutStubNum);
-} 
+}
+void test_should_not_call_connect_outgoing()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    connectOutStubNum = 0;
+
+    msg_pipe_settings_t pipe_settings = {
+        .in = msg_core_createMessagingClient(settings),
+        .out = msg_core_createMessagingClient(settings),
+        .lazyConnect = 1,
+    };
+    
+    msg_pipe(pipe_settings);
+
+    TEST_ASSERT_EQUAL(0,connectOutStubNum);
+}  
 void test_should_set_in_and_out_clients()
 {
     messagingSettings_t settings;
@@ -696,34 +725,46 @@ static int all_outputTransformerCalled = 0;
 static int all_aggregatorCalled = 0;
 
 
-message_t * all_splitter(message_t * message) 
+message_t * all_splitter(void * ctx, message_t * message) 
 {
     all_splitterCalled ++;
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_EQUAL_STRING("Context", ctx);
     return message;
 }
-message_t * all_inputTransformer(message_t * message)
+message_t * all_inputTransformer(void * ctx, message_t * message)
 {
     all_inputTransformerCalled ++;
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_EQUAL_STRING("Context", ctx);
     return message;
 }
-message_t * all_filter(message_t * message)
+int all_filter(void * ctx, message_t * message)
 {
     all_filterCalled ++;
-    return message;
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_EQUAL_STRING("Context", ctx);
+    return 1;
 }
-message_t * all_responder(message_t * message)
+message_t * all_responder(void * ctx, message_t * message)
 {
     all_responderCalled ++;
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_EQUAL_STRING("Context", ctx);
     return message;
 }
-message_t * all_outputTransformer(message_t * message)
+message_t * all_outputTransformer(void * ctx, message_t * message)
 {
     all_outputTransformerCalled ++;
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_EQUAL_STRING("Context", ctx);
     return message;
 }
-message_t * all_aggregator(message_t * message)
+message_t * all_aggregator(void * ctx, message_t * message)
 {
     all_aggregatorCalled ++;
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_EQUAL_STRING("Context", ctx);
     return message;
 }
 
@@ -760,6 +801,8 @@ void test_should_call_all_output_transformers()
     all_outputTransformerCalled = 0;
     all_aggregatorCalled = 0;
     
+    char dummyCtx[] = "Context";
+
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
@@ -775,6 +818,7 @@ void test_should_call_all_output_transformers()
         .in = msg_core_createMessagingClient(settings),
         .out = msg_core_createMessagingClient(settings),
         .out_chain = &chain,
+        .user_context = dummyCtx,
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
@@ -822,6 +866,8 @@ void test_should_call_all_input_transformers()
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
     msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
     
+    char dummyCtx[] = "Context";
+
     msg_pipe_chain_t chain = {
         .splitter = all_splitter,
         .inputTransformer = all_inputTransformer,
@@ -834,6 +880,7 @@ void test_should_call_all_input_transformers()
         .in = msg_core_createMessagingClient(settings),
         .out = msg_core_createMessagingClient(settings),
         .in_chain = &chain,
+        .user_context = dummyCtx,
     };
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);

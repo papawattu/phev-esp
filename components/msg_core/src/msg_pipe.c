@@ -53,7 +53,7 @@ message_t * msg_pipe_splitter(msg_pipe_ctx_t *ctx, messagingClient_t * client, m
 
     while(totalBytesRead < message->length && numMessages < MAX_MESSAGES && msg != NULL)
     {
-        next = chain->splitter(message);
+        next = chain->splitter(ctx->user_context, message);
 
         if(next == NULL) break;
 
@@ -73,19 +73,18 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
 
     if(chain->inputTransformer != NULL) 
     {
-        msg = chain->inputTransformer(msg);
+        msg = chain->inputTransformer(ctx->user_context, msg);
     }
     if(chain->filter != NULL)
     {
-        msg = chain->filter(msg);
-        if(msg == NULL)
+        if(!chain->filter(ctx->user_context, msg))
         {
             return NULL;
         }
     }
     if(chain->responder != NULL)
     {
-        message_t * response = chain->responder(msg);
+        message_t * response = chain->responder(ctx->user_context, msg);
         if(response != NULL)
         {
            client->publish(client,response);
@@ -93,7 +92,7 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
     }
     if(chain->outputTransformer != NULL)
     {
-        msg = chain->outputTransformer(msg);
+        msg = chain->outputTransformer(ctx->user_context, msg);
     }
 
     return msg;
@@ -151,6 +150,8 @@ msg_pipe_ctx_t * msg_pipe(msg_pipe_settings_t settings)
 
     ctx->in_chain = settings.in_chain;
     ctx->out_chain = settings.out_chain;
+
+    ctx->user_context = settings.user_context;
     
     ctx->loop = msg_pipe_loop;
 
@@ -162,8 +163,7 @@ msg_pipe_ctx_t * msg_pipe(msg_pipe_settings_t settings)
     ctx->in->connect(ctx->in);
     ctx->out->start(ctx->out);
     
-    ctx->out->connect(ctx->out);
-    
+    if(!settings.lazyConnect) ctx->out->connect(ctx->out);
     
     return ctx;    
 }

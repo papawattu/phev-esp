@@ -7,11 +7,11 @@
 #define MAX_TRANSFORMERS 16
 typedef struct msg_pipe_ctx_t msg_pipe_ctx_t;
 
-typedef message_t * (* msg_pipe_splitter_t)(message_t *);
-typedef message_t * (* msg_pipe_filter_t)(message_t *);
-typedef message_t * (* msg_pipe_responder_t)(message_t *);
-typedef message_t * (* msg_pipe_aggregator_t)(message_t *);
-typedef message_t * (* msg_pipe_transformer_t)(message_t *);
+typedef message_t * (* msg_pipe_splitter_t)(void * ctx, message_t *);
+typedef int (* msg_pipe_filter_t)(void * ctx, message_t *);
+typedef message_t * (* msg_pipe_responder_t)(void * ctx, message_t *);
+typedef message_t * (* msg_pipe_aggregator_t)(void * ctx, message_t *);
+typedef message_t * (* msg_pipe_transformer_t)(void * ctx, message_t *);
 
 
 typedef struct msg_pipe_chain_t {
@@ -29,6 +29,10 @@ typedef struct msg_pipe_settings_t {
 
     msg_pipe_chain_t * in_chain;
     msg_pipe_chain_t * out_chain;
+
+    void * user_context;
+
+    int lazyConnect;
     
  } msg_pipe_settings_t;
 
@@ -40,6 +44,7 @@ typedef struct msg_pipe_ctx_t {
     msg_pipe_chain_t * in_chain;
     msg_pipe_chain_t * out_chain;
     
+    void * user_context;
  } msg_pipe_ctx_t;
 
 msg_pipe_ctx_t * msg_pipe(msg_pipe_settings_t);
