@@ -124,7 +124,10 @@ void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, mess
     {
           out = msg_pipe_callInputTransformers((msg_pipe_ctx_t *) params, message);
     }
-        
+    if(outboundClient->connected == 0) 
+    {
+        outboundClient->connect(outboundClient);
+    }    
     if(out != NULL) outboundClient->publish(outboundClient, out);
     
 }

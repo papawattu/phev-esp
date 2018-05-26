@@ -187,7 +187,56 @@ void test_should_not_call_connect_outgoing()
     msg_pipe(pipe_settings);
 
     TEST_ASSERT_EQUAL(0,connectOutStubNum);
-}  
+} 
+
+static int dummyPublishCalled = 0;
+
+void dummyPublish(messagingClient_t * client, message_t * message)
+{
+
+}
+void test_should_connect_on_publish()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.publish = dummyPublish;
+    
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    
+    connectOutStubNum = 0;
+
+    messagingClient_t * out = msg_core_createMessagingClient(settings);
+
+    msg_pipe_settings_t pipe_settings = {
+        .in = msg_core_createMessagingClient(settings),
+        .out = out,
+        .lazyConnect = 1,
+    };
+    
+    msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
+
+    TEST_ASSERT_EQUAL(0, connectOutStubNum);
+    const uint8_t data[] = {1,2,3,4};
+
+    message_t * message = malloc(sizeof(message_t));
+    message->data = malloc(4);
+    memcpy(message->data, data, 4);
+    message->length = 4;
+    
+    msg_pipe_inboundSubscription(out, ctx, message);
+
+    TEST_ASSERT_EQUAL(1,connectOutStubNum);
+}   
 void test_should_set_in_and_out_clients()
 {
     messagingSettings_t settings;

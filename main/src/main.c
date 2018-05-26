@@ -187,6 +187,7 @@ msg_pipe_ctx_t * connectPipe(void)
     msg_pipe_settings_t pipe_settings = {
         .in = msg_gcp_createGcpClient(inSettings),
         .out = msg_tcpip_createTcpIpClient(outSettings),
+        .lazyConnect = 1,
     };
 
     return msg_pipe(pipe_settings);
