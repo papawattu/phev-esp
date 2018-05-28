@@ -14,6 +14,7 @@ typedef struct phevSettings_t
     messagingClient_t * in;
     messagingClient_t * out;
     msg_pipe_transformer_t inputTransformer;
+    msg_pipe_transformer_t outputTransformer;
 } phevSettings_t;
 
 typedef enum phevEventType { CONNECT_REQUEST } phevEventType_t; 
@@ -22,6 +23,7 @@ struct phevCtx_t {
     phevMessage_t * queuedCommands[MAX_QUEUED_COMMANDS];
     size_t queueSize;
     msg_pipe_ctx_t * pipe;
+    msg_pipe_transformer_t outputTransformer;
 }; 
 
 typedef struct phevEvent_t

@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "phev_core.h"
+#include "msg_core.h"
 
 const uint8_t allowedCommands[] = {0xf2, 0x2f, 0xf6, 0x6f, 0xf9, 0x9f};
 
@@ -19,7 +21,7 @@ int phev_core_validate_buffer(uint8_t * msg, size_t len)
     }
     return 0;  // invalid command
 }
-int phev_core_extractMessage(const uint8_t *data, const size_t len, phevMessage_t *msg)
+int phev_core_decodeMessage(const uint8_t *data, const size_t len, phevMessage_t *msg)
 {
     if(phev_core_validate_buffer(data, len) != 0)
     {
@@ -34,6 +36,20 @@ int phev_core_extractMessage(const uint8_t *data, const size_t len, phevMessage_
         return msg->length + 2;
     } else {
         return 0;
+    }
+}
+message_t * phev_core_extractMessage(const uint8_t *data, const size_t len)
+{
+    if(phev_core_validate_buffer(data, len) != 0)
+    {
+        message_t * message = malloc(sizeof(message_t));
+
+        message->data = malloc(data[1] + 2);
+        message->length = data[1] + 2;
+        memcpy(message->data, data, message->length);
+        return message;
+    } else {
+        return NULL;
     }
 }
 
@@ -61,6 +77,8 @@ phevMessage_t *phev_core_message(uint8_t command, uint8_t type, uint8_t reg, uin
     message->length = length + 3;
     message->type = type;
     message->reg = reg;
+    printf("Core Message Reg %d\n",message->reg);
+        
     memcpy(message->data, data, length);
     message->checksum = 0;
 
@@ -86,6 +104,7 @@ phevMessage_t *phev_core_simpleRequestCommandMessage(uint8_t reg, uint8_t value)
 phevMessage_t *phev_core_simpleResponseCommandMessage(uint8_t reg, uint8_t value)
 {
     const uint8_t data = value;
+    printf(" Simple Reg %d\n",reg);  
     return phev_core_responseMessage(SEND_CMD, reg, &data, 1);
 }
 phevMessage_t *phev_core_ackMessage(uint8_t reg)
@@ -106,6 +125,8 @@ phevMessage_t *phev_core_pingMessage(uint8_t *number)
 }
 phevMessage_t *phev_core_responseHandler(phevMessage_t * message)
 {
+    printf("Response Handler Reg %d\n",message->reg);  
+    
     return phev_core_ackMessage(message->reg); 
 }
 
@@ -120,4 +141,12 @@ uint8_t phev_core_checksum(const uint8_t * data)
       }
       b = (uint8_t)(data[i] + b);
     }
+}
+message_t * phev_core_convertToMessage(phevMessage_t *message)
+{
+    message_t * out = malloc(message->length + 2);
+
+    out->length = phev_core_encodeMessage(message, &out->data);
+
+    return out;
 }

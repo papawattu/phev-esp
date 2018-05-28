@@ -1,5 +1,6 @@
 #include "unity.h"
 #include "phev_core.h"
+#include "msg_core.h"
 
 const uint8_t singleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x10, 0x06, 0x06, 0x13, 0x05, 0x13, 0x01, 0xd3};
 const uint8_t doubleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff, 0x6f, 0x0a, 0x00, 0x13, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff};
@@ -8,7 +9,7 @@ void test_split_message_single_correct_size(void)
 {
     phevMessage_t msg;
 
-    int ret = phev_core_extractMessage(singleMessage, sizeof(singleMessage), &msg);
+    int ret = phev_core_decodeMessage(singleMessage, sizeof(singleMessage), &msg);
 
     TEST_ASSERT_EQUAL(12, ret);
 }
@@ -17,7 +18,7 @@ void test_split_message_single_correct_command(void)
 {
     phevMessage_t msg;
 
-    int ret = phev_core_extractMessage(singleMessage, sizeof(singleMessage), &msg);
+    int ret = phev_core_decodeMessage(singleMessage, sizeof(singleMessage), &msg);
 
     TEST_ASSERT_EQUAL(0x6f, msg.command);
 }
@@ -25,7 +26,7 @@ void test_split_message_single_correct_length(void)
 {
     phevMessage_t msg;
 
-    int ret = phev_core_extractMessage(singleMessage, sizeof(singleMessage), &msg);
+    int ret = phev_core_decodeMessage(singleMessage, sizeof(singleMessage), &msg);
 
     TEST_ASSERT_EQUAL(0x0a, msg.length);
 }
@@ -33,7 +34,7 @@ void test_split_message_single_correct_type(void)
 {
     phevMessage_t msg;
 
-    int ret = phev_core_extractMessage(singleMessage, sizeof(singleMessage), &msg);
+    int ret = phev_core_decodeMessage(singleMessage, sizeof(singleMessage), &msg);
 
     TEST_ASSERT_EQUAL(REQUEST_TYPE, msg.type);
 }
@@ -41,7 +42,7 @@ void test_split_message_single_correct_reg(void)
 {
     phevMessage_t msg;
 
-    int ret = phev_core_extractMessage(singleMessage, sizeof(singleMessage), &msg);
+    int ret = phev_core_decodeMessage(singleMessage, sizeof(singleMessage), &msg);
 
     TEST_ASSERT_EQUAL(0x12, msg.reg);
 }
@@ -50,7 +51,7 @@ void test_split_message_single_correct_data(void)
     phevMessage_t msg;
     uint8_t data[] = {0x10, 0x06, 0x06, 0x13, 0x05, 0x13};
 
-    int ret = phev_core_extractMessage(singleMessage, sizeof(singleMessage), &msg);
+    int ret = phev_core_decodeMessage(singleMessage, sizeof(singleMessage), &msg);
 
     TEST_ASSERT_EQUAL_HEX8_ARRAY(data, msg.data, 6);
 }
@@ -58,9 +59,9 @@ void test_split_message_double_correct(void)
 {
     phevMessage_t msg;
 
-    int ret = phev_core_extractMessage(doubleMessage, sizeof(doubleMessage), &msg);
+    int ret = phev_core_decodeMessage(doubleMessage, sizeof(doubleMessage), &msg);
 
-    ret = phev_core_extractMessage(doubleMessage + ret, sizeof(singleMessage) - ret, &msg);
+    ret = phev_core_decodeMessage(doubleMessage + ret, sizeof(singleMessage) - ret, &msg);
 
     TEST_ASSERT_EQUAL(0x12, msg.reg);
 }
@@ -68,9 +69,9 @@ void test_split_message_double_decode(void)
 {
     phevMessage_t msg;
 
-    int ret = phev_core_extractMessage(doubleMessage, sizeof(doubleMessage), &msg);
+    int ret = phev_core_decodeMessage(doubleMessage, sizeof(doubleMessage), &msg);
 
-    ret = phev_core_extractMessage(doubleMessage + ret, sizeof(doubleMessage) - ret, &msg);
+    ret = phev_core_decodeMessage(doubleMessage + ret, sizeof(doubleMessage) - ret, &msg);
 
     TEST_ASSERT_EQUAL(0x13, msg.reg);
 }
@@ -210,4 +211,24 @@ void test_calc_checksum(void)
     const uint8_t data[] = {0x2f,0x04,0x00,0x01,0x01,0x00};
     uint8_t checksum = phev_core_checksum(data);
     TEST_ASSERT_EQUAL(0x35,checksum);
+}
+void test_phev_message_to_message(void)
+{
+    const phevMessage_t * phevMsg = phev_core_simpleRequestCommandMessage(0xaa, 0x00);
+    const uint8_t expected[] = {0xf6,0x04,0x00,0xaa,0x00,0xa4};
+    
+    message_t * message = phev_core_convertToMessage(phevMsg);
+
+    TEST_ASSERT_NOT_NULL(message);
+    TEST_ASSERT_EQUAL(6, message->length);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(expected, message->data,6); 
+}
+
+void test_phev_ack_message(void)
+{
+    const uint8_t expected[] = {0xf6, 0x04, 0x01, 0xc0, 0x00, 0xbb};
+    const phevMessage_t * phevMsg = phev_core_ackMessage(0xc0);
+    
+    TEST_ASSERT_NOT_NULL(phevMsg);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(expected, phev_core_convertToMessage(phevMsg)->data,6);   
 }

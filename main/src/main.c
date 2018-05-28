@@ -32,17 +32,21 @@
 
 #include "json_bin.h"
 
+#include "ppp_client.h"
+
 extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private_pem_start");
 extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 
-#define CONFIG_WIFI_SSID "BTHub6-P535"
-#define CONFIG_WIFI_PASSWORD "S1mpsons"
+//#define CONFIG_WIFI_SSID "BTHub6-P535"
+//#define CONFIG_WIFI_PASSWORD "S1mpsons"
 
-#define HOST_IP "35.205.234.94"
+//#define HOST_IP "35.205.234.94"
 #define HOST_PORT 8080
 
-//#define CONFIG_WIFI_SSID "REMOTE45cfsc"
-//#define CONFIG_WIFI_PASSWORD "fhcm852767"
+#define HOST_IP "192.168.8.46"
+
+#define CONFIG_WIFI_SSID "REMOTE45cfsc"
+#define CONFIG_WIFI_PASSWORD "fhcm852767"
 
 static EventGroupHandle_t wifi_event_group;
 
@@ -167,7 +171,7 @@ int logWrite(int soc, uint8_t * buf, size_t len)
 }
 #define CONNECTED_CLIENTS "connectedClients"
 
-message_t * transformJSONtoHex(void * ctx, message_t *message)
+message_t * transformJSONToHex(void * ctx, message_t *message)
 {
     cJSON *json = cJSON_Parse((const char *) message->data);
 
@@ -191,6 +195,21 @@ message_t * transformJSONtoHex(void * ctx, message_t *message)
     }
     
     return NULL;
+}
+message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
+{
+    char output[255];
+
+    if(message != NULL) {
+
+        sprintf(output,"Command %d Reg %d Length %d Type %d Checksum %d"
+        ,message->command,message->reg,message->length,message->type,message->checksum);
+    
+    } else {
+        sprintf(output, "Null message");
+    }
+    
+    return msg_utils_createMsg((uint8_t *) output, strlen(output));
 }
 phevCtx_t * connectPipe(void)
 {
@@ -217,7 +236,8 @@ phevCtx_t * connectPipe(void)
     phevSettings_t phev_settings = {
         .in = msg_gcp_createGcpClient(inSettings),
         .out = msg_tcpip_createTcpIpClient(outSettings),
-        .inputTransformer = transformJSONtoHex,
+        .inputTransformer = transformJSONToHex,
+        .outputTransformer = transformHexToJSON,
     };
 
     return phev_controller_init(&phev_settings);
@@ -336,7 +356,7 @@ void start_app(void)
     uint8_t new_mac[8] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
     esp_base_mac_addr_set(new_mac);
     wifi_conn_init();
-    // ppp_main();
+    ppp_main();
     sntp_task();
     vTaskDelay(2000 / portTICK_PERIOD_MS);
         

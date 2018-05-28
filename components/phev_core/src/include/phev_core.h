@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "msg_core.h"
 
 #define PHEV_OK 0
 
@@ -38,9 +39,11 @@ typedef struct phevMessage_t
     uint8_t checksum;
 } phevMessage_t;
 
-int phev_core_extractMessage(const uint8_t *data, size_t len, phevMessage_t *message);
+int phev_core_decodeMessage(const uint8_t *data, size_t len, phevMessage_t *message);
 
 int phev_core_encodeMessage(phevMessage_t *message,uint8_t **data);
+
+message_t * phev_core_extractMessage(const uint8_t *data, size_t len);
 
 phevMessage_t *phev_core_requestMessage(uint8_t command, uint8_t reg, uint8_t *data, size_t length);
 
@@ -63,5 +66,7 @@ phevMessage_t *phev_core_pingMessage(uint8_t *number);
 phevMessage_t *phev_core_responseHandler(phevMessage_t * message);
 
 uint8_t phev_core_checksum(const uint8_t * data); 
+
+message_t * phev_core_convertToMessage(phevMessage_t * message);
 
 #endif

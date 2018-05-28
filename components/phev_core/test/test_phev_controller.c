@@ -2,6 +2,9 @@
 #include "msg_core.h"
 #include "mock_msg_pipe.h"
 #include "phev_controller.h"
+#include "mock_phev_core.h"
+#include "mock_msg_utils.h"
+
 
 void test_handle_event(void)
 {
