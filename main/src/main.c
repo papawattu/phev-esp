@@ -22,8 +22,10 @@
 #include "msg_gcp_mqtt.h"
 #include "msg_pipe.h"
 #include "msg_tcpip.h"
+#include "msg_utils.h"
 
 #include "phev_core.h"
+#include "phev_controller.h"
 #include "mqtt_client.h"
 
 #include "jwt.h"
@@ -36,7 +38,7 @@ extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 #define CONFIG_WIFI_SSID "BTHub6-P535"
 #define CONFIG_WIFI_PASSWORD "S1mpsons"
 
-#define HOST_IP "192.168.1.67"
+#define HOST_IP "35.205.234.94"
 #define HOST_PORT 8080
 
 //#define CONFIG_WIFI_SSID "REMOTE45cfsc"
@@ -163,7 +165,34 @@ int logWrite(int soc, uint8_t * buf, size_t len)
     
     return num;
 }
-msg_pipe_ctx_t * connectPipe(void)
+#define CONNECTED_CLIENTS "connectedClients"
+
+message_t * transformJSONtoHex(void * ctx, message_t *message)
+{
+    cJSON *json = cJSON_Parse((const char *) message->data);
+
+    cJSON *connect = NULL;
+
+    connect = cJSON_GetObjectItemCaseSensitive(json, CONNECTED_CLIENTS);
+
+    if(connect == NULL) 
+    {
+        return NULL;
+    }
+    if (connect->valueint > 0)
+    {
+        message_t out;
+        uint8_t * data;
+        uint8_t mac[] = {0xaa,0xbb,0xcc,0xdd,0xee,0x0a};
+        
+        out.length = phev_core_encodeMessage(phev_core_startMessage(2,mac),&data);
+        out.data = data;
+        return msg_utils_copyMsg(&out);
+    }
+    
+    return NULL;
+}
+phevCtx_t * connectPipe(void)
 {
     gcpSettings_t inSettings = {
         .host = "mqtt.googleapis.com",
@@ -184,13 +213,14 @@ msg_pipe_ctx_t * connectPipe(void)
         .write = logWrite,
     };
     
-    msg_pipe_settings_t pipe_settings = {
+     
+    phevSettings_t phev_settings = {
         .in = msg_gcp_createGcpClient(inSettings),
         .out = msg_tcpip_createTcpIpClient(outSettings),
-        .lazyConnect = 1,
+        .inputTransformer = transformJSONtoHex,
     };
 
-    return msg_pipe(pipe_settings);
+    return phev_controller_init(&phev_settings);
 }
 /*
 message_t *addInput(message_t *message)
@@ -209,14 +239,14 @@ message_t *addOutput(message_t *message)
 } */
 void main_loop(void)
 {
-    msg_pipe_ctx_t *ctx = NULL;
+    phevCtx_t *ctx = NULL;
     {
         ESP_LOGI(APP_TAG,"Waiting to connect...");
         ctx = connectPipe();
         vTaskDelay(2000 / portTICK_PERIOD_MS);
-    } while(!(ctx->in->connected && ctx->out->connected));
+    } while(!(ctx->pipe->in->connected && ctx->pipe->out->connected));
     
-    ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->out->connected,ctx->in->connected);
+    ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->pipe->out->connected,ctx->pipe->in->connected);
 /*
     msg_pipe_transformer_t transformer = {
         .input = addInput,
@@ -225,10 +255,10 @@ void main_loop(void)
 
     msg_pipe_add_transformer(ctx, &transformer);
 */
-    while(ctx->in->connected && ctx->out->connected)
+    while(ctx->pipe->in->connected && ctx->pipe->out->connected)
     {
-        msg_pipe_loop(ctx);
-        vTaskDelay(portTICK_PERIOD_MS);
+        msg_pipe_loop(ctx->pipe);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
     ESP_LOGI(APP_TAG,"Disconnected...");
@@ -308,7 +338,7 @@ void start_app(void)
     wifi_conn_init();
     // ppp_main();
     sntp_task();
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
         
     main_loop();
 

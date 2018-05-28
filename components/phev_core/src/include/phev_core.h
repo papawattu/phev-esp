@@ -1,7 +1,10 @@
 #ifndef _PHEV_CORE_H_
 #define _PHEV_CORE_H_
 
+#include <stddef.h>
 #include <stdint.h>
+
+#define PHEV_OK 0
 
 #define REQUEST_TYPE 0
 #define RESPONSE_TYPE 1
@@ -53,7 +56,7 @@ phevMessage_t *phev_core_commandMessage(uint8_t reg, uint8_t *data, size_t lengt
 
 phevMessage_t *phev_core_ackMessage(uint8_t reg);
 
-phevMessage_t *phev_core_startMessage(uint8_t *mac);
+phevMessage_t *phev_core_startMessage(uint8_t pos, uint8_t *mac);
 
 phevMessage_t *phev_core_pingMessage(uint8_t *number);
 

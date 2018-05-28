@@ -1,7 +1,7 @@
 #include "unity.h"
 #include "phev_core.h"
 
-const uint8_t singleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xdd};
+const uint8_t singleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x10, 0x06, 0x06, 0x13, 0x05, 0x13, 0x01, 0xd3};
 const uint8_t doubleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff, 0x6f, 0x0a, 0x00, 0x13, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff};
 
 void test_split_message_single_correct_size(void)
@@ -48,11 +48,11 @@ void test_split_message_single_correct_reg(void)
 void test_split_message_single_correct_data(void)
 {
     phevMessage_t msg;
-    uint8_t data[] = {0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01};
+    uint8_t data[] = {0x10, 0x06, 0x06, 0x13, 0x05, 0x13};
 
     int ret = phev_core_extractMessage(singleMessage, sizeof(singleMessage), &msg);
 
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(data, msg.data, 7);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(data, msg.data, 6);
 }
 void test_split_message_double_correct(void)
 {
@@ -76,8 +76,7 @@ void test_split_message_double_decode(void)
 }
 void test_encode_message_single(void)
 {
-    uint8_t data[] = {0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01};
-
+    uint8_t data[] = {0x10, 0x06, 0x06, 0x13, 0x05, 0x13,0x01};
     phevMessage_t msg = {
         .command = 0x6f,
         .length = 0x0a,
@@ -153,15 +152,29 @@ void test_ack_message(void)
 }
 void test_start_message(void)
 {
-    const uint8_t mac[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
-    const phevMessage_t *msg = phev_core_startMessage(&mac);
+    const uint8_t mac[] = {0x02, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
+    const phevMessage_t *msg = phev_core_startMessage(2,&mac[1]);
 
     TEST_ASSERT_EQUAL(START_SEND, msg->command);
     TEST_ASSERT_EQUAL(0x0a, msg->length);
     TEST_ASSERT_EQUAL(REQUEST_TYPE, msg->type);
-    TEST_ASSERT_EQUAL(0x02, msg->reg);
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(&mac, msg->data, sizeof(mac));
+    TEST_ASSERT_EQUAL(0x01, msg->reg);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(mac, msg->data, sizeof(mac));
 }
+void test_start_encoded_message(void)
+{
+    const uint8_t mac[] = {0,0,0,0,0,0};
+    const uint8_t expected[] = {0xf2, 0x0a, 0x00, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff};
+    const phevMessage_t *msg = phev_core_startMessage(2,&mac);
+
+    const uint8_t * out;
+    
+    const size_t length = phev_core_encodeMessage(msg,&out);
+
+    TEST_ASSERT_EQUAL(12, length);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(expected, out, length);
+}
+
 void test_ping_message(void)
 {
     const uint8_t num = 1;

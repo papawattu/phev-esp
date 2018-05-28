@@ -92,9 +92,12 @@ phevMessage_t *phev_core_ackMessage(uint8_t reg)
 {
     return phev_core_simpleResponseCommandMessage(reg, 0);
 }
-phevMessage_t *phev_core_startMessage(uint8_t *mac)
+phevMessage_t *phev_core_startMessage(uint8_t pos, uint8_t *mac)
 {
-    return phev_core_requestMessage(START_SEND, 0x02, mac, 7);
+    uint8_t data[7];
+    data[0] = pos;
+    memcpy(&data[1],mac, 6);
+    return phev_core_requestMessage(START_SEND, 0x01, data, 7);
 }
 phevMessage_t *phev_core_pingMessage(uint8_t *number)
 {

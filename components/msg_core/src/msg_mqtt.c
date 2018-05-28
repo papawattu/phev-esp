@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "msg_core.h"
 #include "msg_utils.h"
@@ -77,7 +78,7 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings)
         .password = settings->password,
         .transport = settings->transport,
     };
-
+    printf("JWT %s\n",mqtt_cfg.password);
     handle_t client = mqtt->init(&mqtt_cfg);
     mqtt->start(client);
     mqtt->handle = client;
