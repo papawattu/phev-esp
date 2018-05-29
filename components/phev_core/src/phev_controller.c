@@ -11,7 +11,7 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
         phevMessage_t phevMsg;
 
         phev_core_decodeMessage(message->data, message->length, &phevMsg);
-        if(phevMsg.command == RESP_CMD && phevMsg.type == REQUEST_TYPE)
+        if(phevMsg.type == REQUEST_TYPE)
         {
         
             return phev_core_convertToMessage(phev_core_responseHandler(&phevMsg));
