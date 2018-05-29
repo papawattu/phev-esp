@@ -104,12 +104,12 @@ phevMessage_t *phev_core_simpleRequestCommandMessage(uint8_t reg, uint8_t value)
 phevMessage_t *phev_core_simpleResponseCommandMessage(uint8_t reg, uint8_t value)
 {
     const uint8_t data = value;
-    printf(" Simple Reg %d\n",reg);  
     return phev_core_responseMessage(SEND_CMD, reg, &data, 1);
 }
-phevMessage_t *phev_core_ackMessage(uint8_t reg)
+phevMessage_t *phev_core_ackMessage(uint8_t command, uint8_t reg)
 {
-    return phev_core_simpleResponseCommandMessage(reg, 0);
+    const uint8_t data = 0;
+    return phev_core_responseMessage(command, reg, &data, 1);
 }
 phevMessage_t *phev_core_startMessage(uint8_t pos, uint8_t *mac)
 {
@@ -125,9 +125,8 @@ phevMessage_t *phev_core_pingMessage(uint8_t *number)
 }
 phevMessage_t *phev_core_responseHandler(phevMessage_t * message)
 {
-    printf("Response Handler Reg %d\n",message->reg);  
-    
-    return phev_core_ackMessage(message->reg); 
+    uint8_t command = ((message->command & 0xf) << 4) | ((message->command & 0xf0) >> 4);
+    return phev_core_ackMessage(command, message->reg); 
 }
 
 uint8_t phev_core_checksum(const uint8_t * data) 

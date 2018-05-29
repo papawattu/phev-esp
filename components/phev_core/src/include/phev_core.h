@@ -57,7 +57,7 @@ phevMessage_t *phev_core_simpleResponseCommandMessage(uint8_t reg, uint8_t value
 
 phevMessage_t *phev_core_commandMessage(uint8_t reg, uint8_t *data, size_t length);
 
-phevMessage_t *phev_core_ackMessage(uint8_t reg);
+phevMessage_t *phev_core_ackMessage(uint8_t command, uint8_t reg);
 
 phevMessage_t *phev_core_startMessage(uint8_t pos, uint8_t *mac);
 

@@ -143,9 +143,9 @@ void test_command_message(void)
 void test_ack_message(void)
 {
     const uint8_t reg = 0x10;
-    const phevMessage_t *msg = phev_core_ackMessage(reg);
+    const phevMessage_t *msg = phev_core_ackMessage(0x6f, reg);
 
-    TEST_ASSERT_EQUAL(0xf6, msg->command);
+    TEST_ASSERT_EQUAL(0x6f, msg->command);
     TEST_ASSERT_EQUAL(0x4, msg->length);
     TEST_ASSERT_EQUAL(RESPONSE_TYPE, msg->type);
     TEST_ASSERT_EQUAL(0x10, msg->reg);
@@ -227,7 +227,7 @@ void test_phev_message_to_message(void)
 void test_phev_ack_message(void)
 {
     const uint8_t expected[] = {0xf6, 0x04, 0x01, 0xc0, 0x00, 0xbb};
-    const phevMessage_t * phevMsg = phev_core_ackMessage(0xc0);
+    const phevMessage_t * phevMsg = phev_core_ackMessage(0xf6,0xc0);
     
     TEST_ASSERT_NOT_NULL(phevMsg);
     TEST_ASSERT_EQUAL_HEX8_ARRAY(expected, phev_core_convertToMessage(phevMsg)->data,6);   

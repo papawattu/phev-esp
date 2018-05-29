@@ -4,13 +4,17 @@
 #include "esp_event.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
+#include "esp_types.h"
 #include "nvs_flash.h"
 
-#include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 #include "freertos/event_groups.h"
+
+#include "soc/timer_group_struct.h"
+#include "driver/periph_ctrl.h"
+#include "driver/timer.h"
 
 #include "lwip/opt.h"
 
@@ -34,6 +38,13 @@
 
 #include "ppp_client.h"
 
+typedef struct {
+    int type;  // the type of timer's event
+    int timer_group;
+    int timer_idx;
+    uint64_t timer_counter_value;
+} timer_event_t;
+
 extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private_pem_start");
 extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 
@@ -48,7 +59,13 @@ extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 #define CONFIG_WIFI_SSID "REMOTE45cfsc"
 #define CONFIG_WIFI_PASSWORD "fhcm852767"
 
+#define TIMER_DIVIDER         16  //  Hardware timer clock divider
+#define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
+#define INTERVAL_SEC 1.00
+
 static EventGroupHandle_t wifi_event_group;
+
+xQueueHandle timer_queue;
 
 const static int CONNECTED_BIT = BIT0;
 
@@ -198,17 +215,49 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
 }
 message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
 {
-    char output[255];
+    char * output;
 
-    if(message != NULL) {
-
-        sprintf(output,"Command %d Reg %d Length %d Type %d Checksum %d"
-        ,message->command,message->reg,message->length,message->type,message->checksum);
+    cJSON * response = cJSON_CreateObject();
+    if(response == NULL) 
+    {
+        ESP_LOGE(APP_TAG,"Cannot create JSON response");
+        return NULL;
+    }
+    cJSON * command = cJSON_CreateNumber(message->command);
+    if(command == NULL) 
+    {
+        ESP_LOGE(APP_TAG,"Cannot create JSON command response");
+        return NULL;
+    }
+    cJSON_AddItemToObject(response, "command", command);
     
+    cJSON * type = NULL;
+    if(message->type == REQUEST_TYPE)
+    {
+        type = cJSON_CreateString("request");
     } else {
-        sprintf(output, "Null message");
+        type = cJSON_CreateString("response");
+    }
+    if(type == NULL) 
+    {
+        ESP_LOGE(APP_TAG,"Cannot create JSON type response");
+        return NULL;
     }
     
+    cJSON_AddItemToObject(response, "type", type);
+    
+    cJSON * length = cJSON_CreateNumber(message->length);
+    if(length == NULL) 
+    {
+        ESP_LOGE(APP_TAG,"Cannot create JSON length response");
+        return NULL;
+    }
+    cJSON_AddItemToObject(response, "length", length);
+
+    output = cJSON_Print(response); 
+
+    cJSON_Delete(response);
+
     return msg_utils_createMsg((uint8_t *) output, strlen(output));
 }
 phevCtx_t * connectPipe(void)
@@ -356,6 +405,8 @@ void start_app(void)
     uint8_t new_mac[8] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
     esp_base_mac_addr_set(new_mac);
     wifi_conn_init();
+    timer_queue = xQueueCreate(10, sizeof(timer_event_t));
+
     ppp_main();
     sntp_task();
     vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -363,10 +414,73 @@ void start_app(void)
     main_loop();
 
 }
+void IRAM_ATTR timer_group0_isr(void *para)
+{
+    int timer_idx = (int) para;
+
+    //ESP_LOGI(APP_TAG,"Ping!!!");
+    /* Retrieve the interrupt status and the counter value
+       from the timer that reported the interrupt */
+    uint32_t intr_status = TIMERG0.int_st_timers.val;
+    TIMERG0.hw_timer[timer_idx].update = 1;
+    uint64_t timer_counter_value = 
+        ((uint64_t) TIMERG0.hw_timer[timer_idx].cnt_high) << 32
+        | TIMERG0.hw_timer[timer_idx].cnt_low;
+
+    /* Prepare basic event data
+       that will be then sent back to the main program task */
+    timer_event_t evt;
+    evt.timer_group = 0;
+    evt.timer_idx = timer_idx;
+    evt.timer_counter_value = timer_counter_value;
+
+    /* Clear the interrupt
+       and update the alarm time for the timer with without reload */
+    if ((intr_status & BIT(timer_idx)) && timer_idx == TIMER_0) {
+        evt.type = 0;
+        TIMERG0.int_clr_timers.t0 = 1;
+        timer_counter_value += (uint64_t) (INTERVAL_SEC * TIMER_SCALE);
+        TIMERG0.hw_timer[timer_idx].alarm_high = (uint32_t) (timer_counter_value >> 32);
+        TIMERG0.hw_timer[timer_idx].alarm_low = (uint32_t) timer_counter_value;
+    } else if ((intr_status & BIT(timer_idx)) && timer_idx == TIMER_1) {
+        evt.type = 0;
+        TIMERG0.int_clr_timers.t1 = 1;
+    } else {
+        evt.type = -1; // not supported even type
+    }
+
+    /* After the alarm has been triggered
+      we need enable it again, so it is triggered the next time */
+    TIMERG0.hw_timer[timer_idx].config.alarm_en = TIMER_ALARM_EN;
+
+    /* Now just send the event data back to the main program task */
+    xQueueSendFromISR(timer_queue, &evt, NULL);
+}
+
+void startTimer(void)
+{
+    timer_config_t config;
+    config.divider = TIMER_DIVIDER;
+    config.counter_dir = TIMER_COUNT_UP;
+    config.counter_en = TIMER_PAUSE;
+    config.alarm_en = TIMER_ALARM_EN;
+    config.intr_type = TIMER_INTR_LEVEL;
+    config.auto_reload = 0;
+    timer_init(TIMER_GROUP_0, TIMER_0, &config);
+
+    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0x00000000ULL);
+    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, INTERVAL_SEC * TIMER_SCALE);
+    timer_enable_intr(TIMER_GROUP_0, TIMER_0);
+    timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_group0_isr, 
+        (void *) TIMER_0, ESP_INTR_FLAG_IRAM, NULL);
+
+    timer_start(TIMER_GROUP_0, TIMER_0);
+
+}
 void app_main(void)
 {
     nvs_flash_init();
     tcpip_adapter_init();
-
+    //startTimer();
     start_app();
 }
