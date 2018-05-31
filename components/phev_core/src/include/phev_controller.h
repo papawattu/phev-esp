@@ -34,6 +34,7 @@ typedef struct phevEvent_t
 int phev_controller_handleEvent(phevEvent_t * event);
 
 phevCtx_t * phev_controller_init(phevSettings_t * settings);
+void phev_controller_setCarConnectionConfig(const char * ssid, const char * password, phevConfig_t * config);
 //void phev_controller_connect(phevCtx_t * ctx);
 
 #endif

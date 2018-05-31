@@ -96,6 +96,12 @@ void phev_controller_sendCommand(phevCtx_t * ctx, phevMessage_t * message)
 
     ctx->queueSize ++;
 }
+void phev_controller_setCarConnectionConfig(const char * ssid, const char * password, phevConfig_t * config)
+{
+    strncpy(config->carConnectionWifi.ssid,ssid,32);
+    strncpy(config->carConnectionWifi.password,password,64);
+
+}
 void phev_controller_connect(phevCtx_t * ctx)
 { 
     uint8_t data[] = {0,0,0,0,0,0};

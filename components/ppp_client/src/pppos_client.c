@@ -60,7 +60,7 @@ ppp_pcb *ppp;
 /* The PPP IP interface */
 struct netif ppp_netif;
 
-static const char *TAG = "example";
+static const char *TAG = "PPP";
 
 typedef struct {
     char *cmd;
@@ -293,7 +293,6 @@ static void pppos_client_task(void *pvParameters)
             memset(data, 0, BUF_SIZE);
             int len = uart_read_bytes(uart_num, (uint8_t *)data, BUF_SIZE, 10 / portTICK_RATE_MS);
             if (len > 0) {
-                ESP_LOGI(TAG, "PPP rx len %d", len);
                 pppos_input_tcpip(ppp, (u8_t *)data, len);
             }
         }

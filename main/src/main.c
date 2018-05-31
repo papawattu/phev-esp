@@ -48,6 +48,8 @@ typedef struct {
 extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private_pem_start");
 extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 
+static void wifi_conn_init(const char *ssid, const char * password);
+
 //#define CONFIG_WIFI_SSID "BTHub6-P535"
 //#define CONFIG_WIFI_PASSWORD "S1mpsons"
 
@@ -188,6 +190,14 @@ int logWrite(int soc, uint8_t * buf, size_t len)
 }
 #define CONNECTED_CLIENTS "connectedClients"
 
+char * getCarConnectionSSID(uint8_t * message) 
+{
+    return NULL;
+}
+char * getCarConnectionPassword(uint8_t * message) 
+{
+    return NULL;
+}
 message_t * transformJSONToHex(void * ctx, message_t *message)
 {
     cJSON *json = cJSON_Parse((const char *) message->data);
@@ -202,6 +212,9 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
     }
     if (connect->valueint > 0)
     {
+        phevConfig_t config;
+
+        phev_controller_setCarConnectionConfig(getCarConnectionSSID(message->data), getCarConnectionPassword(message->data), &config);
         message_t out;
         uint8_t * data;
         uint8_t mac[] = {0xaa,0xbb,0xcc,0xdd,0xee,0x0a};
@@ -252,13 +265,38 @@ message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
         ESP_LOGE(APP_TAG,"Cannot create JSON length response");
         return NULL;
     }
-    cJSON_AddItemToObject(response, "length", length);
+    cJSON_AddItemToObject(response, "length", length);  
+
+    cJSON * data = cJSON_CreateArray();
+    if(data == NULL) 
+    {
+        ESP_LOGE(APP_TAG,"Cannot create JSON data array response");
+        return NULL;
+    }
+    cJSON_AddItemToObject(response, "data", data);  
+
+    for(int i=0; i < message->length - 3; i++)
+    {
+        cJSON * item = cJSON_CreateNumber(message->data[i]);
+        if (item == NULL)
+        {
+            return NULL;
+        }
+        cJSON_AddItemToArray(data, item);
+    }
 
     output = cJSON_Print(response); 
 
     cJSON_Delete(response);
 
     return msg_utils_createMsg((uint8_t *) output, strlen(output));
+}
+int connectToCar(const char *host, uint16_t port)
+{
+    //wifi_conn_init(phev_controller_getConfig->carConnectionWifi.ssid, phev_controller_getConfig->carConnectionWifi.password);
+    wifi_conn_init(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
+
+    return connectSocket(host,port);
 }
 phevCtx_t * connectPipe(void)
 {
@@ -276,7 +314,7 @@ phevCtx_t * connectPipe(void)
     tcpIpSettings_t outSettings = {
         .host = HOST_IP,
         .port = HOST_PORT,
-        .connect = connectSocket, 
+        .connect = connectToCar, 
         .read = logRead,
         .write = logWrite,
     };
@@ -357,23 +395,22 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
     }
     return ESP_OK;
 }
+#define MYSTRDUP(str,lit) strcpy(str = malloc(strlen(lit)+1), lit)
 
-static void wifi_conn_init(void)
+static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword)
 {
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = CONFIG_WIFI_SSID,
-            .password = CONFIG_WIFI_PASSWORD,
-        },
-    };
+    wifi_config_t wifi_config;
+    strncpy(&wifi_config.sta.ssid, wifiSSID,32);
+    strncpy(&wifi_config.sta.password, wifiPassword,64);
+    
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-    ESP_LOGI(APP_TAG, "start the WIFI SSID:[%s] password:[%s]", CONFIG_WIFI_SSID, "******");
+    ESP_LOGI(APP_TAG, "start the WIFI SSID:[%s] password:[%s]", wifiSSID, "******");
     ESP_ERROR_CHECK(esp_wifi_start());
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
@@ -404,7 +441,7 @@ void start_app(void)
     ESP_LOGI(APP_TAG, "Application starting...");
     uint8_t new_mac[8] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
     esp_base_mac_addr_set(new_mac);
-    wifi_conn_init();
+    //wifi_conn_init();
     timer_queue = xQueueCreate(10, sizeof(timer_event_t));
 
     ppp_main();

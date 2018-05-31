@@ -39,6 +39,27 @@ typedef struct phevMessage_t
     uint8_t checksum;
 } phevMessage_t;
 
+typedef struct phevWifi_t
+{
+    char * ssid;
+    char * password;
+} phevWifi_t;
+
+typedef struct phevConfig_t
+{
+    char * currentBuild;
+    int updateOverPPP;
+    char * updateUri;
+    phevWifi_t updateWifi;
+    phevWifi_t carConnectionWifi;
+    char * host;
+    char * port;
+    uint8_t type;
+    uint8_t reg;
+    uint8_t *data;
+    uint8_t checksum;
+} phevConfig_t;
+
 int phev_core_decodeMessage(const uint8_t *data, size_t len, phevMessage_t *message);
 
 int phev_core_encodeMessage(phevMessage_t *message,uint8_t **data);
