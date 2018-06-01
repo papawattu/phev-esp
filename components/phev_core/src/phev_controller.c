@@ -1,8 +1,19 @@
 #include <stddef.h>
 #include <string.h>
+#include <stdio.h>
 #include "phev_controller.h"
 #include "msg_pipe.h"
 #include "msg_utils.h"
+#include "msg_tcpip.h"
+
+void phev_controller_preOutConnectHook(msg_pipe_ctx_t * pipe)
+{
+    phevCtx_t * ctx = (phevCtx_t *) pipe->user_context;
+    ctx->startWifi(ctx->config->carConnectionWifi.ssid,ctx->config->carConnectionWifi.password);
+    ((tcpip_ctx_t *) ctx->pipe->out->ctx)->host = ctx->config->host;
+    ((tcpip_ctx_t *) ctx->pipe->out->ctx)->port = ctx->config->port;
+    
+}
 
 message_t * phev_controller_responder(void * ctx, message_t * message)
 {
@@ -71,11 +82,17 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
         .user_context = ctx,
         .in_chain = inputChain,
         .out_chain = outputChain,
+        .preOutConnectHook = phev_controller_preOutConnectHook,
     };
 
+    ctx->startWifi = settings->startWifi;
     ctx->outputTransformer = settings->outputTransformer;
+
+    ctx->config = (phevConfig_t *) malloc(sizeof(phevConfig_t));
+
     ctx->pipe = msg_pipe(pipe_settings);
     ctx->queueSize = 0;
+    ctx->currentPing = 0;
 
     return ctx;
 }
@@ -96,11 +113,16 @@ void phev_controller_sendCommand(phevCtx_t * ctx, phevMessage_t * message)
 
     ctx->queueSize ++;
 }
-void phev_controller_setCarConnectionConfig(const char * ssid, const char * password, phevConfig_t * config)
+void phev_controller_setCarConnectionConfig(phevCtx_t * ctx, const char * ssid, const char * password, const char * host, const uint16_t port)
 {
-    strncpy(config->carConnectionWifi.ssid,ssid,32);
-    strncpy(config->carConnectionWifi.password,password,64);
-
+    phevConfig_t * config = ctx->config;
+    
+    strcpy(config->carConnectionWifi.ssid,ssid);
+    strcpy(config->carConnectionWifi.password,password);
+    
+    config->host = malloc(strlen(host));
+    strcpy(config->host, host);
+    config->port = port;
 }
 void phev_controller_connect(phevCtx_t * ctx)
 { 
@@ -118,3 +140,9 @@ void phev_controller_connect(phevCtx_t * ctx)
     //phev_controller_waitForResponse(ctx);
 
 } 
+
+void phev_controller_ping(phevCtx_t * ctx)
+{
+    ctx->pipe->out->publish(ctx->pipe->out, phev_core_convertToMessage(phev_core_pingMessage(ctx->currentPing++)));
+}
+

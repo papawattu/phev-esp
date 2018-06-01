@@ -31,6 +31,9 @@ typedef struct msg_pipe_settings_t
     msg_pipe_chain_t *in_chain;
     msg_pipe_chain_t *out_chain;
 
+    void (* preInConnectHook)(msg_pipe_ctx_t * ctx);
+    void (* preOutConnectHook)(msg_pipe_ctx_t * ctx);
+
     void *user_context;
 
     int lazyConnect;
@@ -46,6 +49,9 @@ typedef struct msg_pipe_ctx_t
     msg_pipe_chain_t *in_chain;
     msg_pipe_chain_t *out_chain;
 
+    void (* preInConnectHook)(msg_pipe_ctx_t * ctx);
+    void (* preOutConnectHook)(msg_pipe_ctx_t * ctx);
+
     void *user_context;
 } msg_pipe_ctx_t;
 
@@ -54,5 +60,9 @@ msg_pipe_ctx_t *msg_pipe(msg_pipe_settings_t);
 void msg_pipe_loop(msg_pipe_ctx_t *ctx);
 
 message_t *msg_pipe_transformChain(msg_pipe_ctx_t *ctx, messagingClient_t *client, msg_pipe_chain_t *chain, message_t *message);
+
+int msg_pipe_in_connect(msg_pipe_ctx_t * ctx);
+
+int msg_pipe_out_connect(msg_pipe_ctx_t * ctx);
 
 #endif

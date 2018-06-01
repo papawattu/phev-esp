@@ -41,12 +41,13 @@ typedef struct phevMessage_t
 
 typedef struct phevWifi_t
 {
-    char * ssid;
-    char * password;
+    char ssid[32];
+    char password[64];
 } phevWifi_t;
 
 typedef struct phevConfig_t
 {
+    //char bob[4] = "Bob";
     char * currentBuild;
     int updateOverPPP;
     char * updateUri;

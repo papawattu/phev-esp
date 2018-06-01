@@ -77,7 +77,6 @@ phevMessage_t *phev_core_message(uint8_t command, uint8_t type, uint8_t reg, uin
     message->length = length + 3;
     message->type = type;
     message->reg = reg;
-    printf("Core Message Reg %d\n",message->reg);
         
     memcpy(message->data, data, length);
     message->checksum = 0;

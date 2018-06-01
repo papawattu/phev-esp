@@ -49,21 +49,29 @@ extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private_pem_start"
 extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
 
 static void wifi_conn_init(const char *ssid, const char * password);
+void startTimer(void);
 
-//#define CONFIG_WIFI_SSID "BTHub6-P535"
-//#define CONFIG_WIFI_PASSWORD "S1mpsons"
+#define CONFIG_WIFI_SSID "BTHub6-P535"
+#define CONFIG_WIFI_PASSWORD "S1mpsons"
 
 //#define HOST_IP "35.205.234.94"
-#define HOST_PORT 8080
+//#define HOST_PORT 8080
 
-#define HOST_IP "192.168.8.46"
+//#define HOST_IP "192.168.8.46"
 
-#define CONFIG_WIFI_SSID "REMOTE45cfsc"
-#define CONFIG_WIFI_PASSWORD "fhcm852767"
+//#define CONFIG_WIFI_SSID "REMOTE45cfsc"
+//#define CONFIG_WIFI_PASSWORD "fhcm852767"
 
 #define TIMER_DIVIDER         16  //  Hardware timer clock divider
 #define TIMER_SCALE           (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
 #define INTERVAL_SEC 1.00
+
+#define CONNECTED_CLIENTS "connectedClients"
+#define CAR_CONNECTION "carConnection"
+#define CAR_SSID "ssid"
+#define CAR_PASSWORD "password"
+#define CAR_HOST "host"
+#define CAR_PORT "port"
 
 static EventGroupHandle_t wifi_event_group;
 
@@ -188,15 +196,30 @@ int logWrite(int soc, uint8_t * buf, size_t len)
     
     return num;
 }
-#define CONNECTED_CLIENTS "connectedClients"
 
-char * getCarConnectionSSID(uint8_t * message) 
+char * getConfigString(cJSON * json, char * option) 
 {
-    return NULL;
+    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
+    if(value == NULL) {
+        ESP_LOGE(APP_TAG,"Cannot find connection option %s", option);
+        return NULL;
+    }
+
+    ESP_LOGI(APP_TAG,"Option %s set to %s", option, value->valuestring);
+    
+    return value->valuestring;
 }
-char * getCarConnectionPassword(uint8_t * message) 
+uint16_t getConfigInt(cJSON * json, char * option) 
 {
-    return NULL;
+    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
+    if(value == NULL) {
+        ESP_LOGE(APP_TAG,"Cannot find connection option %s", option);
+        return NULL;
+    }
+
+    ESP_LOGI(APP_TAG,"Option %s set to %d", option, value->valueint);
+    
+    return value->valueint;
 }
 message_t * transformJSONToHex(void * ctx, message_t *message)
 {
@@ -212,9 +235,13 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
     }
     if (connect->valueint > 0)
     {
-        phevConfig_t config;
-
-        phev_controller_setCarConnectionConfig(getCarConnectionSSID(message->data), getCarConnectionPassword(message->data), &config);
+        cJSON * carConnection = cJSON_GetObjectItemCaseSensitive(json, CAR_CONNECTION);
+    
+        phev_controller_setCarConnectionConfig(ctx, getConfigString(carConnection,CAR_SSID), 
+                                                    getConfigString(carConnection,CAR_PASSWORD),
+                                                    getConfigString(carConnection,CAR_HOST),
+                                                    getConfigInt(carConnection,CAR_PORT)
+                                                    );
         message_t out;
         uint8_t * data;
         uint8_t mac[] = {0xaa,0xbb,0xcc,0xdd,0xee,0x0a};
@@ -293,9 +320,6 @@ message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
 }
 int connectToCar(const char *host, uint16_t port)
 {
-    //wifi_conn_init(phev_controller_getConfig->carConnectionWifi.ssid, phev_controller_getConfig->carConnectionWifi.password);
-    wifi_conn_init(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
-
     return connectSocket(host,port);
 }
 phevCtx_t * connectPipe(void)
@@ -312,8 +336,6 @@ phevCtx_t * connectPipe(void)
     }; 
     
     tcpIpSettings_t outSettings = {
-        .host = HOST_IP,
-        .port = HOST_PORT,
         .connect = connectToCar, 
         .read = logRead,
         .write = logWrite,
@@ -325,6 +347,7 @@ phevCtx_t * connectPipe(void)
         .out = msg_tcpip_createTcpIpClient(outSettings),
         .inputTransformer = transformJSONToHex,
         .outputTransformer = transformHexToJSON,
+        .startWifi = wifi_conn_init,
     };
 
     return phev_controller_init(&phev_settings);
@@ -344,6 +367,23 @@ message_t *addOutput(message_t *message)
 
     return NULL; 
 } */
+
+void ping_task(void *pvParameter)
+{
+    phevCtx_t *ctx = (phevCtx_t *) pvParameter;
+
+    ESP_LOGI(APP_TAG,"Ping task started");
+    
+    while(1)
+    {
+        while(ctx->pipe->in->connected && ctx->pipe->out->connected)
+        {
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            phev_controller_ping(ctx);
+        }
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+    }
+}
 void main_loop(void)
 {
     phevCtx_t *ctx = NULL;
@@ -362,10 +402,15 @@ void main_loop(void)
 
     msg_pipe_add_transformer(ctx, &transformer);
 */
+    startTimer();
+    
+    xTaskCreate(&ping_task, "ping_task", 4096, (void *) ctx, 5, NULL);
+    
     while(ctx->pipe->in->connected && ctx->pipe->out->connected)
     {
         msg_pipe_loop(ctx->pipe);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        
+        vTaskDelay(portTICK_PERIOD_MS);
     }
 
     ESP_LOGI(APP_TAG,"Disconnected...");
@@ -395,18 +440,15 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
     }
     return ESP_OK;
 }
-#define MYSTRDUP(str,lit) strcpy(str = malloc(strlen(lit)+1), lit)
 
 static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword)
 {
-    wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-    wifi_config_t wifi_config;
-    strncpy(&wifi_config.sta.ssid, wifiSSID,32);
-    strncpy(&wifi_config.sta.password, wifiPassword,64);
+    wifi_config_t wifi_config ={
+        .sta.ssid = CONFIG_WIFI_SSID,
+        .sta.password = CONFIG_WIFI_PASSWORD,
+    };
+    strncpy((char *) &wifi_config.sta.ssid, wifiSSID,strlen(wifiSSID));
+    strncpy((char *) &wifi_config.sta.password, wifiPassword,strlen(wifiPassword));
     
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
@@ -436,14 +478,23 @@ static void sntp_task(void)
     }
     ESP_LOGI(APP_TAG, "Time synced");
 }
+void wifiSetup(void)
+{
+    wifi_event_group = xEventGroupCreate();
+    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+}
 void start_app(void)
 {
     ESP_LOGI(APP_TAG, "Application starting...");
     uint8_t new_mac[8] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
     esp_base_mac_addr_set(new_mac);
-    //wifi_conn_init();
-    timer_queue = xQueueCreate(10, sizeof(timer_event_t));
-
+    
+    wifiSetup();
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    
     ppp_main();
     sntp_task();
     vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -496,6 +547,8 @@ void IRAM_ATTR timer_group0_isr(void *para)
 
 void startTimer(void)
 {
+    timer_queue = xQueueCreate(10, sizeof(timer_event_t));
+    
     timer_config_t config;
     config.divider = TIMER_DIVIDER;
     config.counter_dir = TIMER_COUNT_UP;
@@ -514,10 +567,11 @@ void startTimer(void)
     timer_start(TIMER_GROUP_0, TIMER_0);
 
 }
+ 
 void app_main(void)
 {
     nvs_flash_init();
     tcpip_adapter_init();
-    //startTimer();
+    //timer_example_evt_task(NULL);
     start_app();
 }

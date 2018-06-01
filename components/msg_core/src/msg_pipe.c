@@ -119,14 +119,15 @@ void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, mess
 {
     messagingClient_t *outboundClient = ((msg_pipe_ctx_t *) params)->out;
     message_t * out = message;
+    msg_pipe_ctx_t * pipe = (msg_pipe_ctx_t *) params;
     
-    if(((msg_pipe_ctx_t *) params)->in_chain != NULL)
+    if(pipe->in_chain != NULL)
     {
-          out = msg_pipe_callInputTransformers((msg_pipe_ctx_t *) params, message);
+          out = msg_pipe_callInputTransformers(pipe, message);
     }
     if(outboundClient->connected == 0) 
     {
-        outboundClient->connect(outboundClient);
+        msg_pipe_out_connect(pipe);
     }    
     if(out != NULL) outboundClient->publish(outboundClient, out);
     
@@ -144,6 +145,16 @@ void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, mes
     if(out != NULL) inboundClient->publish(inboundClient, out);
 }
 
+int msg_pipe_in_connect(msg_pipe_ctx_t * ctx)
+{
+    if(ctx->preInConnectHook != NULL) ctx->preInConnectHook(ctx);
+    return ctx->in->connect(ctx->in);
+}
+int msg_pipe_out_connect(msg_pipe_ctx_t * ctx)
+{
+    if(ctx->preOutConnectHook != NULL) ctx->preOutConnectHook(ctx);
+    return ctx->out->connect(ctx->out);
+}
 msg_pipe_ctx_t * msg_pipe(msg_pipe_settings_t settings) 
 {
     msg_pipe_ctx_t * ctx = malloc(sizeof(msg_pipe_ctx_t));
@@ -158,15 +169,19 @@ msg_pipe_ctx_t * msg_pipe(msg_pipe_settings_t settings)
     
     ctx->loop = msg_pipe_loop;
 
+    ctx->preOutConnectHook = settings.preOutConnectHook;
+    ctx->preInConnectHook = settings.preInConnectHook;
+
+
     ctx->in->subscribe(ctx->in, ctx, msg_pipe_inboundSubscription);
     ctx->out->subscribe(ctx->out, ctx, msg_pipe_outboundSubscription);
 
     ctx->in->start(ctx->in);
     
-    ctx->in->connect(ctx->in);
+    msg_pipe_in_connect(ctx);
     ctx->out->start(ctx->out);
     
-    if(!settings.lazyConnect) ctx->out->connect(ctx->out);
+    if(!settings.lazyConnect) msg_pipe_out_connect(ctx);
     
     return ctx;    
 }

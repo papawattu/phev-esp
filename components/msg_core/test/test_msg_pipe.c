@@ -1020,3 +1020,73 @@ void test_should_call_all_input_transformers()
     TEST_ASSERT_EQUAL(1, all_outputTransformerCalled);
     TEST_ASSERT_EQUAL(0, all_aggregatorCalled);   
 }
+static int dummyPreConnectHookCalled = 0;
+
+void dummyPreConnectHook(msg_pipe_ctx_t * ctx)
+{
+    dummyPreConnectHookCalled ++;
+}
+void test_should_call_pre_in_connection_hook()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;   
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.loop = loopInStub;  
+    mockIn.publish = splitter_two_messages_publish;  
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.loop = loopOutStub;
+    mockOut.publish = all_publish;
+    
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    msg_pipe_settings_t pipe_settings = {
+        .in = msg_core_createMessagingClient(settings),
+        .out = msg_core_createMessagingClient(settings),
+        .preInConnectHook = dummyPreConnectHook,
+    };
+
+    dummyPreConnectHookCalled = 0;
+    msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
+    
+    TEST_ASSERT_EQUAL(1, dummyPreConnectHookCalled);
+ }
+ void test_should_call_pre_out_connection_hook()
+{
+    messagingSettings_t settings;
+    messagingClient_t mockIn;
+    messagingClient_t mockOut;   
+    
+    mockIn.start = startInStub;
+    mockIn.connect = connectInStub;
+    mockIn.subscribe = subscribeInStub;
+    mockIn.loop = loopInStub;  
+    mockIn.publish = splitter_two_messages_publish;  
+    
+    mockOut.start = startOutStub;
+    mockOut.connect = connectOutStub;
+    mockOut.subscribe = subscribeOutStub;
+    mockOut.loop = loopOutStub;
+    mockOut.publish = all_publish;
+    
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockIn);
+    msg_core_createMessagingClient_ExpectAndReturn(settings,&mockOut);
+    
+    msg_pipe_settings_t pipe_settings = {
+        .in = msg_core_createMessagingClient(settings),
+        .out = msg_core_createMessagingClient(settings),
+        .preOutConnectHook = dummyPreConnectHook,
+    };
+
+    dummyPreConnectHookCalled = 0;
+    msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
+    
+    TEST_ASSERT_EQUAL(1, dummyPreConnectHookCalled);
+ }
