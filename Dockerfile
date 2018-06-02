@@ -29,7 +29,7 @@ RUN make test
 ENV IDF_PATH /usr/src/esp-idf
 ENV PATH $PATH:/usr/esp/xtensa-esp32-elf/bin
 ENV PATH /usr/esp/xtensa-esp32-elf/bin:$IDF_PATH/tools:$PATH
-RUN make -j5
+RUN make 
 WORKDIR /usr/
 RUN curl https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/root/google-cloud-sdk/bin
