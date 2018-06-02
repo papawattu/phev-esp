@@ -8,6 +8,7 @@ TEST_DIR ?= $(COMP_DIR)/test
 CJSON_DIR ?= ${CJSON_DIR}
 INC_DIRS := $(shell find $(COMP_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+CFLAGS += -std=c11
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -D_TEST_ -DBUILD_NUMBER=$(BUILD_NUMBER)
 TEST_BUILD_DIR ?= $(BUILD_DIR)/test
 TEST_MAKEFILE = $(TEST_BUILD_DIR)/MakefileTestSupport
