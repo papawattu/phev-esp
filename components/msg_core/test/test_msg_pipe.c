@@ -9,6 +9,7 @@ void tearDown()
 {
 
 }
+
 static int startInStubNum = 0;
 
 int startInStub(messagingClient_t *client)
@@ -73,7 +74,7 @@ void test_should_call_start_incoming()
     
     TEST_ASSERT_EQUAL(1,startInStubNum);
     
-} 
+}  
 void test_should_call_connect_incoming()
 {
     messagingSettings_t settings;
@@ -158,7 +159,7 @@ void test_should_call_connect_outgoing()
     msg_pipe(pipe_settings);
 
     TEST_ASSERT_EQUAL(1,connectOutStubNum);
-}
+} 
 void test_should_not_call_connect_outgoing()
 {
     messagingSettings_t settings;
@@ -352,7 +353,7 @@ void incomingPublish(messagingClient_t *client, message_t * message)
 {
     incomingPublishCalled ++;
     TEST_ASSERT_NOT_NULL(message);
-}
+} 
 void test_should_publish_message_incoming()
 { 
     messagingSettings_t settings;
@@ -396,7 +397,7 @@ void test_should_publish_message_incoming()
 
     TEST_ASSERT_EQUAL(1, incomingPublishCalled);
     
-}
+} 
 static int outgoingPublishCalled = 0;
 void outgoingPublish(messagingClient_t *client, message_t * message)
 {
@@ -486,7 +487,7 @@ void test_should_set_in_input_transformer_in_settings()
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
     
     TEST_ASSERT_EQUAL(inputTransform,ctx->in_chain->inputTransformer);
-}
+} 
 void test_should_set_out_input_transformer_in_settings()
 {
     messagingSettings_t settings;
@@ -527,7 +528,7 @@ message_t * outputTransform(message_t * message)
 {
     outputTransformCalled ++;
     return message;
-}
+} 
 void test_should_set_out_output_transformer()
 {
     messagingSettings_t settings;
@@ -599,7 +600,7 @@ message_t * splitter_no_message(message_t * message)
 {
     splitterCalled ++;
     return NULL;
-}
+} 
 void test_should_set_up_in_splitter()
 {
     messagingSettings_t settings;
@@ -633,7 +634,7 @@ void test_should_set_up_in_splitter()
 
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
     TEST_ASSERT_EQUAL(splitter_no_message,ctx->in_chain->splitter);
-} 
+}  
 void test_should_set_up_out_splitter()
 {
     messagingSettings_t settings;
@@ -707,7 +708,7 @@ void test_should_call_out_splitter()
     msg_pipe_outboundSubscription(ctx->out, (void *) ctx, &message);
     
     TEST_ASSERT_EQUAL(1,splitterCalled);
-}
+} 
 static int splitterOneMessageCalled = 0;
 message_t * splitter_one_message(message_t * message)
 {
@@ -745,7 +746,7 @@ message_t * splitter_two_messages(message_t * message)
         splitterTwoMessagesCalled =2;
         return msg;
     }
-}
+} 
 void test_should_call_out_splitter_two_messages()
 {
     messagingSettings_t settings;

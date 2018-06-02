@@ -12,6 +12,7 @@ void msg_pipe_loop(msg_pipe_ctx_t * ctx)
 message_t * msg_pipe_concat(message_t * messages[], size_t size)
 {
     size_t total = 0;
+    if(messages[0] == NULL) return NULL;
     
     uint8_t * data = malloc(messages[0]->length);
 

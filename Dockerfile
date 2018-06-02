@@ -16,4 +16,4 @@ WORKDIR /usr/src/phev-esp
 ENV CMOCK_DIR /usr/src/cmock
 ENV CJSON_DIR /usr/src/cJSON
 RUN make test
-# RUN make test
+RUN make test
