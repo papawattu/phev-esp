@@ -47,14 +47,17 @@ typedef struct phevWifi_t
 
 typedef struct phevConfig_t
 {
-    //char bob[4] = "Bob";
     char * currentBuild;
     int updateOverPPP;
     char * updateUri;
     phevWifi_t updateWifi;
     phevWifi_t carConnectionWifi;
+    char * updatePath;
+    char * updateHost;
+    uint16_t updatePort;
+    char * updateImageFullPath;
     char * host;
-    char * port;
+    uint16_t port;
     uint8_t type;
     uint8_t reg;
     uint8_t *data;

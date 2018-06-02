@@ -13,7 +13,7 @@ message_t * msg_pipe_concat(message_t * messages[], size_t size)
 {
     size_t total = 0;
     
-    uint8_t * data = malloc(total);
+    uint8_t * data = malloc(messages[0]->length);
 
     for(int i = 0;i < size; i++)
     {

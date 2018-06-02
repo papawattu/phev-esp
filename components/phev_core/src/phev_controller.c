@@ -124,6 +124,37 @@ void phev_controller_setCarConnectionConfig(phevCtx_t * ctx, const char * ssid, 
     strcpy(config->host, host);
     config->port = port;
 }
+
+#define IMAGE_PREFIX "firmware-"
+void phev_controller_setUpdateConfig(phevCtx_t * ctx, const char * ssid, 
+                                        const char * password,
+                                        const char * host,
+                                        const char * path,
+                                        uint16_t port,
+                                        int build)
+{
+    phevConfig_t * config = ctx->config;
+    
+    strcpy(config->updateWifi.ssid,ssid);
+    config->updateWifi.ssid[strlen(ssid)] = '\0';
+    
+    strcpy(config->updateWifi.password,password);
+
+    config->updateWifi.password[strlen(password)] = '\0';
+    
+    config->updateHost = malloc(strlen(host));
+    strcpy(config->updateHost,host);    
+    
+    config->updatePath = malloc(strlen(path));
+    strcpy(config->updatePath,path);
+    
+    const char * buildPath = NULL;     
+    asprintf(&buildPath,"%s%s%06d.bin",ctx->config->updatePath,IMAGE_PREFIX,build);
+    
+    config->updateImageFullPath = buildPath;
+
+    config->updatePort = port;
+}
 void phev_controller_connect(phevCtx_t * ctx)
 { 
     uint8_t data[] = {0,0,0,0,0,0};

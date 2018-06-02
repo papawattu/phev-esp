@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "esp_wifi.h"
 #include "esp_system.h"
@@ -20,6 +21,8 @@
 
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
+#include "lwip/netdb.h"
+#include "lwip/dns.h"
 #include "apps/sntp/sntp.h"
 
 #include "esp_ota_ops.h"
@@ -41,6 +44,10 @@
 #include "json_bin.h"
 
 #include "ppp_client.h"
+
+#ifndef BUILD_NUMBER
+#define BUILD_NUMBER "unknown"
+#endif
 
 typedef struct {
     int type;  // the type of timer's event
@@ -154,6 +161,27 @@ static bool connect_to_http_server(const char * host, const uint16_t port)
 
     int  http_connect_flag = -1;
     struct sockaddr_in sock_info;
+    struct addrinfo *res;
+    struct in_addr *addr;
+    
+    const struct addrinfo hints = {
+        .ai_family = AF_INET,
+        .ai_socktype = SOCK_STREAM,
+    };
+
+    int err = getaddrinfo(host , "80", &hints, &res);
+
+    if(err != 0 || res == NULL) {
+        ESP_LOGE(APP_TAG, "DNS lookup failed err=%d res=%p", err, res);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        return false;
+     }
+
+        /* Code to print the resolved IP.
+
+           Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */
+    addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
+    ESP_LOGI(APP_TAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
 
     socket_id = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_id == -1) {
@@ -164,7 +192,7 @@ static bool connect_to_http_server(const char * host, const uint16_t port)
     // set connect info
     memset(&sock_info, 0, sizeof(struct sockaddr_in));
     sock_info.sin_family = AF_INET;
-    sock_info.sin_addr.s_addr = inet_addr(host);
+    sock_info.sin_addr = *addr;
     sock_info.sin_port = htons(port);
 
     // connect to http server
@@ -182,6 +210,14 @@ static bool connect_to_http_server(const char * host, const uint16_t port)
 
 static void ota_task(void *pvParameter)
 {
+    phevConfig_t * config = (phevConfig_t *) pvParameter;
+
+    if(config == NULL) 
+    {
+        ESP_LOGE(APP_TAG,"Config not passed to task");
+        return;
+    }
+
     esp_err_t err;
     /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
     esp_ota_handle_t update_handle = 0 ;
@@ -203,12 +239,9 @@ static void ota_task(void *pvParameter)
     /* Wait for the callback to set the CONNECTED_BIT in the
        event group.
     */
-    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
-                        false, true, portMAX_DELAY);
-    ESP_LOGI(APP_TAG, "Connect to Wifi ! Start to Connect to Server....");
-
+    
     /*connect to http server*/
-    if (connect_to_http_server("192.168.1.1",8080)) {
+    if (connect_to_http_server(config->updateHost,config->updatePort)) {
         ESP_LOGI(APP_TAG, "Connected to http server");
     } else {
         ESP_LOGE(APP_TAG, "Connect to http server failed!");
@@ -218,11 +251,11 @@ static void ota_task(void *pvParameter)
     /*send GET request to http server*/
     const char *GET_FORMAT =
         "GET %s HTTP/1.0\r\n"
-        "Host: %s:%s\r\n"
+        "Host: %s:%d\r\n"
         "User-Agent: esp-idf/1.0 esp32\r\n\r\n";
 
     char *http_request = NULL;
-    int get_len = asprintf(&http_request, GET_FORMAT, EXAMPLE_FILENAME, EXAMPLE_SERVER_IP, EXAMPLE_SERVER_PORT);
+    int get_len = asprintf(&http_request, GET_FORMAT, config->updateImageFullPath, config->updateHost, config->updatePort);
     if (get_len < 0) {
         ESP_LOGE(APP_TAG, "Failed to allocate memory for GET request buffer");
         return;
@@ -231,7 +264,7 @@ static void ota_task(void *pvParameter)
     free(http_request);
 
     if (res < 0) {
-        ESP_LOGE(APP_TAG, "Send GET request to server failed");
+        ESP_LOGE(APP_TAG, "Send GET request to server failed %s", http_request);
         return;
     } else {
         ESP_LOGI(APP_TAG, "Send GET request to server succeeded");
@@ -275,7 +308,7 @@ static void ota_task(void *pvParameter)
                 return;
             }
             binary_file_length += buff_len;
-            ESP_LOGI(APP_TAG, "Have written image length %d", binary_file_length);
+            //ESP_LOGI(APP_TAG, "Have written image length %d", binary_file_length);
         } else if (buff_len == 0) {  /*packet over*/
             socket_flag = false;
             ESP_LOGI(APP_TAG, "Connection closed, all packets received");
@@ -413,7 +446,7 @@ char * getConfigString(cJSON * json, char * option)
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
     if(value == NULL) {
-        ESP_LOGE(APP_TAG,"Cannot find connection option %s", option);
+        ESP_LOGE(APP_TAG,"Cannot find option %s", option);
         return NULL;
     }
 
@@ -425,7 +458,7 @@ uint16_t getConfigInt(cJSON * json, char * option)
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
     if(value == NULL) {
-        ESP_LOGE(APP_TAG,"Cannot find connection option %s", option);
+        ESP_LOGE(APP_TAG,"Cannot find option %s", option);
         return NULL;
     }
 
@@ -433,9 +466,80 @@ uint16_t getConfigInt(cJSON * json, char * option)
     
     return value->valueint;
 }
+
+bool getConfigBool(cJSON * json, char * option) 
+{
+    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
+    if(value == NULL) {
+        ESP_LOGE(APP_TAG,"Cannot find option %s", option);
+        return NULL;
+    }
+
+    if(cJSON_IsTrue(value)) {
+        ESP_LOGI(APP_TAG,"Option %s set to true", option);
+    } else {
+        ESP_LOGI(APP_TAG,"Option %s set to false", option);
+    }
+    
+    return cJSON_IsTrue(value);
+}
+#define UPDATE_NAME "update"
+#define UPDATE_SSID "ssid"
+#define UPDATE_PASSWORD "password"
+#define UPDATE_HOST "host"
+#define UPDATE_PATH "path"
+#define UPDATE_PORT "port"
+#define LATEST_BUILD "latestBuild"
+#define UPDATE_OVER_GSM "overGsm"
+
+void checkForUpdate(phevCtx_t * ctx, cJSON * json)
+{
+    cJSON * update = cJSON_GetObjectItemCaseSensitive(json, UPDATE_NAME);
+
+    if(update == NULL)
+    {
+        ESP_LOGE(APP_TAG, "Cannot find update config");
+    }
+    
+    int build = getConfigInt(json,LATEST_BUILD);
+
+    phev_controller_setUpdateConfig(ctx, getConfigString(update,UPDATE_SSID), 
+                                        getConfigString(update,UPDATE_PASSWORD),
+                                        getConfigString(update,UPDATE_HOST),
+                                        getConfigString(update,UPDATE_PATH),
+                                        getConfigInt(update,UPDATE_PORT),
+                                        build
+                                    );
+    
+
+    
+    if(build > BUILD_NUMBER)
+    {
+        ESP_LOGI(APP_TAG,"Updating firmware to build %d",build);
+        if(!getConfigBool(update,UPDATE_OVER_GSM))
+        {
+            ESP_LOGI(APP_TAG,"Connect over wifi to update");
+            wifi_conn_init(ctx->config->updateWifi.ssid,ctx->config->updateWifi.password);
+            xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
+                        false, true, portMAX_DELAY);
+            ESP_LOGI(APP_TAG, "Connected to Wifi");
+
+        }
+        ESP_LOGI(APP_TAG,"Build image %s",ctx->config->updateImageFullPath);
+        ota_task((void *) ctx->config);
+        ESP_LOGE(APP_TAG, "update failed better restart system!");
+        esp_restart();
+    
+    } else {
+        ESP_LOGI(APP_TAG,"At latest firmware");
+    }  
+}
 message_t * transformJSONToHex(void * ctx, message_t *message)
 {
+    phevCtx_t * phevCtx = (phevCtx_t *) ctx;
     cJSON *json = cJSON_Parse((const char *) message->data);
+
+    checkForUpdate(phevCtx,json);
 
     cJSON *connect = NULL;
 
@@ -449,7 +553,7 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
     {
         cJSON * carConnection = cJSON_GetObjectItemCaseSensitive(json, CAR_CONNECTION);
     
-        phev_controller_setCarConnectionConfig(ctx, getConfigString(carConnection,CAR_SSID), 
+        phev_controller_setCarConnectionConfig(phevCtx, getConfigString(carConnection,CAR_SSID), 
                                                     getConfigString(carConnection,CAR_PASSWORD),
                                                     getConfigString(carConnection,CAR_HOST),
                                                     getConfigInt(carConnection,CAR_PORT)
@@ -505,7 +609,7 @@ message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
         return NULL;
     }
     cJSON_AddItemToObject(response, "length", length);  
-
+/*
     cJSON * data = cJSON_CreateArray();
     if(data == NULL) 
     {
@@ -523,7 +627,7 @@ message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
         }
         cJSON_AddItemToArray(data, item);
     }
-
+    */
     output = cJSON_Print(response); 
 
     cJSON_Delete(response);
@@ -591,7 +695,7 @@ void ping_task(void *pvParameter)
         while(ctx->pipe->in->connected && ctx->pipe->out->connected)
         {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
-            phev_controller_ping(ctx);
+            //phev_controller_ping(ctx);
         }
         vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
@@ -614,7 +718,7 @@ void main_loop(void)
 
     msg_pipe_add_transformer(ctx, &transformer);
 */
-    startTimer();
+    //startTimer();
     
     xTaskCreate(&ping_task, "ping_task", 4096, (void *) ctx, 5, NULL);
     
@@ -622,7 +726,7 @@ void main_loop(void)
     {
         msg_pipe_loop(ctx->pipe);
         
-        vTaskDelay(portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
     ESP_LOGI(APP_TAG,"Disconnected...");
@@ -655,16 +759,17 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 
 static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword)
 {
-    wifi_config_t wifi_config ={
-        .sta.ssid = CONFIG_WIFI_SSID,
-        .sta.password = CONFIG_WIFI_PASSWORD,
+    wifi_config_t wifi_config = {
+        .sta.ssid = "",
+        .sta.password = "",
     };
-    strncpy((char *) &wifi_config.sta.ssid, wifiSSID,strlen(wifiSSID));
-    strncpy((char *) &wifi_config.sta.password, wifiPassword,strlen(wifiPassword));
+    //memset(&wifi_config,0, sizeof(wifi_config_t));
+    strncpy((char *) wifi_config.sta.ssid, wifiSSID,strlen(wifiSSID));
+    strncpy((char *) wifi_config.sta.password, wifiPassword,strlen(wifiPassword));
     
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-    ESP_LOGI(APP_TAG, "start the WIFI SSID:[%s] password:[%s]", wifiSSID, "******");
+    ESP_LOGI(APP_TAG, "start the WIFI SSID:[%s] password:[%s]", wifiSSID, wifiPassword);
     ESP_ERROR_CHECK(esp_wifi_start());
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
@@ -782,8 +887,18 @@ void startTimer(void)
  
 void app_main(void)
 {
-    nvs_flash_init();
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES) {
+        // OTA app partition table has a smaller NVS partition size than the non-OTA
+        // partition table. This size mismatch may cause NVS initialization to fail.
+        // If this happens, we erase NVS partition and initialize NVS again.
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK( err );
     tcpip_adapter_init();
     //timer_example_evt_task(NULL);
+    ESP_LOGI(APP_TAG,"PHEV ESP Build-%d", BUILD_NUMBER);
+    
     start_app();
 }
