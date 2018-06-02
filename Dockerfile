@@ -15,5 +15,5 @@ COPY . /usr/src/phev-esp
 WORKDIR /usr/src/phev-esp
 ENV CMOCK_DIR /usr/src/cmock
 ENV CJSON_DIR /usr/src/cJSON
-RUN make setup
-RUN make local
+RUN make test
+RUN make test
