@@ -1,5 +1,4 @@
 PROJECT_NAME := phev-esp
-CFLAGS=-std=c99
 BUILD_NUMBER := 1234
 SHELL := /bin/bash
 BUILD_DIR ?= ./build

@@ -34,4 +34,6 @@ ENV PATH /usr/esp/xtensa-esp32-elf/bin:$IDF_PATH/tools:$PATH
 RUN make -j5
 WORKDIR /usr/
 RUN curl https://sdk.cloud.google.com | bash
+ENV PATH $PATH:/root/google-cloud-sdk/bin
+CMD gsutil cp /usr/src/phev-esp/build/phev-esp.bin gs://espimages/default/
 #RUN /root/google-cloud-sdk/bin/gsutil 
