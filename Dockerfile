@@ -33,4 +33,4 @@ RUN make
 WORKDIR /usr/
 RUN curl https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/root/google-cloud-sdk/bin
-CMD gsutil cp /usr/src/phev-esp/build/phev-esp.bin gs://espimages/develop/ 
+RUN gsutil cp /usr/src/phev-esp/build/phev-esp.bin gs://espimages/develop/ 
