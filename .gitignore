@@ -2,4 +2,3 @@ build
 *.old
 test1.exe
 components/messaging/test/*_Runner.c
-main/rsa_private.pem
