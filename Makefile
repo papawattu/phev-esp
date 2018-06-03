@@ -1,5 +1,5 @@
 PROJECT_NAME := phev-esp
-BUILD_NUMBER ?= ${BUILD_NUMBER}
+BUILD_NUMBER ?= ${BUILD}
 SHELL := /bin/bash
 BUILD_DIR ?= ./build
 COMP_DIR := ./components/**
