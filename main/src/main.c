@@ -719,13 +719,13 @@ void main_loop(void)
 */
     //startTimer();
     
-    xTaskCreate(&ping_task, "ping_task", 4096, (void *) ctx, 5, NULL);
+    //xTaskCreate(&ping_task, "ping_task", 4096, (void *) ctx, 5, NULL);
     
     while(ctx->pipe->in->connected && ctx->pipe->out->connected)
     {
         msg_pipe_loop(ctx->pipe);
         
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
     ESP_LOGI(APP_TAG,"Disconnected...");
