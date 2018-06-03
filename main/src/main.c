@@ -46,9 +46,8 @@
 #include "ppp_client.h"
 
 #ifndef BUILD_NUMBER
-#define BUILD_NUMBER 9999
+#define BUILD_NUMBER 1
 #endif
-
 typedef struct {
     int type;  // the type of timer's event
     int timer_group;
@@ -899,8 +898,6 @@ void app_main(void)
     tcpip_adapter_init();
     //timer_example_evt_task(NULL);
     
-    const uint64_t build = BUILD_NUMBER;
-    ESP_LOGI(APP_TAG,"PHEV ESP Build %ul", build);
-    
+    ESP_LOGI(APP_TAG,"PHEV ESP Build %d", BUILD_NUMBER);
     start_app();
 }
