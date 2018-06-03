@@ -466,6 +466,18 @@ uint16_t getConfigInt(cJSON * json, char * option)
     return value->valueint;
 }
 
+double getConfigDouble(cJSON * json, char * option) 
+{
+    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
+    if(value == NULL) {
+        ESP_LOGE(APP_TAG,"Cannot find option %s", option);
+        return NULL;
+    }
+
+    ESP_LOGI(APP_TAG,"Option %s set to %d", option, value->valuedouble);
+    
+    return value->valuedouble;
+}
 bool getConfigBool(cJSON * json, char * option) 
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
@@ -500,7 +512,7 @@ void checkForUpdate(phevCtx_t * ctx, cJSON * json)
         ESP_LOGE(APP_TAG, "Cannot find update config");
     }
     
-    int build = getConfigInt(json,LATEST_BUILD);
+    int build = getConfigDouble(json,LATEST_BUILD);
 
     phev_controller_setUpdateConfig(ctx, getConfigString(update,UPDATE_SSID), 
                                         getConfigString(update,UPDATE_PASSWORD),
