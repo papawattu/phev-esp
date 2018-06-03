@@ -898,7 +898,9 @@ void app_main(void)
     ESP_ERROR_CHECK( err );
     tcpip_adapter_init();
     //timer_example_evt_task(NULL);
-    ESP_LOGI(APP_TAG,"PHEV ESP Build %ul", BUILD_NUMBER);
+    
+    const uint64_t build = BUILD_NUMBER;
+    ESP_LOGI(APP_TAG,"PHEV ESP Build %ul", build);
     
     start_app();
 }
