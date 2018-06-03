@@ -149,7 +149,7 @@ void phev_controller_setUpdateConfig(phevCtx_t * ctx, const char * ssid,
     strcpy(config->updatePath,path);
     
     const char * buildPath = NULL;     
-    asprintf(&buildPath,"%s%s%06d.bin",ctx->config->updatePath,IMAGE_PREFIX,build);
+    asprintf(&buildPath,"%s%s%010d.bin",ctx->config->updatePath,IMAGE_PREFIX,build);
     
     config->updateImageFullPath = buildPath;
 
