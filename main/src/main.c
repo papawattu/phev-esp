@@ -46,7 +46,7 @@
 #include "ppp_client.h"
 
 #ifndef BUILD_NUMBER
-#define BUILD_NUMBER "unknown"
+#define BUILD_NUMBER 9999
 #endif
 
 typedef struct {
@@ -898,7 +898,7 @@ void app_main(void)
     ESP_ERROR_CHECK( err );
     tcpip_adapter_init();
     //timer_example_evt_task(NULL);
-    ESP_LOGI(APP_TAG,"PHEV ESP Build-%d", BUILD_NUMBER);
+    ESP_LOGI(APP_TAG,"PHEV ESP Build %ul", BUILD_NUMBER);
     
     start_app();
 }
