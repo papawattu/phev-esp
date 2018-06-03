@@ -471,10 +471,10 @@ double getConfigDouble(cJSON * json, char * option)
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
     if(value == NULL) {
         ESP_LOGE(APP_TAG,"Cannot find option %s", option);
-        return NULL;
+        return 0;
     }
 
-    ESP_LOGI(APP_TAG,"Option %s set to %d", option, value->valuedouble);
+    ESP_LOGI(APP_TAG,"Option %s set to %lf", option, value->valuedouble);
     
     return value->valuedouble;
 }
@@ -512,7 +512,7 @@ void checkForUpdate(phevCtx_t * ctx, cJSON * json)
         ESP_LOGE(APP_TAG, "Cannot find update config");
     }
     
-    int build = getConfigDouble(json,LATEST_BUILD);
+    double build = getConfigDouble(json,LATEST_BUILD);
 
     phev_controller_setUpdateConfig(ctx, getConfigString(update,UPDATE_SSID), 
                                         getConfigString(update,UPDATE_PASSWORD),
@@ -526,7 +526,7 @@ void checkForUpdate(phevCtx_t * ctx, cJSON * json)
     
     if(build > BUILD_NUMBER)
     {
-        ESP_LOGI(APP_TAG,"Updating firmware to build %d",build);
+        ESP_LOGI(APP_TAG,"Updating firmware to build %f",build);
         if(!getConfigBool(update,UPDATE_OVER_GSM))
         {
             ESP_LOGI(APP_TAG,"Connect over wifi to update");
