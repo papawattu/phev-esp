@@ -699,7 +699,7 @@ void ping_task(void *pvParameter)
         vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
-void main_loop(void)
+void main_loop(void *pvParameter)
 {
     phevCtx_t *ctx = NULL;
     {
@@ -814,8 +814,9 @@ void start_app(void)
     ppp_main();
     sntp_task();
     vTaskDelay(2000 / portTICK_PERIOD_MS);
-        
-    main_loop();
+
+    xTaskCreate(&main_loop, "main_task", 4096, NULL, 5, NULL);    
+    //main_loop();
 
 }
 void IRAM_ATTR timer_group0_isr(void *para)
