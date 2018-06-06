@@ -44,6 +44,7 @@ void phev_controller_setCarConnectionConfig(phevCtx_t *ctx, const char * ssid, c
 //void phev_controller_connect(phevCtx_t * ctx);
 void phev_controller_ping(phevCtx_t * ctx);
 void phev_controller_setUpdateConfig(phevCtx_t * ctx, const char * ssid, const char * password, const char * host, const char * path, uint16_t port, int build);
-
+message_t * phev_controller_input_responder(void * ctx, message_t * message);
+    
 #endif
 

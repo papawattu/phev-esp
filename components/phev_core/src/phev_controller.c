@@ -14,7 +14,10 @@ void phev_controller_preOutConnectHook(msg_pipe_ctx_t * pipe)
     ((tcpip_ctx_t *) ctx->pipe->out->ctx)->port = ctx->config->port;
     
 }
-
+message_t * phev_controller_input_responder(void * ctx, message_t * message) {
+    
+    return NULL;
+}
 message_t * phev_controller_responder(void * ctx, message_t * message)
 {
     if(message != NULL) {
@@ -66,7 +69,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     inputChain->splitter = NULL;
     inputChain->filter = NULL;
     inputChain->outputTransformer = NULL;
-    inputChain->responder = NULL;
+    inputChain->responder = phev_controller_input_responder;
     
     outputChain->inputTransformer = phev_controller_outputChainInputTransformer;
     outputChain->aggregator = NULL;

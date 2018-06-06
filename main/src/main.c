@@ -45,6 +45,9 @@
 
 #include "ppp_client.h"
 
+//#define NO_PPP
+//#define NO_OTA
+
 #ifndef BUILD_NUMBER
 #define BUILD_NUMBER 1
 #endif
@@ -55,8 +58,8 @@ typedef struct {
     uint64_t timer_counter_value;
 } timer_event_t;
 
-extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private_pem_start");
-extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private_pem_end");
+extern const uint8_t rsa_private_pem_start[] asm("_binary_rsa_private2_pem_start");
+extern const uint8_t rsa_private_pem_end[]   asm("_binary_rsa_private2_pem_end");
 
 static void wifi_conn_init(const char *ssid, const char * password);
 void startTimer(void);
@@ -97,18 +100,66 @@ static char text[BUFFSIZE + 1] = { 0 };
 static int binary_file_length = 0;
 
 static EventGroupHandle_t wifi_event_group;
+static EventGroupHandle_t mqtt_event_group;
+
 
 xQueueHandle timer_queue;
 
 const static int CONNECTED_BIT = BIT0;
-
+const static int SENT_BIT = BIT0;
 const static char *APP_TAG = "Main";
 
+xQueueHandle message_queue;
+
+esp_mqtt_client_handle_t mqtt_client = NULL;
+char * mqtt_topic;
+
+typedef struct mqtt_message_t {
+    uint8_t * data;
+    size_t length;
+    esp_mqtt_client_handle_t client;
+    char * topic;    
+} mqtt_message_t;
+void sendMessageTask(void * pvParameter)
+{
+    ESP_LOGI(APP_TAG,"Started message task");
+
+    while(1)
+    {
+        mqtt_message_t message;
+        ESP_LOGI(APP_TAG,"Waiting for message");
+        
+        xQueueReceive(message_queue, &message, portMAX_DELAY);
+        ESP_LOGI(APP_TAG,"Message received %p Length %d",message.data, message.length);
+        
+        int delay = 250;
+        int id = esp_mqtt_client_publish(message.client, message.topic, (char *) message.data, message.length, 1, 0);
+        while(id < 0) {
+            ESP_LOGW(APP_TAG,"Message could not be pubished");
+    
+            vTaskDelay(delay / portTICK_PERIOD_MS);
+            id = esp_mqtt_client_publish(message.client, message.topic, (char * )message.data, message.length, 1, 0);
+            delay *= 2;
+        }
+        ESP_LOGI(APP_TAG,"Message published id %d",id);    
+    }
+}
+
+void messagePublished(mqtt_event_handle_t event)
+{
+    ESP_LOGI(APP_TAG,"Publish CB");
+//    xEventGroupSetBits(mqtt_event_group, SENT_BIT);
+}
+int dummyPublish(esp_mqtt_client_handle_t client, const char *topic, const char *data, int length, int qos, int retain) 
+{
+    return esp_mqtt_client_publish(client, topic, data, length, 1,0);
+}
+
 msg_mqtt_t mqtt = {
-    .init = &esp_mqtt_client_init,
-    .start = &esp_mqtt_client_start,
-    .publish = &esp_mqtt_client_publish,
-    .subscribe = &esp_mqtt_client_subscribe
+    .init = esp_mqtt_client_init,
+    .start = esp_mqtt_client_start,
+    .publish = esp_mqtt_client_publish,
+    .subscribe = esp_mqtt_client_subscribe
 };
 
 static int socket_id = -1;
@@ -425,18 +476,18 @@ int connectSocket(const char *host, uint16_t port)
 int logRead(int soc, uint8_t * buf, size_t len)
 {
     int num = lwip_read(soc,buf,len);
-    ESP_LOGI(APP_TAG, "Read %d bytes",num);
+    //ESP_LOGI(APP_TAG, "Read %d bytes",num);
     if(num > 0) 
     {
-        ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,num,ESP_LOG_INFO);
+        //ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,num,ESP_LOG_INFO);
     }
     return num;
 }
 int logWrite(int soc, uint8_t * buf, size_t len)
 {
-    ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,len,ESP_LOG_INFO);
+    //ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,len,ESP_LOG_INFO);
     int num = lwip_write(soc,buf,len);
-    ESP_LOGI(APP_TAG, "Written %d bytes",num);
+    //ESP_LOGI(APP_TAG, "Written %d bytes",num);
     
     return num;
 }
@@ -466,7 +517,7 @@ uint16_t getConfigInt(cJSON * json, char * option)
     return value->valueint;
 }
 
-double getConfigDouble(cJSON * json, char * option) 
+long getConfigLong(cJSON * json, char * option) 
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
     if(value == NULL) {
@@ -474,16 +525,16 @@ double getConfigDouble(cJSON * json, char * option)
         return 0;
     }
 
-    ESP_LOGI(APP_TAG,"Option %s set to %lf", option, value->valuedouble);
+    ESP_LOGI(APP_TAG,"Option %s set to %ld", option, (long) value->valuedouble);
     
-    return value->valuedouble;
+    return (long) value->valuedouble;
 }
 bool getConfigBool(cJSON * json, char * option) 
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
     if(value == NULL) {
-        ESP_LOGE(APP_TAG,"Cannot find option %s", option);
-        return NULL;
+        ESP_LOGW(APP_TAG,"Cannot find option %s defaulting to false", option);
+        return false;
     }
 
     if(cJSON_IsTrue(value)) {
@@ -502,7 +553,9 @@ bool getConfigBool(cJSON * json, char * option)
 #define UPDATE_PORT "port"
 #define LATEST_BUILD "latestBuild"
 #define UPDATE_OVER_GSM "overGsm"
-
+#define FORCE_UPDATE "forceUpdate"
+    
+    
 void checkForUpdate(phevCtx_t * ctx, cJSON * json)
 {
     cJSON * update = cJSON_GetObjectItemCaseSensitive(json, UPDATE_NAME);
@@ -512,7 +565,7 @@ void checkForUpdate(phevCtx_t * ctx, cJSON * json)
         ESP_LOGE(APP_TAG, "Cannot find update config");
     }
     
-    double build = getConfigDouble(json,LATEST_BUILD);
+    long build = getConfigLong(json,LATEST_BUILD);
 
     phev_controller_setUpdateConfig(ctx, getConfigString(update,UPDATE_SSID), 
                                         getConfigString(update,UPDATE_PASSWORD),
@@ -522,11 +575,11 @@ void checkForUpdate(phevCtx_t * ctx, cJSON * json)
                                         build
                                     );
     
-
+    bool forceUpdate = getConfigBool(json, FORCE_UPDATE);
     
-    if(build > BUILD_NUMBER)
+    if(build > BUILD_NUMBER || forceUpdate)
     {
-        ESP_LOGI(APP_TAG,"Updating firmware to build %f",build);
+        ESP_LOGI(APP_TAG,"Updating firmware to build %ld from %d",build, BUILD_NUMBER);
         if(!getConfigBool(update,UPDATE_OVER_GSM))
         {
             ESP_LOGI(APP_TAG,"Connect over wifi to update");
@@ -550,8 +603,9 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
     phevCtx_t * phevCtx = (phevCtx_t *) ctx;
     cJSON *json = cJSON_Parse((const char *) message->data);
 
+#ifndef NO_OTA
     checkForUpdate(phevCtx,json);
-
+#endif
     cJSON *connect = NULL;
 
     connect = cJSON_GetObjectItemCaseSensitive(json, CONNECTED_CLIENTS);
@@ -583,7 +637,7 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
 message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
 {
     char * output;
-
+    
     cJSON * response = cJSON_CreateObject();
     if(response == NULL) 
     {
@@ -654,12 +708,13 @@ phevCtx_t * connectPipe(void)
     gcpSettings_t inSettings = {
         .host = "mqtt.googleapis.com",
         .port = 8883,
-        .clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device",
-        .device = "my-device",
+        .clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device2",
+        .device = "my-device2",
         .createJwt = createJwt,
         .mqtt = &mqtt,
         .projectId = "phev-db3fa",
-        .topic = "/devices/my-device/events"
+        .topic = "/devices/my-device2/events",
+        .published = messagePublished,
     }; 
     
     tcpIpSettings_t outSettings = {
@@ -679,21 +734,6 @@ phevCtx_t * connectPipe(void)
 
     return phev_controller_init(&phev_settings);
 }
-/*
-message_t *addInput(message_t *message)
-{
-    message_t msg;
-    msg.length = phev_core_encodeMessage(phev_core_simpleRequestCommandMessage(0x0a,0x01),&msg.data);
-    return msg_core_copyMessage(&msg);
-}
-message_t *addOutput(message_t *message)
-{
-    phevMessage_t phevMsg;
-
-    int remain = phev_core_extractMessage(message->data, message->length, &phevMsg);
-
-    return NULL; 
-} */
 
 void ping_task(void *pvParameter)
 {
@@ -713,31 +753,46 @@ void ping_task(void *pvParameter)
 }
 void main_loop(void *pvParameter)
 {
+    /*
+    mqtt_event_group = xEventGroupCreate();
+    xEventGroupClearBits(mqtt_event_group, SENT_BIT);
+    message_queue = xQueueCreate( 10, sizeof(mqtt_message_t ) );
+    xTaskCreate(&sendMessageTask, "mqtt_task", 4096, (void *) NULL, 5,NULL);
+    */
     phevCtx_t *ctx = NULL;
     {
         ESP_LOGI(APP_TAG,"Waiting to connect...");
         ctx = connectPipe();
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     } while(!(ctx->pipe->in->connected && ctx->pipe->out->connected));
     
     ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->pipe->out->connected,ctx->pipe->in->connected);
-/*
-    msg_pipe_transformer_t transformer = {
-        .input = addInput,
-        .output = addOutput, //transformLightsJSONToBin,
-    };
-
-    msg_pipe_add_transformer(ctx, &transformer);
-*/
-    //startTimer();
-    
-    //xTaskCreate(&ping_task, "ping_task", 4096, (void *) ctx, 5, NULL);
     
     while(ctx->pipe->in->connected && ctx->pipe->out->connected)
     {
         msg_pipe_loop(ctx->pipe);
-        
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+    /*    const char msg[] = "Hello Jamie 123567890\0";
+        const char topic[] = "/devices/my-device2/events";
+
+        const char * data = malloc(strlen(msg));
+        strncpy(data, msg, strlen(msg));
+        message_t message = {
+            .data = (uint8_t *) &msg,
+            .length = strlen(msg),
+        };
+        //ctx->pipe->in->publish(ctx->pipe->in, &message);
+        const esp_mqtt_client_handle_t mqtt = ((gcp_ctx_t *) ctx->pipe->in->ctx)->mqtt->handle;
+
+        //ESP_LOGI(APP_TAG, "Host %s Port %d",mqtt->host,mqtt->port);
+       // printf("2 MQTT pointer %p transport &p", mqtt, ((esp_mqtt_client *) mqtt)->transport);
+    
+        //esp_mqtt_client_publish(mqtt, topic, data, strlen(msg), 1,0);
+        while(1)
+        {
+            vTaskDelay(10000 / portTICK_PERIOD_MS);
+            ESP_LOGI(APP_TAG,"Ping");
+            esp_mqtt_client_publish(mqtt, topic, data, strlen(msg), 0,0);
+        } */
     }
 
     ESP_LOGI(APP_TAG,"Disconnected...");
@@ -822,13 +877,16 @@ void start_app(void)
     
     wifiSetup();
     vTaskDelay(2000 / portTICK_PERIOD_MS);
-    
+#ifndef NO_PPP    
     ppp_main();
+#else
+    wifi_conn_init(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
+#endif
     sntp_task();
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     xTaskCreate(&main_loop, "main_task", 4096, NULL, 5, NULL);    
-    //main_loop();
+    //main_loop(NULL);
 
 }
 void IRAM_ATTR timer_group0_isr(void *para)
@@ -912,5 +970,7 @@ void app_main(void)
     //timer_example_evt_task(NULL);
     
     ESP_LOGI(APP_TAG,"PHEV ESP Build %d", BUILD_NUMBER);
+
+    ESP_LOGI(APP_TAG,"Size of mqtt config_t %d size of esp config_t %d",sizeof(msg_mqtt_config_t), sizeof(esp_mqtt_client_config_t));
     start_app();
 }

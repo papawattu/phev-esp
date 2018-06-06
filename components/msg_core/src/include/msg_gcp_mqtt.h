@@ -39,6 +39,7 @@ typedef struct gcpSettings_t
     msg_mqtt_t * mqtt;
     char * topic;
     char * (* createJwt)(const char *);
+    void (* published)(void);
     
 } gcpSettings_t;
 
@@ -53,6 +54,7 @@ typedef struct gcp_ctx_t
     char *projectId;
     void *client;
     char *topic;
+    void (* published)(void);
     msg_mqtt_t * mqtt;
 } gcp_ctx_t;
 

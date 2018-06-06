@@ -43,12 +43,16 @@ typedef enum {
 } mqtt_transport_t;
 
 typedef mqtt_event_t * mqtt_event_handle_t;
-typedef struct config_t 
+
+typedef int32_t mesp_err_t; 
+typedef mesp_err_t (* mmqtt_event_callback_t)(mqtt_event_handle_t event);
+
+typedef struct 
 {
-    handle_t event_handle;
+    mmqtt_event_callback_t event_handle;
     const char * host;
     const char *uri;
-    uint16_t port;
+    uint32_t port;
     const char * client_id;
     const char * username;
     const char *password;
@@ -66,7 +70,7 @@ typedef struct config_t
     int buffer_size;
     const char *cert_pem;
     mqtt_transport_t transport;
-} config_t;
+} msg_mqtt_config_t;
 
 typedef struct msg_mqtt_t
 {
@@ -80,7 +84,7 @@ typedef struct msg_mqtt_t
     void (* published_cb)(mqtt_event_handle_t *);
     
 
-    handle_t (*init)(const config_t *config);
+    handle_t (*init)(const msg_mqtt_config_t *config);
     msg_mqtt_err_t (*set_uri)(handle_t client, const char *uri);
     msg_mqtt_err_t (*start)(handle_t client);
     msg_mqtt_err_t (*stop)(handle_t client);

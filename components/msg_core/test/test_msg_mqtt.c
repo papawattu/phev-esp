@@ -16,7 +16,7 @@ static int mock_start_Called = 0;
 static int mock_publish_Called = 0;
 
 
-handle_t mock_init(const config_t *config) 
+handle_t mock_init(const msg_mqtt_config_t *config) 
 {
     mock_init_Called ++;
     msg_mqtt_t * mqtt = config->user_context;

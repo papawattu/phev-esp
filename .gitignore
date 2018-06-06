@@ -1,4 +1,5 @@
 build
 *.old
+*.txt
 test1.exe
 components/messaging/test/*_Runner.c

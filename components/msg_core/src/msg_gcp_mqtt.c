@@ -23,7 +23,7 @@ void msg_gcp_asyncIncomingHandler(messagingClient_t *client, message_t *message)
 void msg_gcp_connected(mqtt_event_handle_t *event)
 {    
     ((msg_mqtt_t *)((mqtt_event_t *)event)->user_context)->client->connected = 1;
-    subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/devices/my-device/config");
+    subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/devices/my-device2/config");
 }
 void msg_gcp_disconnected(mqtt_event_handle_t *event)
 {    
@@ -43,11 +43,11 @@ int msg_gcp_connect(messagingClient_t *client)
         .mqtt = ctx->mqtt,
         .subscribed_cb = NULL,
         .connected_cb = msg_gcp_connected,
-        .published_cb = NULL,
+        .published_cb = ctx->published,
         .disconnected_cb = msg_gcp_disconnected,
         .incoming_cb = msg_gcp_asyncIncomingHandler,
         .client = client,
-        .transport = MSG_MQTT_TRANSPORT_OVER_SSL
+        .transport = MQTT_TRANSPORT_OVER_SSL
     };
     
     ctx->mqtt->handle = mqtt_start(&settings);
@@ -78,6 +78,7 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
     ctx->topic = strdup(settings.topic);
     ctx->createJwt = settings.createJwt;
     ctx->projectId = strdup(settings.projectId);
+    ctx->published = settings.published;
 
     ctx->readBuffer = malloc(GCP_CLIENT_READ_BUF_SIZE);
     

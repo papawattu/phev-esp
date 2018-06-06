@@ -68,7 +68,7 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings)
 
     msg_mqtt_t * mqtt = settings->mqtt;
 
-    const config_t mqtt_cfg = {
+    const msg_mqtt_config_t mqtt_cfg = {
         .event_handle = mqtt_event_handler,
         .user_context = (void *) mqtt,
         .host = settings->host,
@@ -78,8 +78,8 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings)
         .password = settings->password,
         .transport = settings->transport,
     };
-    printf("JWT %s\n",mqtt_cfg.password);
     handle_t client = mqtt->init(&mqtt_cfg);
+    printf("MQTT pointer %p\n", client);
     mqtt->start(client);
     mqtt->handle = client;
     mqtt->incoming_cb = settings->incoming_cb;
