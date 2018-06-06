@@ -16,7 +16,7 @@ void phev_controller_preOutConnectHook(msg_pipe_ctx_t * pipe)
 }
 message_t * phev_controller_input_responder(void * ctx, message_t * message) {
     
-    return NULL;
+    return msg_utils_createMsg((uint8_t *) "OK",3);
 }
 message_t * phev_controller_responder(void * ctx, message_t * message)
 {

@@ -23,7 +23,7 @@ void msg_gcp_asyncIncomingHandler(messagingClient_t *client, message_t *message)
 void msg_gcp_connected(mqtt_event_handle_t *event)
 {    
     ((msg_mqtt_t *)((mqtt_event_t *)event)->user_context)->client->connected = 1;
-    subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/devices/my-device2/config");
+    msg_mqtt_subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/devices/my-device2/config");
 }
 void msg_gcp_disconnected(mqtt_event_handle_t *event)
 {    
@@ -47,7 +47,7 @@ int msg_gcp_connect(messagingClient_t *client)
         .disconnected_cb = msg_gcp_disconnected,
         .incoming_cb = msg_gcp_asyncIncomingHandler,
         .client = client,
-        .transport = MQTT_TRANSPORT_OVER_SSL
+        .transport = MSG_MQTT_TRANSPORT_OVER_SSL,
     };
     
     ctx->mqtt->handle = mqtt_start(&settings);
@@ -62,7 +62,7 @@ message_t * msg_gcp_incomingHandler(messagingClient_t *client)
 void msg_gcp_outgoingHandler(messagingClient_t *client, message_t *message)
 {
     gcp_ctx_t * ctx = (gcp_ctx_t *) client->ctx;
-    publish(ctx->mqtt, ctx->topic, message);
+    msg_mqtt_publish(ctx->mqtt, ctx->topic, message);
 }
 messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
 {

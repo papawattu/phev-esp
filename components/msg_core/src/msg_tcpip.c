@@ -42,7 +42,8 @@ message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
             memcpy(message->data, ctx->readBuffer, len);
             message->length = len;
             return message;
-        } else {
+        } 
+        if(len < 0) {
             client->connected = 0;
         }
     }

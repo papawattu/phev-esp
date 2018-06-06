@@ -114,7 +114,7 @@ typedef struct msg_mqtt_settings_t
 
 handle_t mqtt_start(msg_mqtt_settings_t * settings);
 
-int publish(msg_mqtt_t *mqtt, topic_t topic, message_t * message);
-void subscribe(msg_mqtt_t *mqtt, topic_t topic);
+int msg_mqtt_publish(msg_mqtt_t *mqtt, topic_t topic, message_t * message);
+void msg_mqtt_subscribe(msg_mqtt_t *mqtt, topic_t topic);
 
 #endif
