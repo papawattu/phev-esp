@@ -5,6 +5,8 @@
 #include "msg_core.h"
 
 #define MAX_TRANSFORMERS 16
+#define MAX_MESSAGES 100
+
 typedef struct msg_pipe_ctx_t msg_pipe_ctx_t;
 
 typedef message_t *(*msg_pipe_splitter_t)(void *ctx, message_t *);

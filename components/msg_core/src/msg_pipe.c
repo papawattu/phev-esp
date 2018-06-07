@@ -38,8 +38,6 @@ message_t * msg_pipe_aggregrator(message_t * messages[], size_t size)
 {
     return msg_pipe_concat(messages,size);
 }
-#define MAX_MESSAGES 100
-
 message_t * msg_pipe_splitter(msg_pipe_ctx_t *ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t *message)
 {
     size_t totalBytesRead = 0;
@@ -121,7 +119,7 @@ void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, mess
     messagingClient_t *outboundClient = ((msg_pipe_ctx_t *) params)->out;
     message_t * out = message;
     msg_pipe_ctx_t * pipe = (msg_pipe_ctx_t *) params;
-    //printf("Got message inbound  %s", out->data);
+    
     if(pipe->in_chain != NULL)
     {
           out = msg_pipe_callInputTransformers(pipe, message);
@@ -142,7 +140,6 @@ void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, mes
     {
         out = msg_pipe_callOutputTransformers((msg_pipe_ctx_t *) params, message);
     }
-    //printf("Got message outbound %s", out->data);
     
     if(out != NULL) inboundClient->publish(inboundClient, out);
 }

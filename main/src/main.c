@@ -889,7 +889,6 @@ void start_app(void)
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     xTaskCreate(&main_loop, "main_task", 4096, NULL, 5, NULL);    
-    //main_loop(NULL);
 
 }
 void IRAM_ATTR timer_group0_isr(void *para)
