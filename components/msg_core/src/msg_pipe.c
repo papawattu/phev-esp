@@ -121,7 +121,7 @@ void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, mess
     messagingClient_t *outboundClient = ((msg_pipe_ctx_t *) params)->out;
     message_t * out = message;
     msg_pipe_ctx_t * pipe = (msg_pipe_ctx_t *) params;
-    
+    //printf("Got message inbound  %s", out->data);
     if(pipe->in_chain != NULL)
     {
           out = msg_pipe_callInputTransformers(pipe, message);
@@ -137,11 +137,12 @@ void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, mes
 {
     messagingClient_t *inboundClient = ((msg_pipe_ctx_t *) params)->in;
     message_t * out = message;
-
+    
     if(((msg_pipe_ctx_t *) params)->out_chain != NULL)
     {
         out = msg_pipe_callOutputTransformers((msg_pipe_ctx_t *) params, message);
     }
+    //printf("Got message outbound %s", out->data);
     
     if(out != NULL) inboundClient->publish(inboundClient, out);
 }

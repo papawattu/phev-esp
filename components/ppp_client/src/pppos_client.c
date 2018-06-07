@@ -235,7 +235,7 @@ static void pppos_client_task(void *pvParameters)
         //init gsm
         int gsmCmdIter = 0;
         while (1) {
-            ESP_LOGI(TAG, "%s", GSM_MGR_InitCmds[gsmCmdIter].cmd);
+            ESP_LOGD(TAG, "%s", GSM_MGR_InitCmds[gsmCmdIter].cmd);
             uart_write_bytes(uart_num, (const char *)GSM_MGR_InitCmds[gsmCmdIter].cmd,
                              GSM_MGR_InitCmds[gsmCmdIter].cmdSize);
 
@@ -244,7 +244,7 @@ static void pppos_client_task(void *pvParameters)
                 memset(data, 0, BUF_SIZE);
                 int len = uart_read_bytes(uart_num, (uint8_t *)data, BUF_SIZE, 500 / portTICK_RATE_MS);
                 if (len > 0) {
-                    ESP_LOGI(TAG, "%s", data);
+                    ESP_LOGD(TAG, "%s", data);
                 }
 
                 timeoutCnt += 500;
@@ -264,13 +264,13 @@ static void pppos_client_task(void *pvParameters)
             }
         }
 
-        ESP_LOGI(TAG, "Gsm init end");
+        ESP_LOGD(TAG, "Gsm init end");
 
         //ESP_LOGI(TAG, "ppp task group %d",(EventGroupHandle_t *) pvParameters);
         ppp = pppapi_pppos_create(&ppp_netif,
                                   ppp_output_callback, ppp_status_cb, pvParameters);
 
-        ESP_LOGI(TAG, "After pppapi_pppos_create");
+        ESP_LOGD(TAG, "After pppapi_pppos_create");
 
         if (ppp == NULL) {
             ESP_LOGE(TAG, "Error init pppos");
@@ -279,15 +279,15 @@ static void pppos_client_task(void *pvParameters)
 
         pppapi_set_default(ppp);
 
-        ESP_LOGI(TAG, "After pppapi_set_default");
+        ESP_LOGD(TAG, "After pppapi_set_default");
 
         pppapi_set_auth(ppp, PPPAUTHTYPE_PAP, PPP_User, PPP_Pass);
 
-        ESP_LOGI(TAG, "After pppapi_set_auth");
+        ESP_LOGD(TAG, "After pppapi_set_auth");
 
         pppapi_connect(ppp, 0);
 
-        ESP_LOGI(TAG, "After pppapi_connect");
+        ESP_LOGD(TAG, "After pppapi_connect");
 
         while (1) {
             memset(data, 0, BUF_SIZE);

@@ -56,7 +56,7 @@ static msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
 int msg_mqtt_publish(msg_mqtt_t * mqtt, topic_t topic, message_t *message)
 {
     message_t *msg = msg_utils_copyMsg(message);
-    return mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) msg->data, msg->length, 1, 0);
+    return mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) msg->data, msg->length, 0, 0);
 }
 
 void msg_mqtt_subscribe(msg_mqtt_t * mqtt, topic_t topic)
@@ -80,7 +80,6 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings)
         .disable_auto_reconnect = true,
     };
     handle_t client = mqtt->init(&mqtt_cfg);
-    printf("MQTT pointer %p\n", client);
     mqtt->start(client);
     mqtt->handle = client;
     mqtt->incoming_cb = settings->incoming_cb;

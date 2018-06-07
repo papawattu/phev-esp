@@ -78,7 +78,7 @@ void test_publish(void)
 
     msg_utils_copyMsg_ExpectAndReturn(&message,&out);
     
-    int msgId = publish(&mqtt, TOPIC, &message);
+    int msgId = msg_mqtt_publish(&mqtt, TOPIC, &message);
 
     TEST_ASSERT_EQUAL(1,mock_publish_Called);
     TEST_ASSERT_EQUAL(MSG_ID,msgId);

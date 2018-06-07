@@ -24,6 +24,7 @@
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
 #include "apps/sntp/sntp.h"
+#include "lwip/netif.h"
 
 #include "esp_ota_ops.h"
 #include "nvs.h"
@@ -567,12 +568,11 @@ static int tcp_read(int soc, uint8_t *buffer, int len, int timeout_ms)
 int logRead(int soc, uint8_t * buf, size_t len)
 {
 
-    int num = tcp_read(soc,buf,len,1000);
+    int num = tcp_read(soc,buf,len,10000);
 
-    //ESP_LOGI(APP_TAG, "Read %d bytes",num);
     if(num > 0) 
     {
-      //  ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,num,ESP_LOG_INFO);
+        //ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,num,ESP_LOG_INFO);
     }
     return num;
 }
@@ -767,7 +767,7 @@ message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
         return NULL;
     }
     cJSON_AddItemToObject(response, "length", length);  
-/*
+
     cJSON * data = cJSON_CreateArray();
     if(data == NULL) 
     {
@@ -785,13 +785,13 @@ message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
         }
         cJSON_AddItemToArray(data, item);
     }
-    */
+    
     output = cJSON_Print(response); 
 
     cJSON_Delete(response);
 
     message_t * outputMessage = msg_utils_createMsg((uint8_t *) output, strlen(output));
-    ESP_LOGI(APP_TAG,"%s",output);
+    //ESP_LOGI(APP_TAG,"%s",output);
     return outputMessage;
 }
 int connectToCar(const char *host, uint16_t port)
@@ -824,7 +824,7 @@ phevCtx_t * connectPipe(void)
         .out = msg_tcpip_createTcpIpClient(outSettings),
         .inputTransformer = transformJSONToHex,
         .outputTransformer = transformHexToJSON,
-        //.startWifi = wifi_conn_init,
+        .startWifi = wifi_conn_init,
     };
 
     return phev_controller_init(&phev_settings);
@@ -854,10 +854,10 @@ void main_loop(void *pvParameter)
         ESP_LOGI(APP_TAG,"Waiting to connect...");
         ctx = connectPipe();
         vTaskDelay(100 / portTICK_PERIOD_MS);
-    } while(!(ctx->pipe->in->connected && ctx->pipe->out->connected));
+    } while(!ctx->pipe->in->connected);
     
     ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->pipe->out->connected,ctx->pipe->in->connected);
-    
+
     while(1)
     {
         msg_pipe_loop(ctx->pipe);
@@ -867,12 +867,12 @@ void main_loop(void *pvParameter)
             vTaskDelay(10000 / portTICK_PERIOD_MS);
             ctx->pipe->in->connect(ctx->pipe->in);
 
-        }
+        } 
         if(!ctx->pipe->out->connected)
         {
-            ESP_LOGW(APP_TAG,"TCPIP connection dropped");
-            vTaskDelay(10000 / portTICK_PERIOD_MS);
-            ctx->pipe->out->connect(ctx->pipe->out);
+      //      ESP_LOGW(APP_TAG,"TCPIP connection not connected");
+      //      vTaskDelay(10000 / portTICK_PERIOD_MS);
+      //      ctx->pipe->out->connect(ctx->pipe->out);
 
         }   
     }
@@ -922,6 +922,15 @@ static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword)
     ESP_ERROR_CHECK(esp_wifi_start());
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
+    for (struct netif *pri = netif_list; pri != NULL; pri=pri->next)
+    {
+        ESP_LOGI(APP_TAG, "Interface priority is %c%c%d (" IPSTR "/" IPSTR " gateway " IPSTR ")",
+        pri->name[0], pri->name[1], pri->num,
+        IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
+        if(pri->name[0] == 'p') netif_set_default(pri);
+        //    SetDNSServer(dns);
+        //    return;
+    }
 }
 static void sntp_task(void)
 {
@@ -959,7 +968,7 @@ void start_app(void)
     esp_base_mac_addr_set(new_mac);
     
     wifiSetup();
-    wifi_conn_init(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
+//    wifi_conn_init(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 #ifndef NO_PPP    

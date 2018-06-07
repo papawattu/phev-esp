@@ -12,6 +12,7 @@ void phev_controller_preOutConnectHook(msg_pipe_ctx_t * pipe)
     ctx->startWifi(ctx->config->carConnectionWifi.ssid,ctx->config->carConnectionWifi.password);
     ((tcpip_ctx_t *) ctx->pipe->out->ctx)->host = ctx->config->host;
     ((tcpip_ctx_t *) ctx->pipe->out->ctx)->port = ctx->config->port;
+    //ctx->pipe->in->connect(ctx->pipe->in);
     
 }
 message_t * phev_controller_input_responder(void * ctx, message_t * message) {
