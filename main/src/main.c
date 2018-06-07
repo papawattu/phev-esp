@@ -676,7 +676,7 @@ void checkForUpdate(phevCtx_t * ctx, cJSON * json)
         if(!getConfigBool(update,UPDATE_OVER_GSM))
         {
             ESP_LOGI(APP_TAG,"Connect over wifi to update");
-            wifi_conn_init(ctx->config->updateWifi.ssid,ctx->config->updateWifi.password);
+            wifi_conn_init_update(ctx->config->updateWifi.ssid,ctx->config->updateWifi.password);
             xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
             ESP_LOGI(APP_TAG, "Connected to Wifi");
@@ -931,6 +931,25 @@ static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword)
         //    SetDNSServer(dns);
         //    return;
     }
+}
+
+static void wifi_conn_init_update(const char * wifiSSID, const char * wifiPassword)
+{
+    esp_wifi_stop();
+    wifi_config_t wifi_config = {
+        .sta.ssid = "",
+        .sta.password = "",
+    };
+    //memset(&wifi_config,0, sizeof(wifi_config_t));
+    strncpy((char *) wifi_config.sta.ssid, wifiSSID,strlen(wifiSSID));
+    strncpy((char *) wifi_config.sta.password, wifiPassword,strlen(wifiPassword));
+    
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_LOGI(APP_TAG, "start the WIFI SSID:[%s] password:[%s]", wifiSSID, wifiPassword);
+    ESP_ERROR_CHECK(esp_wifi_start());
+    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
+                        false, true, portMAX_DELAY);
 }
 static void sntp_task(void)
 {
