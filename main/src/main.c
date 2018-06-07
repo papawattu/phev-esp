@@ -48,6 +48,15 @@
 
 //#define NO_PPP
 //#define NO_OTA
+#define UPDATE_NAME "update"
+#define UPDATE_SSID "ssid"
+#define UPDATE_PASSWORD "password"
+#define UPDATE_HOST "host"
+#define UPDATE_PATH "path"
+#define UPDATE_PORT "port"
+#define LATEST_BUILD "latestBuild"
+#define UPDATE_OVER_GSM "overGsm"
+#define FORCE_UPDATE "forceUpdate"
 
 #ifndef BUILD_NUMBER
 #define BUILD_NUMBER 1
@@ -112,113 +121,11 @@ static EventGroupHandle_t mqtt_event_group;
 xQueueHandle timer_queue;
 
 const static int CONNECTED_BIT = BIT0;
-const static int SENT_BIT = BIT0;
 const static char *APP_TAG = "Main";
-
-xQueueHandle message_queue;
-
-esp_mqtt_client_handle_t mqtt_client = NULL;
-char * mqtt_topic;
-
-typedef struct mqtt_message_t {
-    uint8_t * data;
-    size_t length;
-    esp_mqtt_client_handle_t client;
-    char * topic;    
-} mqtt_message_t;
-
-static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
-{
-    esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
-    // your_context_t *context = event->context;
-    switch (event->event_id) {
-        case MQTT_EVENT_CONNECTED:
-            ESP_LOGI(APP_TAG, "MQTT_EVENT_CONNECTED");
-            msg_id = esp_mqtt_client_subscribe(client, "/devices/my-device2/config", 0);
-            ESP_LOGI(APP_TAG, "sent subscribe successful, msg_id=%d", msg_id);
-            connected = true;
-            break;
-        case MQTT_EVENT_DISCONNECTED:
-            ESP_LOGI(APP_TAG, "MQTT_EVENT_DISCONNECTED");
-            connected = false;
-            
-            break;
-
-        case MQTT_EVENT_SUBSCRIBED:
-            ESP_LOGI(APP_TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-            msg_id = esp_mqtt_client_publish(client, "/devices/my-device2/events", "data", strlen("data"), 0, 0);
-            ESP_LOGI(APP_TAG, "sent publish successful, msg_id=%d", msg_id);
-            break;
-        case MQTT_EVENT_UNSUBSCRIBED:
-            ESP_LOGI(APP_TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
-            break;
-        case MQTT_EVENT_PUBLISHED:
-            ESP_LOGI(APP_TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
-            break;
-        case MQTT_EVENT_DATA:
-            ESP_LOGI(APP_TAG, "MQTT_EVENT_DATA");
-            printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-            printf("DATA=%.*s\r\n", event->data_len, event->data);
-            break;
-        case MQTT_EVENT_ERROR:
-            ESP_LOGI(APP_TAG, "MQTT_EVENT_ERROR");
-            break;
-    }
-    return ESP_OK;
-}
-
-static esp_mqtt_client_handle_t mqtt_app_start(void)
-{
-    const esp_mqtt_client_config_t mqtt_cfg = {
-        .event_handle = mqtt_event_handler,
-        .host = "mqtt.googleapis.com",
-        .port = 8883,
-        .client_id = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device2",
-        .username = "my-device2",
-        .password = createJwt("phev-db3fa"),
-        .transport = MQTT_TRANSPORT_OVER_SSL,
-        //.cert_pem = (const char *)iot_eclipse_org_pem_start,
-    };
-
-    ESP_LOGI(APP_TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
-    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
-    esp_mqtt_client_start(client);
-    return client;
-}
-void sendMessageTask(void * pvParameter)
-{
-    ESP_LOGI(APP_TAG,"Started message task");
-
-    while(1)
-    {
-        mqtt_message_t message;
-        ESP_LOGI(APP_TAG,"Waiting for message");
-        
-        xQueueReceive(message_queue, &message, portMAX_DELAY);
-        ESP_LOGI(APP_TAG,"Message received %p Length %d",message.data, message.length);
-        
-        int delay = 250;
-        int id = esp_mqtt_client_publish(message.client, message.topic, (char *) message.data, message.length, 1, 0);
-        while(id < 0) {
-            ESP_LOGW(APP_TAG,"Message could not be pubished");
-    
-            vTaskDelay(delay / portTICK_PERIOD_MS);
-            id = esp_mqtt_client_publish(message.client, message.topic, (char * )message.data, message.length, 1, 0);
-            delay *= 2;
-        }
-        ESP_LOGI(APP_TAG,"Message published id %d",id);    
-    }
-}
 
 void messagePublished(mqtt_event_handle_t event)
 {
-    ESP_LOGI(APP_TAG,"Publish CB");
-//    xEventGroupSetBits(mqtt_event_group, SENT_BIT);
-}
-int dummyPublish(esp_mqtt_client_handle_t client, const char *topic, const char *data, int length, int qos, int retain) 
-{
-    return esp_mqtt_client_publish(client, topic, data, length, 1,0);
+    ESP_LOGD(APP_TAG,"Publish Callback");
 }
 
 msg_mqtt_t mqtt = {
@@ -639,16 +546,6 @@ bool getConfigBool(cJSON * json, char * option)
     
     return cJSON_IsTrue(value);
 }
-#define UPDATE_NAME "update"
-#define UPDATE_SSID "ssid"
-#define UPDATE_PASSWORD "password"
-#define UPDATE_HOST "host"
-#define UPDATE_PATH "path"
-#define UPDATE_PORT "port"
-#define LATEST_BUILD "latestBuild"
-#define UPDATE_OVER_GSM "overGsm"
-#define FORCE_UPDATE "forceUpdate"
-    
     
 void checkForUpdate(phevCtx_t * ctx, cJSON * json)
 {
@@ -842,7 +739,7 @@ void ping_task(void *pvParameter)
         while(ctx->pipe->in->connected && ctx->pipe->out->connected)
         {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
-            //phev_controller_ping(ctx);
+            phev_controller_ping(ctx);
         }
         vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
@@ -867,13 +764,6 @@ void main_loop(void *pvParameter)
             ESP_LOGW(APP_TAG,"MQTT connection dropped");
             vTaskDelay(10000 / portTICK_PERIOD_MS);
             ctx->pipe->in->connect(ctx->pipe->in);
-
-        } 
-        if(!ctx->pipe->out->connected)
-        {
-      //      ESP_LOGW(APP_TAG,"TCPIP connection not connected");
-      //      vTaskDelay(10000 / portTICK_PERIOD_MS);
-      //      ctx->pipe->out->connect(ctx->pipe->out);
 
         }   
     }
@@ -988,7 +878,6 @@ void start_app(void)
     esp_base_mac_addr_set(new_mac);
     
     wifiSetup();
-//    wifi_conn_init(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 #ifndef NO_PPP    
@@ -1081,11 +970,10 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( err );
     tcpip_adapter_init();
+
     //timer_example_evt_task(NULL);
     
     ESP_LOGI(APP_TAG,"PHEV ESP Build %d", BUILD_NUMBER);
-
-    //ESP_LOGI(APP_TAG,"Size of mqtt config_t %d size of esp config_t %d",sizeof(msg_mqtt_config_t), sizeof(esp_mqtt_client_config_t));
     
     start_app();
 }
