@@ -66,6 +66,7 @@ static bool connected = false;
 esp_mqtt_client_handle_t client;
 
 char *createJwt(const char *project_id);
+static void wifi_conn_init_update(const char *ssid, const char * password);
 static void wifi_conn_init(const char *ssid, const char * password);
 void startTimer(void);
 
@@ -924,7 +925,7 @@ static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword)
                         false, true, portMAX_DELAY);
     for (struct netif *pri = netif_list; pri != NULL; pri=pri->next)
     {
-        ESP_LOGI(APP_TAG, "Interface priority is %c%c%d (" IPSTR "/" IPSTR " gateway " IPSTR ")",
+        ESP_LOGD(APP_TAG, "Interface priority is %c%c%d (" IPSTR "/" IPSTR " gateway " IPSTR ")",
         pri->name[0], pri->name[1], pri->num,
         IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
         if(pri->name[0] == 'p') netif_set_default(pri);
