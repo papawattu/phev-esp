@@ -7,6 +7,7 @@
 #include "esp_log.h"
 #include "esp_types.h"
 #include "nvs_flash.h"
+#include "driver/gpio.h"
 
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -48,6 +49,8 @@
 
 //#define NO_PPP
 //#define NO_OTA
+
+#define GSM_RESET_PIN GPIO_NUM_21
 #define UPDATE_NAME "update"
 #define UPDATE_SSID "ssid"
 #define UPDATE_PASSWORD "password"
@@ -787,7 +790,7 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
     case SYSTEM_EVENT_STA_DISCONNECTED:
         /* This is a workaround as ESP32 WiFi libs don't currently
                auto-reassociate. */
-        esp_wifi_connect();
+        //esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
         break;
     default:
@@ -841,6 +844,15 @@ static void wifi_conn_init_update(const char * wifiSSID, const char * wifiPasswo
     ESP_ERROR_CHECK(esp_wifi_start());
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
+        for (struct netif *pri = netif_list; pri != NULL; pri=pri->next)
+    {
+        ESP_LOGD(APP_TAG, "Interface priority is %c%c%d (" IPSTR "/" IPSTR " gateway " IPSTR ")",
+        pri->name[0], pri->name[1], pri->num,
+        IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
+     //   if(pri->name[0] == 'p') netif_set_default(pri);
+        //    SetDNSServer(dns);
+        //    return;
+    }
 }
 static void sntp_task(void)
 {
@@ -957,6 +969,30 @@ void startTimer(void)
 
 }
  
+void resetGSMModule(int resetPin)
+{
+    ESP_LOGI(APP_TAG,"Resetting GSM module");
+    gpio_config_t io_conf;
+    //disable interrupt
+    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
+    //set as output mode
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    //bit mask of the pins that you want to set,e.g.GPIO18/19
+    io_conf.pin_bit_mask = 1ULL << resetPin;
+    //disable pull-down mode
+    io_conf.pull_down_en = 0;
+    //disable pull-up mode
+    io_conf.pull_up_en = 0;
+    //configure GPIO with the given settings
+    gpio_config(&io_conf);
+    gpio_set_level(resetPin, 0);
+    //ESP_LOGI(APP_TAG,"Before Level %d", gpio_get_level(GPIO_NUM_19));
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    gpio_set_level(resetPin, 1);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    //ESP_LOGI(APP_TAG,"After Level %d", gpio_get_level(GPIO_NUM_19));
+    gpio_set_level(resetPin, 0);
+}
 void app_main(void)
 {
     esp_err_t err = nvs_flash_init();
@@ -968,6 +1004,7 @@ void app_main(void)
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK( err );
+    resetGSMModule(GPIO_NUM_21);
     tcpip_adapter_init();
 
     //timer_example_evt_task(NULL);

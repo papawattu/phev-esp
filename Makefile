@@ -8,17 +8,19 @@ TEST_DIR ?= $(COMP_DIR)/test
 CJSON_DIR ?= ${CJSON_DIR}
 INC_DIRS := $(shell find $(COMP_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-CPPFLAGS ?= $(INC_FLAGS) -DBUILD_NUMBER=$(BUILD_NUMBER)
+CPPFLAGS ?= $(INC_FLAGS) -DBUILD_NUMBER=$(BUILD_NUMBER) -MMD -Wall -Wextra -g
 TEST_BUILD_DIR ?= $(BUILD_DIR)/test
 TEST_MAKEFILE = $(TEST_BUILD_DIR)/MakefileTestSupport
 #INCLUDE_PATH += -I$(SRC_DIR)/include 
-INCLUDE_PATH += -I$(INC_FLAGS) -std=c99
+INCLUDE_PATH += -lcjson -I$(INC_FLAGS) -std=c99 -lcjson
 CMOCK_DIR := ${CMOCK_DIR}
 RM := rm
-
+TEST_CFLAGS += -lcjson
+LDFLAGS +=-lcjson
 export
 
 ifdef IDF_PATH
+undefine LDFLAGS
 unexport
 include $(IDF_PATH)/make/project.mk
 endif

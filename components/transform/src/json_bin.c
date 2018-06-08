@@ -9,50 +9,16 @@
 #define LIGHTS_CMD      "lights"
 #define ON              "on"
 #define OFF             "off"
-/*
-#ifdef _TEST_
-typedef struct cJSON 
+
+char * getConfigString(cJSON * json, char * option) 
 {
-    char * valuestring;
-} cJSON;
-
-cJSON * cJSON_Parse(const char* data) 
-{
-    
-    return NULL;
-}
-
-cJSON * cJSON_GetObjectItemCaseSensitive(cJSON *b, char *a)
-{
-    return NULL;
-}
-#endif
-message_t *transformLightsJSONToBin(message_t *message)
-{
-    message_t *bin = malloc(sizeof(message_t));
-    data_t *data = malloc(SIMPLE_MESSAGE_SIZE);
-
-    cJSON *json = cJSON_Parse((const char *)message->data);
-
-    cJSON *lights = NULL;
-
-    lights = cJSON_GetObjectItemCaseSensitive(json, LIGHTS_CMD);
-
-    if(lights == NULL) 
-    {
+    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
+    if(value == NULL) {
+        //ESP_LOGE(APP_TAG,"Cannot find option %s", option);
         return NULL;
     }
-    if (strcmp(ON, lights->valuestring) == 0)
-    {
-        memcpy(data, (unsigned char[]){0xf6, 0x04, 0x00, LIGHTS_REG, LIGHTS_ON_VAL, 0x05}, 6);
-    }
-    else
-    {
-        memcpy(data, (unsigned char[]){0xf6, 0x04, 0x00, LIGHTS_REG, LIGHTS_OFF_VAL, 0x05}, 6);
-    }
 
-    bin->data = data;
-    bin->length = SIMPLE_MESSAGE_SIZE;
-
-    return bin;
-} */
+    //ESP_LOGI(APP_TAG,"Option %s set to %s", option, value->valuestring);
+    
+    return value->valuestring;
+}
