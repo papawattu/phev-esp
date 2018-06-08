@@ -480,7 +480,7 @@ int logRead(int soc, uint8_t * buf, size_t len)
 
     if(num > 0) 
     {
-        //ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,num,ESP_LOG_INFO);
+        ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,num,ESP_LOG_DEBUG);
     }
     return num;
 }
