@@ -486,9 +486,9 @@ int logRead(int soc, uint8_t * buf, size_t len)
 }
 int logWrite(int soc, uint8_t * buf, size_t len)
 {
-    //ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,len,ESP_LOG_INFO);
+    ESP_LOG_BUFFER_HEXDUMP(APP_TAG,buf,len,ESP_LOG_DEBUG);
     int num = lwip_write(soc,buf,len);
-    //ESP_LOGI(APP_TAG, "Written %d bytes",num);
+    ESP_LOGD(APP_TAG, "Written %d bytes",num);
     
     return num;
 }
