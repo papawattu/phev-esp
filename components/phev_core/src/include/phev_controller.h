@@ -1,6 +1,6 @@
 #ifndef _PHEV_CONTROLLER_H_
 #define _PHEV_CONTROLLER_H_
-
+#include <stdbool.h>
 #include "phev_core.h"
 #include "msg_pipe.h"
 
@@ -32,6 +32,7 @@ struct phevCtx_t {
     phevStartWifi_t startWifi;
     int (* connect)(const char*, uint16_t);
     uint8_t currentPing;
+    bool successfulPing;
 }; 
 
 typedef struct phevEvent_t

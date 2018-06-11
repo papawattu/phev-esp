@@ -18,7 +18,7 @@ void phev_controller_preOutConnectHook(msg_pipe_ctx_t * pipe)
 }
 message_t * phev_controller_input_responder(void * ctx, message_t * message) {
     
-    return msg_utils_createMsg((uint8_t *) "OK",3);
+    return NULL;
 }
 message_t * phev_controller_responder(void * ctx, message_t * message)
 {
@@ -34,7 +34,8 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
             return phev_core_convertToMessage(phev_core_responseHandler(&phevMsg));
         } else {
             if(phevMsg.command == 0x9f) {
-                phevCtx->currentPing = (phevCtx->currentPing + 1) % 0x3c;
+                phevCtx->currentPing = (message->data[3] + 1) % 100;
+                phevCtx->successfulPing = true;
             }
         }
     }
@@ -103,6 +104,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     ctx->pipe = msg_pipe(pipe_settings);
     ctx->queueSize = 0;
     ctx->currentPing = 0;
+    ctx->successfulPing = false;
 
     return ctx;
 }
@@ -212,9 +214,8 @@ void phev_controller_ping(phevCtx_t * ctx)
 */
         ctx->pipe->out->publish(ctx->pipe->out, phev_core_convertToMessage(phev_core_commandMessage(KO_WF_DATE_INFO_SYNC_SP,pingTime, sizeof(pingTime))));
     }
-    
+    ctx->successfulPing = false;
     ctx->pipe->out->publish(ctx->pipe->out, phev_core_convertToMessage(phev_core_pingMessage(ctx->currentPing)));
-    
     
 }
 void phev_controller_resetPing(phevCtx_t * ctx)

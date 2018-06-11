@@ -738,14 +738,15 @@ void ping_task(void *pvParameter)
     
     while(1)
     {
-        phev_controller_resetPing(ctx);
+        if(ctx->currentPing > 0) phev_controller_resetPing(ctx);
         
         while(ctx->pipe->out->connected)
         {
-            vTaskDelay(999 / portTICK_PERIOD_MS);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
             phev_controller_ping(ctx);
+            ESP_LOGD(APP_TAG, "Free heap %d", system_get_free_heap_size());
         }
-        //vTaskDelay(10000 / portTICK_PERIOD_MS);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
 void main_loop(void *pvParameter)
@@ -795,6 +796,7 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
                auto-reassociate. */
         //esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+        esp_restart();
         break;
     default:
         break;
