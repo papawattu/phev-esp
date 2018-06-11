@@ -7,7 +7,7 @@ static int dummyReadCalled = 0;
 static int dummyWriteCalled = 0;
 static int dummyConnectCalled = 0;
 
-
+/*
 int dummyRead_noMessage(int socket,uint8_t* buf, size_t size)
 {
     dummyReadNoMessageCalled ++;
@@ -112,4 +112,4 @@ void test_tcpip_client_incoming_handler(void)
     client.ctx = (void *) &ctx;
     message_t *message = msg_tcpip_incomingHandler(&client);
     TEST_ASSERT_EQUAL(1,dummyReadCalled);
-} 
+} */
