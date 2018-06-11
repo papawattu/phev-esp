@@ -21,7 +21,9 @@ void dataEvent(mqtt_event_handle_t event)
     message->length = event->data_len;
     
     ((msg_mqtt_t *) event->user_context)->incoming_cb(((msg_mqtt_t *) event->user_context)->client, message);
-
+    free(topic);
+    free(data);
+    
 }
 
 static msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
@@ -56,7 +58,10 @@ static msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
 int msg_mqtt_publish(msg_mqtt_t * mqtt, topic_t topic, message_t *message)
 {
     message_t *msg = msg_utils_copyMsg(message);
-    return mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) msg->data, msg->length, 0, 0);
+    int ret =  mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) msg->data, msg->length, 0, 0);
+    free(msg->data);
+    free(msg);
+    return ret;
 }
 
 void msg_mqtt_subscribe(msg_mqtt_t * mqtt, topic_t topic)

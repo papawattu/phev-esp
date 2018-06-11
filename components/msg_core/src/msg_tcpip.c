@@ -60,6 +60,9 @@ void msg_tcpip_outgoingHandler(messagingClient_t *client, message_t *message)
             if(num != message->length)
             {
                 client->connected = 0;
+            } else {
+                //free(message->data);
+                //free(message);
             }
         }
     }

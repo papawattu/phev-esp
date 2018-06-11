@@ -9,7 +9,7 @@ void tearDown()
 {
 
 }
-
+/*
 static int startInStubNum = 0;
 
 int startInStub(messagingClient_t *client)
@@ -746,7 +746,7 @@ message_t * splitter_two_messages(message_t * message)
         splitterTwoMessagesCalled =2;
         return msg;
     }
-} /* 
+} 
 void test_should_call_out_splitter_two_messages()
 {
     messagingSettings_t settings;

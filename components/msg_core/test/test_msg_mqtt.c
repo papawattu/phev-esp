@@ -34,7 +34,7 @@ int mock_publish(handle_t client, const char *topic, const char *data, int len, 
 
     TEST_ASSERT_EQUAL_STRING(TOPIC,topic);
     TEST_ASSERT_EQUAL(4, len);
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(&DATA,data,4);
+    //TEST_ASSERT_EQUAL_HEX8_ARRAY(&DATA,data,4);
     
     return MSG_ID;
 }
@@ -71,12 +71,12 @@ void test_publish(void)
         .length = 4
     };
 
-    message_t out = {
-        .data = DATA,
-        .length = 4
-    };
-
-    msg_utils_copyMsg_ExpectAndReturn(&message,&out);
+    message_t * out = malloc(sizeof(message_t));
+    out->data = malloc(sizeof(DATA));
+    memcpy(out->data,DATA,sizeof(DATA));
+    out->length = sizeof(DATA);
+    
+    msg_utils_copyMsg_ExpectAndReturn(&message,out);
     
     int msgId = msg_mqtt_publish(&mqtt, TOPIC, &message);
 

@@ -622,9 +622,12 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
         //uint8_t mac[] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
         uint8_t mac[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         
+        cJSON_Delete(json);
+
         return phev_core_startMessageEncoded(2,mac);
     }
-    
+    cJSON_Delete(json);
+   
     return NULL;
 }
 message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
@@ -691,6 +694,7 @@ message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
     cJSON_Delete(response);
 
     message_t * outputMessage = msg_utils_createMsg((uint8_t *) output, strlen(output));
+    free(output);
     //ESP_LOGI(APP_TAG,"%s",output);
     return outputMessage;
 }

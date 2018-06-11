@@ -1,11 +1,19 @@
-#include "msg_core.h"
 #include "unity.h"
+#include "msg_core.h"
+#include "mock_msg_utils.h"
 
 static int outTimes = 0;
 static int inTimes = 0;
 static int started = 0;
 static int connected = 0;
 
+void setUp(void)
+{
+    message_t * message = malloc(sizeof(message_t));
+    message->data = malloc(1);
+    message->length;
+    msg_utils_copyMsg_IgnoreAndReturn(message);
+}
 void outHandler(messagingClient_t *client, message_t *message) 
 {
     outTimes ++;
