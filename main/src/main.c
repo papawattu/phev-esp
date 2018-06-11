@@ -619,7 +619,8 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
                                                     );
         message_t out;
         uint8_t * data;
-        uint8_t mac[] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
+        //uint8_t mac[] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
+        uint8_t mac[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         
         return phev_core_startMessageEncoded(2,mac);
     }
@@ -741,10 +742,10 @@ void ping_task(void *pvParameter)
         
         while(ctx->pipe->out->connected)
         {
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(999 / portTICK_PERIOD_MS);
             phev_controller_ping(ctx);
         }
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
+        //vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
 void main_loop(void *pvParameter)
@@ -879,6 +880,9 @@ static void sntp_task(void)
 }
 void wifiSetup(void)
 {
+    uint8_t new_mac[8] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
+    esp_base_mac_addr_set(new_mac);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_handler, NULL));
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -888,8 +892,6 @@ void wifiSetup(void)
 void start_app(void)
 {
     ESP_LOGI(APP_TAG, "Application starting...");
-    uint8_t new_mac[8] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
-    esp_base_mac_addr_set(new_mac);
     
     wifiSetup();
 
