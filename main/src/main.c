@@ -334,7 +334,7 @@ static void ota_task(void *pvParameter)
                 return;
             }
             binary_file_length += buff_len;
-            //ESP_LOGI(APP_TAG, "Have written image length %d", binary_file_length);
+            ESP_LOGD(APP_TAG, "Have written image length %d", binary_file_length);
         } else if (buff_len == 0) {  /*packet over*/
             socket_flag = false;
             ESP_LOGI(APP_TAG, "Connection closed, all packets received");
