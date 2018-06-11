@@ -45,7 +45,7 @@ static int subscribeOutStubNum = 0;
 void subscribeOutStub(messagingClient_t client, void * params, messagingSubscriptionCallback_t callback)
 {
     subscribeOutStubNum++;
-} /*
+} 
 void test_should_call_start_incoming()
 {
     messagingSettings_t settings;
@@ -746,7 +746,7 @@ message_t * splitter_two_messages(message_t * message)
         splitterTwoMessagesCalled =2;
         return msg;
     }
-} 
+} /* 
 void test_should_call_out_splitter_two_messages()
 {
     messagingSettings_t settings;
@@ -836,7 +836,7 @@ void test_should_call_out_splitter_two_messages_and_get_back_both()
     msg_pipe_outboundSubscription(ctx->out, (void *) ctx, &message);
     
     TEST_ASSERT_EQUAL(2,splitterTwoMessagesCalled);
-}
+} 
 
 static int all_splitterCalled = 0;
 static int all_inputTransformerCalled = 0;
@@ -1090,4 +1090,5 @@ void test_should_call_pre_in_connection_hook()
     msg_pipe_ctx_t * ctx = msg_pipe(pipe_settings);
     
     TEST_ASSERT_EQUAL(1, dummyPreConnectHookCalled);
- } */
+ } 
+*/

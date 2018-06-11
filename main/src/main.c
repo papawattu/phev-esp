@@ -619,11 +619,9 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
                                                     );
         message_t out;
         uint8_t * data;
-        uint8_t mac[] = {0xaa,0xbb,0xcc,0xdd,0xee,0x0a};
+        uint8_t mac[] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
         
-        out.length = phev_core_encodeMessage(phev_core_startMessage(2,mac),&data);
-        out.data = data;
-        return msg_utils_copyMsg(&out);
+        return phev_core_startMessageEncoded(2,mac);
     }
     
     return NULL;
@@ -739,7 +737,9 @@ void ping_task(void *pvParameter)
     
     while(1)
     {
-        while(ctx->pipe->in->connected && ctx->pipe->out->connected)
+        phev_controller_resetPing(ctx);
+        
+        while(ctx->pipe->out->connected)
         {
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             phev_controller_ping(ctx);
@@ -758,7 +758,7 @@ void main_loop(void *pvParameter)
     } while(!ctx->pipe->in->connected);
     
     ESP_LOGI(APP_TAG,"TCPIP connected %d MQTT connected %d",ctx->pipe->out->connected,ctx->pipe->in->connected);
-
+    xTaskCreate(&ping_task, "ping_task", 4096, (void *) ctx, 5, NULL);   
     while(1)
     {
         msg_pipe_loop(ctx->pipe);
@@ -769,6 +769,8 @@ void main_loop(void *pvParameter)
             ctx->pipe->in->connect(ctx->pipe->in);
 
         }   
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+            
     }
 
     ESP_LOGI(APP_TAG,"Disconnected...");

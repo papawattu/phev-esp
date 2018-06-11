@@ -1,6 +1,7 @@
 #include "unity.h"
 #include "phev_core.h"
-#include "msg_core.h"
+//#include "msg_core.h"
+#include "mock_msg_utils.h"
 
 const uint8_t singleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x10, 0x06, 0x06, 0x13, 0x05, 0x13, 0x01, 0xd3};
 const uint8_t doubleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff, 0x6f, 0x0a, 0x00, 0x13, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff};
@@ -186,7 +187,7 @@ void test_ping_message(void)
     TEST_ASSERT_EQUAL(0x04, msg->length);
     TEST_ASSERT_EQUAL(REQUEST_TYPE, msg->type);
     TEST_ASSERT_EQUAL(num, msg->reg);
-    TEST_ASSERT_EQUAL(0, *msg->data);
+    TEST_ASSERT_EQUAL(0, msg->data[0]);
 }
 void test_response_handler_start(void)
 {
@@ -205,13 +206,13 @@ void test_response_handler_start(void)
     TEST_ASSERT_EQUAL(RESPONSE_TYPE, msg->type);
     TEST_ASSERT_EQUAL(0x29, msg->reg);
     TEST_ASSERT_EQUAL(0, *msg->data);   
-}
+} 
 void test_calc_checksum(void)
 {
     const uint8_t data[] = {0x2f,0x04,0x00,0x01,0x01,0x00};
     uint8_t checksum = phev_core_checksum(data);
     TEST_ASSERT_EQUAL(0x35,checksum);
-}
+} 
 void test_phev_message_to_message(void)
 {
     const phevMessage_t * phevMsg = phev_core_simpleRequestCommandMessage(0xaa, 0x00);
@@ -231,4 +232,24 @@ void test_phev_ack_message(void)
     
     TEST_ASSERT_NOT_NULL(phevMsg);
     TEST_ASSERT_EQUAL_HEX8_ARRAY(expected, phev_core_convertToMessage(phevMsg)->data,6);   
+}
+void test_phev_start_message(void)
+{
+    const uint8_t mac[] = {0,0,0,0,0,0};
+    const uint8_t data[] = {0xf2, 0x0a, 0x00, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff,
+                                0xf6, 0x04, 0x00, 0xaa, 0x00, 0xa4};
+    const uint8_t expected[] = {0xf2, 0x0a, 0x00, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff,
+                                0xf6, 0x04, 0x00, 0xaa, 0x00, 0xa4};
+    
+    message_t msg = {
+        .data = data,
+        .length = sizeof(data),
+    };
+    msg_utils_concatMessages_IgnoreAndReturn(&msg);
+    
+    message_t * message = phev_core_startMessageEncoded(2,mac);
+    
+    TEST_ASSERT_NOT_NULL(message);
+    TEST_ASSERT_EQUAL(18, message->length);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(expected, message->data, 18);   
 }

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "phev_core.h"
 #include "msg_core.h"
+#include "msg_utils.h"
 
 const uint8_t allowedCommands[] = {0xf2, 0x2f, 0xf6, 0x6f, 0xf9, 0x9f};
 
@@ -117,7 +118,17 @@ phevMessage_t *phev_core_startMessage(uint8_t pos, uint8_t *mac)
     memcpy(&data[1],mac, 6);
     return phev_core_requestMessage(START_SEND, 0x01, data, 7);
 }
-phevMessage_t *phev_core_pingMessage(uint8_t *number)
+message_t *phev_core_startMessageEncoded(uint8_t pos, uint8_t *mac)
+{
+    uint8_t data[7];
+    data[0] = pos;
+    memcpy(&data[1],mac, 6);
+    return msg_utils_concatMessages(
+                                    phev_core_convertToMessage(phev_core_requestMessage(START_SEND, 0x01, data, 7)),
+                                    phev_core_convertToMessage(phev_core_simpleRequestCommandMessage(0xaa,0))
+                                );
+}
+phevMessage_t *phev_core_pingMessage(uint8_t number)
 {
     const uint8_t data = 0;
     return phev_core_requestMessage(PING_SEND_CMD, number, &data, 1);
@@ -142,7 +153,7 @@ uint8_t phev_core_checksum(const uint8_t * data)
 }
 message_t * phev_core_convertToMessage(phevMessage_t *message)
 {
-    message_t * out = malloc(message->length + 2);
+    message_t * out = malloc(sizeof(message_t));   
 
     out->length = phev_core_encodeMessage(message, &out->data);
 

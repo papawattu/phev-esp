@@ -12,4 +12,6 @@ void msg_utils_destroyMsg(message_t * message);
 
 message_t * msg_utils_copyMsg(message_t * message);
 
+message_t * msg_utils_concatMessages(message_t * message1, message_t * message2);
+
 #endif

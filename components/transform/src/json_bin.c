@@ -21,4 +21,4 @@ char * getConfigString(cJSON * json, char * option)
     //ESP_LOGI(APP_TAG,"Option %s set to %s", option, value->valuestring);
     
     return value->valuestring;
-}
+} 

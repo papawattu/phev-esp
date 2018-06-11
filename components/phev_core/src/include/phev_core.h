@@ -86,7 +86,9 @@ phevMessage_t *phev_core_ackMessage(uint8_t command, uint8_t reg);
 
 phevMessage_t *phev_core_startMessage(uint8_t pos, uint8_t *mac);
 
-phevMessage_t *phev_core_pingMessage(uint8_t *number);
+message_t *phev_core_startMessageEncoded(uint8_t pos, uint8_t *mac);
+
+phevMessage_t *phev_core_pingMessage(uint8_t number);
 
 phevMessage_t *phev_core_responseHandler(phevMessage_t * message);
 

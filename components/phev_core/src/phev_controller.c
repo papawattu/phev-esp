@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 #include "phev_controller.h"
 #include "msg_pipe.h"
 #include "msg_utils.h"
@@ -26,7 +27,7 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
         phevMessage_t phevMsg;
 
         phev_core_decodeMessage(message->data, message->length, &phevMsg);
-        if(phevMsg.type == REQUEST_TYPE)
+        if((phevMsg.type == REQUEST_TYPE)) //-- && (phevMsg.command == 0x6f))
         {
         
             return phev_core_convertToMessage(phev_core_responseHandler(&phevMsg));
@@ -129,7 +130,6 @@ void phev_controller_setCarConnectionConfig(phevCtx_t * ctx, const char * ssid, 
     config->port = port;
 }
 
-#define IMAGE_PREFIX "firmware-"
 void phev_controller_setUpdateConfig(phevCtx_t * ctx, const char * ssid, 
                                         const char * password,
                                         const char * host,
@@ -175,9 +175,43 @@ void phev_controller_connect(phevCtx_t * ctx)
     //phev_controller_waitForResponse(ctx);
 
 } 
-
+#define KO_WF_DATE_INFO_SYNC_SP 5
 void phev_controller_ping(phevCtx_t * ctx)
 {
-    ctx->pipe->out->publish(ctx->pipe->out, phev_core_convertToMessage(phev_core_pingMessage(ctx->currentPing++)));
+    if((ctx->currentPing % 30) == 0) 
+    {
+        time_t now;
+        struct tm timeinfo;
+        time(&now);
+        localtime_r(&now, &timeinfo);
+        //const sendDateSync = date => sendFullCommand(codes.KO_WF_DATE_INFO_SYNC_SP,Buffer.from([date.getFullYear()-2000,date.getMonth()+1,date.getDate(),date.getHours(),date.getMinutes(),date.getSeconds(),1]))
+        const uint8_t pingTime[] = {
+            timeinfo.tm_year - 100,
+            timeinfo.tm_mon + 1,
+            timeinfo.tm_mday,
+            timeinfo.tm_hour,
+            timeinfo.tm_min,
+            timeinfo.tm_sec,
+            1
+        };
+  /*      
+        printf("Send date YY %d MM %d DD %d hh %d mm %d ss %d\n", 
+            pingTime[0],
+            pingTime[1],
+            pingTime[2],
+            pingTime[3],
+            pingTime[4],
+            pingTime[5],
+            pingTime[6]
+        );
+*/
+        ctx->pipe->out->publish(ctx->pipe->out, phev_core_convertToMessage(phev_core_commandMessage(KO_WF_DATE_INFO_SYNC_SP,pingTime, sizeof(pingTime))));
+    }
+    ctx->pipe->out->publish(ctx->pipe->out, phev_core_convertToMessage(phev_core_pingMessage((ctx->currentPing++) % 100)));
 }
+void phev_controller_resetPing(phevCtx_t * ctx)
+{
+    ctx->currentPing = 0;
+}
+
 
