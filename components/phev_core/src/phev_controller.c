@@ -27,7 +27,7 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
         phevMessage_t phevMsg;
 
         phev_core_decodeMessage(message->data, message->length, &phevMsg);
-        if((phevMsg.type == REQUEST_TYPE)) //-- && (phevMsg.command == 0x6f))
+        if((phevMsg.type == REQUEST_TYPE) && (phevMsg.command == 0x6f))
         {
         
             return phev_core_convertToMessage(phev_core_responseHandler(&phevMsg));
@@ -207,7 +207,9 @@ void phev_controller_ping(phevCtx_t * ctx)
 */
         ctx->pipe->out->publish(ctx->pipe->out, phev_core_convertToMessage(phev_core_commandMessage(KO_WF_DATE_INFO_SYNC_SP,pingTime, sizeof(pingTime))));
     }
-    ctx->pipe->out->publish(ctx->pipe->out, phev_core_convertToMessage(phev_core_pingMessage((ctx->currentPing++) % 100)));
+    ctx->pipe->out->publish(ctx->pipe->out, phev_core_convertToMessage(phev_core_pingMessage(ctx->currentPing)));
+    
+    ctx->currentPing = (ctx->currentPing + 1) % 100;
 }
 void phev_controller_resetPing(phevCtx_t * ctx)
 {

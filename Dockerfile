@@ -1,7 +1,7 @@
 FROM gcc:latest
 RUN \
   apt-get update && \
-  apt-get install -y ruby flex bison gperf python python-serial build-essential gcc clang git libssl-dev autoconf libtool cmake doxygen pkg-config unzip wget
+  apt-get install -y ccache ruby flex bison gperf python python-serial build-essential gcc clang git libssl-dev autoconf libtool cmake doxygen pkg-config unzip wget
 WORKDIR /usr/esp
 RUN wget -q https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
 RUN tar -xzf xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
