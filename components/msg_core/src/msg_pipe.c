@@ -31,7 +31,7 @@ message_t * msg_pipe_concat(message_t * messages[], size_t size)
     message->data = malloc(total);
     memcpy(message->data, data, total);
     message->length = total;
-
+    free(data);
     return message;
 }
 message_t * msg_pipe_aggregrator(message_t * messages[], size_t size)
@@ -64,7 +64,14 @@ message_t * msg_pipe_splitter(msg_pipe_ctx_t *ctx, messagingClient_t * client, m
         }
     }
     
-    return msg_pipe_aggregrator(messages,numMessages);    
+    message_t * ret = msg_pipe_aggregrator(messages,numMessages); 
+
+    for(int i=0;i< numMessages;i ++)
+    {
+        free(messages[i]->data);
+        free(messages[i]);
+    }
+    return ret;   
 }
 message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message) 
 {
@@ -128,8 +135,11 @@ void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, mess
     {
         msg_pipe_out_connect(pipe);
     }    
-    if(out != NULL) outboundClient->publish(outboundClient, out);
-    
+    if(out != NULL) 
+    {
+        outboundClient->publish(outboundClient, out);
+        free(out);
+    }
 }
 void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, message_t * message)
 {
@@ -141,7 +151,12 @@ void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, mes
         out = msg_pipe_callOutputTransformers((msg_pipe_ctx_t *) params, message);
     }
     
-    if(out != NULL) inboundClient->publish(inboundClient, out);
+    if(out != NULL) 
+    {
+        inboundClient->publish(inboundClient, out);
+        free(out);
+    }
+    
 }
 
 int msg_pipe_in_connect(msg_pipe_ctx_t * ctx)
