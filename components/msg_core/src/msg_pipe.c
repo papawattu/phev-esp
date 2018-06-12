@@ -94,6 +94,8 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
         if(response != NULL)
         {
            client->publish(client,response);
+           free(response->data);
+           free(response);
         }
     }
     if(chain->outputTransformer != NULL)

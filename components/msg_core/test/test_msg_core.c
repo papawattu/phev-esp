@@ -16,10 +16,7 @@ uint8_t * copyData(uint8_t  * data, size_t length)
 
 void setUp(void)
 {
-    message_t * message = malloc(sizeof(message_t));
-    message->data = malloc(1);
-    message->length;
-    //msg_utils_copyMsg_IgnoreAndReturn(message);
+
 }
 void outHandler(messagingClient_t *client, message_t *message) 
 {
@@ -42,7 +39,7 @@ void test_bootstrap(void)
     msg_core_messagingClientInit(&client);
 
     TEST_ASSERT_NOT_NULL(client);
-}
+} 
 void test_publish_returns_zero(void)
 {
     
@@ -62,14 +59,18 @@ void test_publish_returns_zero(void)
     int ret = client->publish(client, message);
     
     TEST_ASSERT_EQUAL(0,ret);
-}
+} 
 void test_publish_calls_outgoing_handler(void)
 {
     
+//    uint8_t data[] = {0x0,0x01};
+
     message_t * message = malloc(sizeof(message_t));
 
-    uint8_t data[] = {0x0,0x01};
-    message->data = (data_t *) &data;
+    uint8_t * data = malloc(2); 
+
+    message->data = (data_t *) data;
+    
     message->length = 2;
 
     messagingClient_t * client = NULL;
@@ -81,7 +82,7 @@ void test_publish_calls_outgoing_handler(void)
     client->publish(client, message);
     
     TEST_ASSERT_EQUAL(2,outTimes);
-}
+} 
 void test_register_handlers_returns_zero(void)
 {
     messagingClient_t * client = NULL;
@@ -91,7 +92,7 @@ void test_register_handlers_returns_zero(void)
     int ret = msg_core_registerHandlers(client, inHandler, outHandler);
 
     TEST_ASSERT_EQUAL(0,ret);
-}
+}  
 void test_register_handlers_can_be_called(void)
 {
     messagingClient_t * client = NULL;
@@ -109,7 +110,7 @@ void outHandler_two(messagingClient_t *client, message_t *message)
 {
     const uint8_t data[] = {0x0,0x01};
     TEST_ASSERT_EQUAL_MEMORY(data, message->data,2);
-}
+} 
 void test_published_message_data(void)
 {
     messagingClient_t * client = NULL;
@@ -124,7 +125,7 @@ void test_published_message_data(void)
 
     msg_core_registerHandlers(client, inHandler, outHandler_two);
 
-    client->publish(client,&message);
+    client->publish(client,message);
     
     TEST_ASSERT_EQUAL(1,inTimes);
 }
@@ -141,7 +142,7 @@ int mock_start(messagingClient_t *client)
 {
     started = 1;
     return 0;
-}
+} 
 void test_create_messaging_client_start()
 {
     messagingSettings_t settings;
@@ -154,7 +155,7 @@ int mock_stop(messagingClient_t *client)
 {
     started = 0;
     return 0;
-}
+} 
 void test_create_messaging_client_stop()
 {
     messagingSettings_t settings;
@@ -167,7 +168,7 @@ int mock_connect(messagingClient_t *client)
 {
     connected = 1;
     return 0;
-}
+} 
 void test_create_messaging_client_connect()
 {
     messagingSettings_t settings;
@@ -175,7 +176,7 @@ void test_create_messaging_client_connect()
     messagingClient_t * client = msg_core_createMessagingClient(settings);
 
     TEST_ASSERT_EQUAL(mock_connect,client->connect);
-}
+} 
 void test_messaging_client_start()
 {
     messagingSettings_t settings;
@@ -187,7 +188,7 @@ void test_messaging_client_start()
     client->start(client);
 
     TEST_ASSERT_EQUAL(1,started);
-}
+} 
 void test_messaging_client_stop()
 {
     messagingSettings_t settings;
@@ -199,7 +200,7 @@ void test_messaging_client_stop()
     client->stop(client);
 
     TEST_ASSERT_EQUAL(0,started);
-}
+} 
 void test_messaging_client_connect()
 {
     messagingSettings_t settings;
@@ -243,8 +244,10 @@ void test_messaging_pub_sub()
 {
     messagingSettings_t settings;
     message_t * message = malloc(sizeof(message_t));
-    uint8_t data[] = {0x0,0x01};
-    message->data = copyData(data, sizeof(data));
+    uint8_t data2[] = {0x0,0x01};
+    message->data = malloc(2);
+    memcpy(message->data, &data2,2);
+    
     message->length = 2;
     settings.start = mock_start;
     settings.connect = mock_connect;
@@ -263,18 +266,5 @@ void test_messaging_pub_sub()
     TEST_ASSERT_EQUAL(1, mock_pub_called);
     TEST_ASSERT_EQUAL(1, mock_sub_called);
     TEST_ASSERT_EQUAL(1, subscriptionCalled);
-}
-/*
-void test_copy_message(void)
-{
-    uint8_t data[] = {1,2,3,4};
-    message_t message = {
-        .data = &data,
-        .length = 4
-    };
-
-    message_t * copied = msg_core_copyMessage(&message);
-
-    TEST_ASSERT_EQUAL(4,copied->length);
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(message.data, copied->data, 4);
-} */
+} 
+*/
