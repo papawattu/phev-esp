@@ -66,11 +66,12 @@ void test_publish(void)
         .publish = &mock_publish
     };
 
-    message_t message = {
-        .data = (uint8_t *) DATA,
-        .length = 4
-    };
+    message_t * message = malloc(sizeof(message_t));
 
+    message->data = malloc(4);
+    message->length = 4;
+
+    memcpy(message->data, &DATA, 4);
     message_t * out = malloc(sizeof(message_t));
     out->data = malloc(sizeof(DATA));
     memcpy(out->data,DATA,sizeof(DATA));
@@ -78,7 +79,7 @@ void test_publish(void)
     
     //msg_utils_copyMsg_ExpectAndReturn(&message,out);
     
-    int msgId = msg_mqtt_publish(&mqtt, TOPIC, &message);
+    int msgId = msg_mqtt_publish(&mqtt, TOPIC, message);
 
     TEST_ASSERT_EQUAL(1,mock_publish_Called);
     TEST_ASSERT_EQUAL(MSG_ID,msgId);
