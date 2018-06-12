@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "msg_tcpip.h"
+#include "msg_utils.h"
 
 int msg_tcpip_start(messagingClient_t *client)
 {
@@ -37,11 +38,7 @@ message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
 
         if (len > 0 && len < TCPIP_CLIENT_READ_BUF_SIZE)
         {
-            message_t *message = malloc(sizeof(message_t));
-            message->data = malloc(len);
-            memcpy(message->data, ctx->readBuffer, len);
-            message->length = len;
-            return message;
+            return msg_utils_createMsg(ctx->readBuffer,len);
         } 
         if(len < 0) {
             client->connected = 0;

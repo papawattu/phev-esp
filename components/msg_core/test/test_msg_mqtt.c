@@ -1,7 +1,7 @@
 #include "unity.h"
 
 #include "mock_msg_core.h"
-#include "mock_msg_utils.h"
+#include "msg_utils.h"
 #include "msg_mqtt.h"
 
 
@@ -76,7 +76,7 @@ void test_publish(void)
     memcpy(out->data,DATA,sizeof(DATA));
     out->length = sizeof(DATA);
     
-    msg_utils_copyMsg_ExpectAndReturn(&message,out);
+    //msg_utils_copyMsg_ExpectAndReturn(&message,out);
     
     int msgId = msg_mqtt_publish(&mqtt, TOPIC, &message);
 

@@ -1,6 +1,6 @@
 #include "unity.h"
 #include "msg_core.h"
-#include "mock_msg_utils.h"
+#include "msg_utils.h"
 
 static int outTimes = 0;
 static int inTimes = 0;
@@ -19,7 +19,7 @@ void setUp(void)
     message_t * message = malloc(sizeof(message_t));
     message->data = malloc(1);
     message->length;
-    msg_utils_copyMsg_IgnoreAndReturn(message);
+    //msg_utils_copyMsg_IgnoreAndReturn(message);
 }
 void outHandler(messagingClient_t *client, message_t *message) 
 {
@@ -108,7 +108,7 @@ void test_register_handlers_can_be_called(void)
 void outHandler_two(messagingClient_t *client, message_t *message)
 {
     const uint8_t data[] = {0x0,0x01};
- //   TEST_ASSERT_EQUAL_MEMORY(data, message->data,2);
+    TEST_ASSERT_EQUAL_MEMORY(data, message->data,2);
 }
 void test_published_message_data(void)
 {
@@ -238,7 +238,7 @@ void subscription(messagingClient_t *client, void * params, message_t *message)
     TEST_ASSERT_EQUAL_HEX8_ARRAY(data,message->data,2);
     TEST_ASSERT_EQUAL(2,message->length);
 }
-
+/*
 void test_messaging_pub_sub()
 {
     messagingSettings_t settings;
