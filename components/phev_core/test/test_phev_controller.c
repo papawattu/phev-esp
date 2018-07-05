@@ -96,4 +96,41 @@ void test_phev_controller_car_connection_config(void)
     TEST_ASSERT_EQUAL(8080, ctx->config->port);
 
 } 
+static int fake_publish_called = 0;
+void fake_publish(void * ctx, message_t * message)
+{
+    
+    uint8_t data[] = {1,2,3};
+
+    TEST_ASSERT_EQUAL(3, message->length);
+    TEST_ASSERT_EQUAL_MEMORY(data,message->data,3);
+    fake_publish_called ++;
+}
+void test_phev_controller_send_message(void)
+{
+    messagingClient_t outClient = {
+        .publish = fake_publish,
+    };
+
+    
+    msg_pipe_ctx_t pipe = {
+        .out = &outClient,
+    };
+
+    msg_pipe_IgnoreAndReturn(&pipe);
+    
+    phevSettings_t settings = {
+        .out    = &outClient,
+    };
+
+    uint8_t data[] = {1,2,3};
+
+    message_t * message = msg_utils_createMsg(data,sizeof(data));
+
+    phevCtx_t * ctx = phev_controller_init(&settings);
+
+    phev_controller_sendMessage(ctx,  message);
+
+    TEST_ASSERT_EQUAL(1, fake_publish_called);
+}
 

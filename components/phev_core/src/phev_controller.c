@@ -185,6 +185,10 @@ void phev_controller_connect(phevCtx_t * ctx)
     //phev_controller_waitForResponse(ctx);
 
 } 
+void phev_controller_sendMessage(phevCtx_t * ctx, message_t * message)
+{
+    ctx->pipe->out->publish(ctx->pipe->out, message);
+}
 #define KO_WF_DATE_INFO_SYNC_SP 5
 void phev_controller_ping(phevCtx_t * ctx)
 {
@@ -194,7 +198,7 @@ void phev_controller_ping(phevCtx_t * ctx)
         struct tm timeinfo;
         time(&now);
         localtime_r(&now, &timeinfo);
-        //const sendDateSync = date => sendFullCommand(codes.KO_WF_DATE_INFO_SYNC_SP,Buffer.from([date.getFullYear()-2000,date.getMonth()+1,date.getDate(),date.getHours(),date.getMinutes(),date.getSeconds(),1]))
+        
         const uint8_t pingTime[] = {
             timeinfo.tm_year - 100,
             timeinfo.tm_mon + 1,
@@ -204,20 +208,9 @@ void phev_controller_ping(phevCtx_t * ctx)
             timeinfo.tm_sec,
             1
         };
-  /*      
-        printf("Send date YY %d MM %d DD %d hh %d mm %d ss %d\n", 
-            pingTime[0],
-            pingTime[1],
-            pingTime[2],
-            pingTime[3],
-            pingTime[4],
-            pingTime[5],
-            pingTime[6]
-        );
-*/
         phevMessage_t * dateCmd = phev_core_commandMessage(KO_WF_DATE_INFO_SYNC_SP,pingTime, sizeof(pingTime));
         message_t * message = phev_core_convertToMessage(dateCmd);
-        ctx->pipe->out->publish(ctx->pipe->out, message);
+        phev_controller_sendMessage(ctx, message);
         free(message->data);
         free(message);
         free(dateCmd->data);
@@ -226,7 +219,7 @@ void phev_controller_ping(phevCtx_t * ctx)
     ctx->successfulPing = false;
     phevMessage_t * ping = phev_core_pingMessage(ctx->currentPing);
     message_t * message = phev_core_convertToMessage(ping);
-    ctx->pipe->out->publish(ctx->pipe->out, message);
+    phev_controller_sendMessage(ctx, message);
     free(message->data);
     free(message);
     free(ping->data);
