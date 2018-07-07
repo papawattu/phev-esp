@@ -1,4 +1,4 @@
-#ifdef ESP32
+#ifdef __XTENSA__
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "esp_wifi.h"
@@ -1024,4 +1024,5 @@ void app_main(void)
     
     start_app();
 }
-#endif
+
+#endif // __XTENSA__
