@@ -180,6 +180,13 @@ void sendMessage(phevCtx_t * ctx, uint8_t * data, size_t length)
 int main()
 {
 
+    #if defined(__XTENSA__)
+    printf("ESP...\n");
+    #endif
+
+    #if defined(__linux__)
+    printf("Linux...\n");
+    #endif
         
     phevCtx_t * ctx = createPhevController();
 

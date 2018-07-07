@@ -68,8 +68,7 @@ message_t * msg_pipe_splitter(msg_pipe_ctx_t *ctx, messagingClient_t * client, m
 
     for(int i=0;i< numMessages;i ++)
     {
-        free(messages[i]->data);
-        free(messages[i]);
+        msg_utils_destroyMsg(messages[i]);
     }
     return ret;   
 }
@@ -93,9 +92,8 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
         message_t * response = chain->responder(ctx->user_context, msg);
         if(response != NULL)
         {
-           client->publish(client,response);
-           free(response->data);
-           free(response);
+            client->publish(client,response);
+            msg_utils_destroyMsg(response);
         }
     }
     if(chain->outputTransformer != NULL)
@@ -140,8 +138,7 @@ void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, mess
     if(out != NULL) 
     {
         outboundClient->publish(outboundClient, out);
-        free(out->data);
-        free(out);
+        msg_utils_destroyMsg(out);
     }
 }
 void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, message_t * message)
@@ -157,8 +154,7 @@ void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, mes
     if(out != NULL) 
     {
         inboundClient->publish(inboundClient, out);
-        free(out->data);
-        free(out);
+        msg_utils_destroyMsg(out);
     }
     
 }

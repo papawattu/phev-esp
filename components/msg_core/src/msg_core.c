@@ -46,8 +46,7 @@ void msg_core_loop(messagingClient_t *client)
     message_t *message = client->incomingHandler(client);
 
     msg_core_call_subs(client, message);
-    //free(message->data);
-    //free(message);
+    msg_utils_destroyMsg(message);
 }
 void msg_core_subscribe(messagingClient_t *client, void * params, messagingSubscriptionCallback_t callback)
 {

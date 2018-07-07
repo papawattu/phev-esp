@@ -47,7 +47,9 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
 }
 message_t * phev_controller_splitter(void * ctx, message_t * message)
 {
-    return phev_core_extractMessage(message->data, message->length);
+    message_t * out = phev_core_extractMessage(message->data, message->length);
+    //msg_utils_destroyMsg(message);
+    return out;
 }
 
 message_t * phev_controller_outputChainInputTransformer(void * ctx, message_t * message)
@@ -55,8 +57,8 @@ message_t * phev_controller_outputChainInputTransformer(void * ctx, message_t * 
     phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
 
     int length = phev_core_decodeMessage(message->data, message->length, phevMessage);
-    free(message->data);
-    free(message);
+    msg_utils_destroyMsg(message);
+    
     message_t * ret = phev_core_convertToMessage(phevMessage);
 
     free(phevMessage->data);
@@ -69,9 +71,10 @@ message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t *
     phevCtx_t * phevCtx = (phevCtx_t *) ctx;
     phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
     phev_core_decodeMessage(message->data,message->length, phevMessage);
-    free(message->data);
-    free(message);
+    msg_utils_destroyMsg(message);
+    
     message_t * ret = phevCtx->outputTransformer(ctx, phevMessage);
+    
     free(phevMessage->data);
     free(phevMessage);
     return ret;
@@ -220,8 +223,8 @@ void phev_controller_ping(phevCtx_t * ctx)
         phevMessage_t * dateCmd = phev_core_commandMessage(KO_WF_DATE_INFO_SYNC_SP,pingTime, sizeof(pingTime));
         message_t * message = phev_core_convertToMessage(dateCmd);
         phev_controller_sendMessage(ctx, message);
-        free(message->data);
-        free(message);
+        msg_utils_destroyMsg(message);
+        
         free(dateCmd->data);
         free(dateCmd);
     }
@@ -229,8 +232,7 @@ void phev_controller_ping(phevCtx_t * ctx)
     phevMessage_t * ping = phev_core_pingMessage(ctx->currentPing);
     message_t * message = phev_core_convertToMessage(ping);
     phev_controller_sendMessage(ctx, message);
-    free(message->data);
-    free(message);
+    msg_utils_destroyMsg(message);
     free(ping->data);
     free(ping);
     
