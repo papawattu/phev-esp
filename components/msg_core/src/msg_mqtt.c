@@ -26,7 +26,7 @@ void dataEvent(mqtt_event_handle_t event)
     
 }
 
-static msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
+msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
 {
     msg_mqtt_t * mqtt = (msg_mqtt_t *) event->user_context;
     switch (event->event_id) {

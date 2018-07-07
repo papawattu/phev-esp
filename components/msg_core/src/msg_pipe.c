@@ -140,7 +140,7 @@ void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, mess
     if(out != NULL) 
     {
         outboundClient->publish(outboundClient, out);
-//free(out->data);
+        free(out->data);
         free(out);
     }
 }
@@ -157,6 +157,7 @@ void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, mes
     if(out != NULL) 
     {
         inboundClient->publish(inboundClient, out);
+        free(out->data);
         free(out);
     }
     

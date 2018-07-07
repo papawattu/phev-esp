@@ -2,5 +2,8 @@
 build
 *.old
 *.txt
+*.o
+*.d
 test1.exe
+app
 components/messaging/test/*_Runner.c

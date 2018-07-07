@@ -55,8 +55,13 @@ message_t * phev_controller_outputChainInputTransformer(void * ctx, message_t * 
     phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
 
     int length = phev_core_decodeMessage(message->data, message->length, phevMessage);
+    free(message->data);
+    free(message);
+    message_t * ret = phev_core_convertToMessage(phevMessage);
 
-    return phev_core_convertToMessage(phevMessage);
+    free(phevMessage->data);
+    free(phevMessage);
+    return ret;
 }
 
 message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t * message)
@@ -64,8 +69,12 @@ message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t *
     phevCtx_t * phevCtx = (phevCtx_t *) ctx;
     phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
     phev_core_decodeMessage(message->data,message->length, phevMessage);
-
-    return phevCtx->outputTransformer(ctx, phevMessage);
+    free(message->data);
+    free(message);
+    message_t * ret = phevCtx->outputTransformer(ctx, phevMessage);
+    free(phevMessage->data);
+    free(phevMessage);
+    return ret;
 }
 
 phevCtx_t * phev_controller_init(phevSettings_t * settings)

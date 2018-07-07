@@ -1,3 +1,4 @@
+EXEC := app
 PROJECT_NAME := phev-esp
 BUILD_NUMBER ?= $(BUILD)
 SHELL := /bin/bash
@@ -9,6 +10,7 @@ CJSON_DIR ?= ${CJSON_DIR}
 INC_DIRS := $(shell find $(COMP_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 CPPFLAGS ?= $(INC_FLAGS) -DBUILD_NUMBER=$(BUILD_NUMBER) -MMD -Wall -Wextra -g
+CFLAGS += -g
 TEST_BUILD_DIR ?= $(BUILD_DIR)/test
 TEST_MAKEFILE = $(TEST_BUILD_DIR)/MakefileTestSupport
 #INCLUDE_PATH += -I$(SRC_DIR)/include 
@@ -17,6 +19,7 @@ CMOCK_DIR := ${CMOCK_DIR}
 RM := rm
 TEST_CFLAGS += -lcjson
 LDFLAGS +=-lcjson
+
 export
 
 ifdef IDF_PATH
@@ -36,5 +39,25 @@ test: setup
 
 test_clean:
 	$(RM) -r $(BUILD_DIR)/test
+
+CSRC = $(wildcard main/src/*.c) \
+       $(wildcard components/msg_core/src/*.c) \
+       $(wildcard components/phev_core/src/*.c)
+OBJ = $(CSRC:.c=.o)
+DEP = $(OBJ:.o=.d) 
+
+app: $(OBJ)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+%.d: %.c
+	@$(CC) $(CFLAGS) $< -MM -MT $(@:.d=.o) > $@
+
+.PHONY: clean
+clean:
+	rm -f $(OBJ) app
+
+.PHONY: cleandep
+cleandep:
+	rm -f $(DEP)
 
 -include $(TEST_MAKEFILE)

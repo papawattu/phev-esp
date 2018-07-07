@@ -1,3 +1,4 @@
+#ifdef ESP32
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "esp_wifi.h"
@@ -1023,3 +1024,4 @@ void app_main(void)
     
     start_app();
 }
+#endif

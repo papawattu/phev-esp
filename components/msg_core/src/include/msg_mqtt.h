@@ -116,5 +116,6 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings);
 
 int msg_mqtt_publish(msg_mqtt_t *mqtt, topic_t topic, message_t * message);
 void msg_mqtt_subscribe(msg_mqtt_t *mqtt, topic_t topic);
+msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event);
 
 #endif
