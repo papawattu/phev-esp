@@ -634,6 +634,11 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
 message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
 {
     char * output;
+
+    if(message->type == RESPONSE_TYPE || message->command != 0x6f) 
+    {
+        return NULL;
+    }
     
     cJSON * response = cJSON_CreateObject();
     if(response == NULL) 
@@ -695,8 +700,8 @@ message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
     cJSON_Delete(response);
 
     message_t * outputMessage = msg_utils_createMsg((uint8_t *) output, strlen(output));
-    free(output);
     //ESP_LOGI(APP_TAG,"%s",output);
+    free(output);
     return outputMessage;
 }
 int connectToCar(const char *host, uint16_t port)
