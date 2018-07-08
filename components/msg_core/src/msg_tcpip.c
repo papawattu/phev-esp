@@ -58,8 +58,7 @@ void msg_tcpip_outgoingHandler(messagingClient_t *client, message_t *message)
             {
                 client->connected = 0;
             } else {
-                //free(message->data);
-                //free(message);
+               // msg_utils_destroyMsg(message);
             }
         }
     }

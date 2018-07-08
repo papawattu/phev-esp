@@ -66,6 +66,8 @@ typedef struct phevConfig_t
 
 phevMessage_t * phev_core_createMessage(uint8_t command, uint8_t type, uint8_t reg, uint8_t * data, size_t length);
 
+void phev_core_destroyMessage(phevMessage_t * message);
+
 int phev_core_decodeMessage(const uint8_t *data, size_t len, phevMessage_t *message);
 
 int phev_core_encodeMessage(phevMessage_t *message,uint8_t **data);

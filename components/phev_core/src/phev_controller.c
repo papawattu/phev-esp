@@ -48,7 +48,9 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
 message_t * phev_controller_splitter(void * ctx, message_t * message)
 {
     message_t * out = phev_core_extractMessage(message->data, message->length);
+    
     //msg_utils_destroyMsg(message);
+    
     return out;
 }
 
@@ -61,8 +63,7 @@ message_t * phev_controller_outputChainInputTransformer(void * ctx, message_t * 
     
     message_t * ret = phev_core_convertToMessage(phevMessage);
 
-    free(phevMessage->data);
-    free(phevMessage);
+    phev_core_destroyMessage(phevMessage);
     return ret;
 }
 
@@ -75,8 +76,8 @@ message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t *
     
     message_t * ret = phevCtx->outputTransformer(ctx, phevMessage);
     
-    free(phevMessage->data);
-    free(phevMessage);
+    phev_core_destroyMessage(phevMessage);
+    
     return ret;
 }
 
@@ -225,16 +226,15 @@ void phev_controller_ping(phevCtx_t * ctx)
         phev_controller_sendMessage(ctx, message);
         msg_utils_destroyMsg(message);
         
-        free(dateCmd->data);
-        free(dateCmd);
+        phev_core_destroyMessage(dateCmd);
+    
     }
     ctx->successfulPing = false;
     phevMessage_t * ping = phev_core_pingMessage(ctx->currentPing);
     message_t * message = phev_core_convertToMessage(ping);
     phev_controller_sendMessage(ctx, message);
     msg_utils_destroyMsg(message);
-    free(ping->data);
-    free(ping);
+    phev_core_destroyMessage(ping);
     
 }
 void phev_controller_resetPing(phevCtx_t * ctx)
