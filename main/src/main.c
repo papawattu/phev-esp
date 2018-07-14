@@ -593,6 +593,27 @@ void checkForUpdate(phevCtx_t * ctx, cJSON * json)
         ESP_LOGI(APP_TAG,"At latest firmware");
     }  
 }
+
+#define STATUS "status"
+#define HEAD_LIGHTS_ON "headLightsOn"
+
+message_t * checkStatus(phevCtx_t * ctx, cJSON *json)
+{
+    cJSON * status = cJSON_GetObjectItemCaseSensitive(json, STATUS);
+
+    if(status == NULL) {
+        ESP_LOGW(APP_TAG,"Cannot find status config");
+        return NULL;
+    }
+
+    if(getConfigBool(status, HEAD_LIGHTS_ON))
+    {
+        return phev_controller_turnHeadLightsOn(ctx);
+    } 
+
+    return NULL;
+
+}
 message_t * transformJSONToHex(void * ctx, message_t *message)
 {
     phevCtx_t * phevCtx = (phevCtx_t *) ctx;
@@ -627,9 +648,12 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
 
         return phev_core_startMessageEncoded(2,mac);
     }
+
+    message_t * ret = checkStatus(phevCtx, json);
+    
     cJSON_Delete(json);
    
-    return NULL;
+    return ret;
 }
 message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
 {
@@ -669,6 +693,14 @@ message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
     
     cJSON_AddItemToObject(response, "type", type);
     
+    cJSON * reg = cJSON_CreateNumber(message->reg);
+    if(reg == NULL) 
+    {
+        ESP_LOGE(APP_TAG,"Cannot create JSON register response");
+        return NULL;
+    }
+    cJSON_AddItemToObject(response, "register", reg);  
+
     cJSON * length = cJSON_CreateNumber(message->length);
     if(length == NULL) 
     {

@@ -202,7 +202,6 @@ void phev_controller_sendMessage(phevCtx_t * ctx, message_t * message)
 {
     ctx->pipe->out->publish(ctx->pipe->out, message);
 }
-#define KO_WF_DATE_INFO_SYNC_SP 5
 void phev_controller_ping(phevCtx_t * ctx)
 {
     if((ctx->currentPing % 30) == 0) 
@@ -241,5 +240,18 @@ void phev_controller_resetPing(phevCtx_t * ctx)
 {
     ctx->currentPing = 0;
 }
+
+message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx)
+{
+    phevMessage_t * headLightsOn = phev_core_simpleRequestCommandMessage(KO_WF_H_LAMP_CONT_SP, 1);
+    message_t * message = phev_core_convertToMessage(headLightsOn);
+    phev_core_destroyMessage(headLightsOn);
+    
+    return message;
+}
+message_t * phev_controller_configSplitter(void * ctx, message_t * message)
+{
+    
+} 
 
 

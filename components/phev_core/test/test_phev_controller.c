@@ -5,6 +5,11 @@
 #include "phev_controller.h"
 #include "mock_phev_core.h"
 #include "mock_msg_utils.h"
+//#ifdef ESP_PLATFORM
+//#include "cJSON.h"
+//#else
+#include <cjson/cJSON.h>
+//#endif
 
 
 void test_handle_event(void)
@@ -132,5 +137,34 @@ void test_phev_controller_send_message(void)
     phev_controller_sendMessage(ctx,  message);
 
     TEST_ASSERT_EQUAL(1, fake_publish_called);
+}
+void test_phev_controller_config_splitter(void)
+{
+    const char * config = "{"
+	"\"connection\" : { " 
+    "    \"clients\": 1"
+    "}"
+	"\"latestBuild\": 1531523469,"
+	"\"update\": {"
+	"	\"overGsm\": true,"
+	"	\"ssid\": \"BTHub6-P535\","
+	"	\"password\": \"S1mpsons\","
+	"	\"host\": \"storage.googleapis.com\","
+	"	\"port\": 80,"
+	"	\"path\": \"/espimages/develop/\""
+	"},"
+	"\"carConnection\": {"
+	"	\"ssid\": \"REMOTE45cfsc\","
+	"	\"password\": \"fhcm852767\","
+	"	\"host\": \"192.168.8.46\","
+	"	\"port\": 8080"
+	"},"
+	"\"status\": {"
+	"	\"headLightsOn\": true,"
+	"	\"airConOn\": false"
+	"}"
+    "}"; 
+    message_t * message = msg_utils_createMsg(config, sizeof(config));
+    phev_controller_configSplitter(ctx, message);
 }
 

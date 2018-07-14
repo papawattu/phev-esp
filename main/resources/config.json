@@ -1,0 +1,22 @@
+{
+  "connectedClients": 1,
+  "latestBuild": 999,
+  "update": {
+    "overGsm": false,
+    "ssid": "BTHub6-P535",
+    "password": "S1mpsons",
+    "host": "storage.googleapis.com",
+    "port": 80,
+    "path": "/espimages/develop/"
+  },
+  "carConnection": {
+    "ssid": "REMOTE45cfsc",
+    "password": "fhcm852767",
+    "host": "192.168.8.46",
+    "port": 8080
+  },
+  "status": {
+    "lightsOn": true,
+    "airConOn": false
+  }
+}

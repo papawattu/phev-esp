@@ -1,7 +1,7 @@
 FROM gcc:latest
 RUN \
   apt-get update && \
-  apt-get install -y ccache ruby flex bison gperf python python-serial build-essential gcc clang git libssl-dev autoconf libtool cmake doxygen pkg-config unzip wget
+  apt-get install -y jq ccache ruby flex bison gperf python python-serial build-essential gcc clang git libssl-dev autoconf libtool cmake doxygen pkg-config unzip wget
 WORKDIR /usr/esp
 RUN wget -q https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
 RUN tar -xzf xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
@@ -44,3 +44,5 @@ RUN date +%s > /root/build_number
 RUN BUILD=`cat /root/build_number` make 
 RUN cp /usr/src/phev-esp/build/phev-esp.bin /root/firmware-`cat /root/build_number`.bin
 RUN gsutil cp /root/firmware-`cat /root/build_number`.bin gs://espimages/develop/ 
+RUN gcloud iot devices configs get-value --device my-device2 --region us-central1 --registry my-registry | jq .latestBuild=`cat /root/build_number` > /root/config.json
+RUN gcloud iot devices configs update --config-file =/root/config.json --device my-device2 --region us-central1 --registry my-registry
