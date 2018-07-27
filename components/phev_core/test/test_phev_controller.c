@@ -137,7 +137,7 @@ void test_phev_controller_send_message(void)
     phev_controller_sendMessage(ctx,  message);
 
     TEST_ASSERT_EQUAL(1, fake_publish_called);
-}
+} /*
 void test_phev_controller_config_splitter(void)
 {
     const char * config = "{"
@@ -165,6 +165,6 @@ void test_phev_controller_config_splitter(void)
 	"}"
     "}"; 
     message_t * message = msg_utils_createMsg(config, sizeof(config));
-    phev_controller_configSplitter(ctx, message);
-}
+    message_t * split = phev_controller_configSplitter(ctx, message);
+} */
 

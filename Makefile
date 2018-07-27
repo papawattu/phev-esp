@@ -14,7 +14,7 @@ CFLAGS += -g
 TEST_BUILD_DIR ?= $(BUILD_DIR)/test
 TEST_MAKEFILE = $(TEST_BUILD_DIR)/MakefileTestSupport
 #INCLUDE_PATH += -I$(SRC_DIR)/include 
-INCLUDE_PATH += -lcjson -I$(INC_FLAGS) -std=c99 -lcjson
+INCLUDE_PATH += -lcjson -I$(INC_FLAGS) -I$(CJSON_DIR) -std=c99 
 CMOCK_DIR := ${CMOCK_DIR}
 RM := rm
 TEST_CFLAGS += -lcjson

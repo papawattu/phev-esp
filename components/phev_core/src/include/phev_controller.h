@@ -25,12 +25,6 @@ typedef struct phevSettings_t
 
 typedef enum phevEventType { CONNECT_REQUEST } phevEventType_t; 
 
-typedef struct phevState_t {
-    bool headLightsOn;
-    bool parkLightsOn;
-    bool airConOn;
-} phevState_t;
-
 struct phevCtx_t {    
     phevConfig_t * config;
     phevMessage_t * queuedCommands[MAX_QUEUED_COMMANDS];
@@ -41,7 +35,6 @@ struct phevCtx_t {
     int (* connect)(const char*, uint16_t);
     uint8_t currentPing;
     bool successfulPing;
-    phevState_t state;
 }; 
 
 typedef struct phevEvent_t
