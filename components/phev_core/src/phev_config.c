@@ -89,7 +89,7 @@ void phev_config_parseUpdateConfig(phevConfig_t * config, cJSON * update)
 }
 void phev_config_parseConnectionConfig(phevConfig_t * config, cJSON * connection)
 {
-    config->connectionConfig.host = getConfigString(connection, CONNECTION_CONFIG_HOST);
+    config->connectionConfig.host = phev_core_strdup(getConfigString(connection, CONNECTION_CONFIG_HOST));
     config->connectionConfig.port = getConfigInt(connection, CONNECTION_CONFIG_PORT);
 
     strcpy(config->connectionConfig.carConnectionWifi.ssid, getConfigString(connection, CONNECTION_CONFIG_SSID)); 
@@ -147,6 +147,9 @@ phevConfig_t * phev_config_parseConfig(const char * config)
     {
         phev_config_parseStateConfig(phevConfig, state);
     }
+
+    cJSON_Delete(json);
+
     return phevConfig;
 }
 bool phev_config_checkForFirmwareUpdate(const phevUpdateConfig_t * config)

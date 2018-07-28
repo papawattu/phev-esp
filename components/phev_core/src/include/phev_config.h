@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "phev_core.h"
 
 #ifndef BUILD_NUMBER
 #define BUILD_NUMBER 1
