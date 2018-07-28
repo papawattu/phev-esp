@@ -2,6 +2,8 @@
 #define _PHEV_CONTROLLER_H_
 #include <stdbool.h>
 #include "phev_core.h"
+#include "phev_config.h"
+
 #include "msg_pipe.h"
 
 #define MAX_QUEUED_COMMANDS 10
@@ -55,6 +57,10 @@ message_t * phev_controller_input_responder(void * ctx, message_t * message);
 void phev_controller_sendMessage(phevCtx_t * ctx, message_t * message);
 message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx);    
 message_t * phev_controller_configSplitter(void * ctx, message_t * message);
+
+void phev_controller_initConfig(phevConfig_t * config);
+void phev_controller_initState(phevState_t * state);
+
 
 #endif
 

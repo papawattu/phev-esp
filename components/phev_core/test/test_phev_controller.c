@@ -64,7 +64,7 @@ void test_phev_controller_init_set_phev_ctx(void)
 
     TEST_ASSERT_NOT_NULL(ctx);
     TEST_ASSERT_EQUAL(dummyCtx, ctx->pipe->user_context);
-} 
+} /*
 void test_phev_controller_car_connection_config(void)
 {
     char host[32];
@@ -100,7 +100,7 @@ void test_phev_controller_car_connection_config(void)
     TEST_ASSERT_EQUAL_STRING("127.0.0.1", ctx->config->host);
     TEST_ASSERT_EQUAL(8080, ctx->config->port);
 
-} 
+} */
 static int fake_publish_called = 0;
 void fake_publish(void * ctx, message_t * message)
 {
@@ -137,34 +137,16 @@ void test_phev_controller_send_message(void)
     phev_controller_sendMessage(ctx,  message);
 
     TEST_ASSERT_EQUAL(1, fake_publish_called);
-} /*
-void test_phev_controller_config_splitter(void)
+} 
+void test_phev_controller_initConfig(void)
 {
-    const char * config = "{"
-	"\"connection\" : { " 
-    "    \"clients\": 1"
-    "}"
-	"\"latestBuild\": 1531523469,"
-	"\"update\": {"
-	"	\"overGsm\": true,"
-	"	\"ssid\": \"BTHub6-P535\","
-	"	\"password\": \"S1mpsons\","
-	"	\"host\": \"storage.googleapis.com\","
-	"	\"port\": 80,"
-	"	\"path\": \"/espimages/develop/\""
-	"},"
-	"\"carConnection\": {"
-	"	\"ssid\": \"REMOTE45cfsc\","
-	"	\"password\": \"fhcm852767\","
-	"	\"host\": \"192.168.8.46\","
-	"	\"port\": 8080"
-	"},"
-	"\"status\": {"
-	"	\"headLightsOn\": true,"
-	"	\"airConOn\": false"
-	"}"
-    "}"; 
-    message_t * message = msg_utils_createMsg(config, sizeof(config));
-    message_t * split = phev_controller_configSplitter(ctx, message);
-} */
 
+}
+void test_phev_controller_initState(void)
+{
+    phevState_t state;
+
+    phev_controller_initState(&state);
+
+    TEST_ASSERT_EQUAL(0, state.connectedClients);
+}

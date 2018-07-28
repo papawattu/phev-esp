@@ -10,9 +10,9 @@
 void phev_controller_preOutConnectHook(msg_pipe_ctx_t * pipe)
 {
     phevCtx_t * ctx = (phevCtx_t *) pipe->user_context;
-    ctx->startWifi(ctx->config->carConnectionWifi.ssid,ctx->config->carConnectionWifi.password);
-    ((tcpip_ctx_t *) ctx->pipe->out->ctx)->host = ctx->config->host;
-    ((tcpip_ctx_t *) ctx->pipe->out->ctx)->port = ctx->config->port;
+    ctx->startWifi(ctx->config->connectionConfig.carConnectionWifi.ssid,ctx->config->connectionConfig.carConnectionWifi.password);
+    ((tcpip_ctx_t *) ctx->pipe->out->ctx)->host = ctx->config->connectionConfig.host;
+    ((tcpip_ctx_t *) ctx->pipe->out->ctx)->port = ctx->config->connectionConfig.port;
     //ctx->pipe->in->connect(ctx->pipe->in);
     
 }
@@ -81,6 +81,15 @@ message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t *
     return ret;
 }
 
+void phev_controller_initState(phevState_t * state)
+{
+    state->connectedClients = 0;
+
+}
+void phev_controller_initConfig(phevConfig_t * config)
+{
+    phev_controller_initState(&config->state);
+}
 phevCtx_t * phev_controller_init(phevSettings_t * settings)
 {
     phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
@@ -90,7 +99,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
 
     inputChain->inputTransformer = settings->inputTransformer;
     inputChain->aggregator = NULL;
-    inputChain->splitter = NULL;
+    inputChain->splitter = phev_controller_configSplitter;
     inputChain->filter = NULL;
     inputChain->outputTransformer = NULL;
     inputChain->responder = phev_controller_input_responder;
@@ -122,6 +131,8 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     ctx->currentPing = 0;
     ctx->successfulPing = false;
 
+    phev_controller_initConfig(ctx->config);
+    
     return ctx;
 }
 
@@ -140,47 +151,6 @@ void phev_controller_sendCommand(phevCtx_t * ctx, phevMessage_t * message)
     memcpy(ctx->queuedCommands[index]->data, message->data, message->length - 2); 
 
     ctx->queueSize ++;
-}
-void phev_controller_setCarConnectionConfig(phevCtx_t * ctx, const char * ssid, const char * password, const char * host, const uint16_t port)
-{
-    phevConfig_t * config = ctx->config;
-    
-    strcpy(config->carConnectionWifi.ssid,ssid);
-    strcpy(config->carConnectionWifi.password,password);
-    
-    config->host = malloc(strlen(host));
-    strcpy(config->host, host);
-    config->port = port;
-}
-// This has moved to phev_config
-void phev_controller_setUpdateConfig(phevCtx_t * ctx, const char * ssid, 
-                                        const char * password,
-                                        const char * host,
-                                        const char * path,
-                                        uint16_t port,
-                                        int build)
-{
-    phevConfig_t * config = ctx->config;
-    
-    strcpy(config->updateWifi.ssid,ssid);
-    config->updateWifi.ssid[strlen(ssid)] = '\0';
-    
-    strcpy(config->updateWifi.password,password);
-
-    config->updateWifi.password[strlen(password)] = '\0';
-    
-    config->updateHost = malloc(strlen(host));
-    strcpy(config->updateHost,host);    
-    
-    config->updatePath = malloc(strlen(path));
-    strcpy(config->updatePath,path);
-    
-    const char * buildPath = NULL;     
-    asprintf(&buildPath,"%s%s%010d.bin",ctx->config->updatePath,IMAGE_PREFIX,build);
-    
-    config->updateImageFullPath = buildPath;
-
-    config->updatePort = port;
 }
 void phev_controller_connect(phevCtx_t * ctx)
 { 

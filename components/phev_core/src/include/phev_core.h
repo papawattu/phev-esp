@@ -4,7 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "msg_core.h"
-
 #define PHEV_OK 0
 
 #define REQUEST_TYPE 0
@@ -38,31 +37,6 @@ typedef struct phevMessage_t
     uint8_t *data;
     uint8_t checksum;
 } phevMessage_t;
-
-typedef struct phevWifi_t
-{
-    char ssid[32];
-    char password[64];
-} phevWifi_t;
-
-typedef struct phevConfig_t
-{
-    char * currentBuild;
-    int updateOverPPP;
-    char * updateUri;
-    phevWifi_t updateWifi;
-    phevWifi_t carConnectionWifi;
-    char * updatePath;
-    char * updateHost;
-    uint16_t updatePort;
-    char * updateImageFullPath;
-    char * host;
-    uint16_t port;
-    uint8_t type;
-    uint8_t reg;
-    uint8_t *data;
-    uint8_t checksum;
-} phevConfig_t;
 
 phevMessage_t * phev_core_createMessage(uint8_t command, uint8_t type, uint8_t reg, uint8_t * data, size_t length);
 
