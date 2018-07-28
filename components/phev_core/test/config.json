@@ -1,8 +1,9 @@
 {
     "state": {
       "connectedClients": 1,
-      "lightsOn": true,
-      "airConOn": false
+      "headLightsOn": true,
+      "parkLightsOn": true,
+      "airConOn": true
     },
     "update": {
       "latestBuild": 999,

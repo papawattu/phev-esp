@@ -6,6 +6,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#ifndef BUILD_NUMBER
+#define BUILD_NUMBER 1
+#endif
+
 #define IMAGE_PREFIX "firmware-"
 
 
@@ -26,6 +30,11 @@
 #define CONNECTION_CONFIG_SSID "ssid"
 #define CONNECTION_CONFIG_PASSWORD "password"
 
+#define STATE_CONFIG_JSON "state"
+#define STATE_CONFIG_CONNECTED_CLIENTS "connectedClients"
+#define STATE_CONFIG_HEADLIGHTS_ON "headLightsOn"
+#define STATE_CONFIG_PARKLIGHTS_ON "parkLightsOn"
+#define STATE_CONFIG_AIRCON_ON "airConOn"
 
 typedef struct phevWifi_t
 {
@@ -34,6 +43,7 @@ typedef struct phevWifi_t
 } phevWifi_t;
 
 typedef struct phevState_t {
+    int connectedClients;
     bool headLightsOn;
     bool parkLightsOn;
     bool airConOn;
@@ -46,7 +56,8 @@ typedef struct phevConnectionConfig_t {
 } phevConnectionConfig_t;
 
 typedef struct phevUpdateConfig_t {
-    uint32_t * latestBuild;
+    uint32_t latestBuild;
+    uint32_t currentBuild;
     bool updateOverPPP;
     phevWifi_t updateWifi;
     char * updatePath;
@@ -64,5 +75,5 @@ typedef struct phevConfig_t
 } phevConfig_t;
 
 phevConfig_t * phev_config_parseConfig(const char * config);
-
+bool phev_config_checkForFirmwareUpdate(const phevUpdateConfig_t * config);
 #endif

@@ -152,7 +152,7 @@ void phev_controller_setCarConnectionConfig(phevCtx_t * ctx, const char * ssid, 
     strcpy(config->host, host);
     config->port = port;
 }
-
+// This has moved to phev_config
 void phev_controller_setUpdateConfig(phevCtx_t * ctx, const char * ssid, 
                                         const char * password,
                                         const char * host,

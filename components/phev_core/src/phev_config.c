@@ -32,7 +32,6 @@ bool getConfigBool(cJSON * json, char * option)
     return cJSON_IsTrue(value);
 }
 
-// This has moved to phev_config
 void phev_config_setUpdateConfig(phevUpdateConfig_t * config, const char * ssid, 
                                         const char * password,
                                         const char * host,
@@ -65,6 +64,8 @@ void phev_config_setUpdateConfig(phevUpdateConfig_t * config, const char * ssid,
 
     config->latestBuild = build;
 
+    config->currentBuild = BUILD_NUMBER;
+
     config->updateOverPPP = updateOverPPP;
 
     config->forceUpdate = forceUpdate;
@@ -95,6 +96,13 @@ void phev_config_parseConnectionConfig(phevConfig_t * config, cJSON * connection
     strcpy(config->connectionConfig.carConnectionWifi.password, getConfigString(connection, CONNECTION_CONFIG_PASSWORD)); 
 }
 
+void phev_config_parseStateConfig(phevConfig_t * config, cJSON * state)
+{
+    config->state.connectedClients = getConfigInt(state, STATE_CONFIG_CONNECTED_CLIENTS);
+    config->state.headLightsOn = getConfigBool(state, STATE_CONFIG_HEADLIGHTS_ON);
+    config->state.parkLightsOn = getConfigBool(state, STATE_CONFIG_PARKLIGHTS_ON);
+    config->state.airConOn = getConfigBool(state, STATE_CONFIG_AIRCON_ON);
+}
 phevConfig_t * phev_config_parseConfig(const char * config)
 {
     phevConfig_t * phevConfig = malloc(sizeof(phevConfig_t));
@@ -133,5 +141,15 @@ phevConfig_t * phev_config_parseConfig(const char * config)
         phev_config_parseConnectionConfig(phevConfig, connection);
     }
 
+    cJSON * state = cJSON_GetObjectItemCaseSensitive(json, STATE_CONFIG_JSON);
+
+    if(state)
+    {
+        phev_config_parseStateConfig(phevConfig, state);
+    }
     return phevConfig;
+}
+bool phev_config_checkForFirmwareUpdate(const phevUpdateConfig_t * config)
+{
+    return (config->latestBuild > config->currentBuild) || config->forceUpdate;
 }
