@@ -86,6 +86,15 @@ void phev_config_parseUpdateConfig(phevConfig_t * config, cJSON * update)
                                 
     
 }
+void phev_config_parseConnectionConfig(phevConfig_t * config, cJSON * connection)
+{
+    config->connectionConfig.host = getConfigString(connection, CONNECTION_CONFIG_HOST);
+    config->connectionConfig.port = getConfigInt(connection, CONNECTION_CONFIG_PORT);
+
+    strcpy(config->connectionConfig.carConnectionWifi.ssid, getConfigString(connection, CONNECTION_CONFIG_SSID)); 
+    strcpy(config->connectionConfig.carConnectionWifi.password, getConfigString(connection, CONNECTION_CONFIG_PASSWORD)); 
+}
+
 phevConfig_t * phev_config_parseConfig(const char * config)
 {
     phevConfig_t * phevConfig = malloc(sizeof(phevConfig_t));
@@ -118,6 +127,11 @@ phevConfig_t * phev_config_parseConfig(const char * config)
     }
 
     cJSON * connection = cJSON_GetObjectItemCaseSensitive(json, CONNECTION_CONFIG_JSON);
+
+    if(connection)
+    {
+        phev_config_parseConnectionConfig(phevConfig, connection);
+    }
 
     return phevConfig;
 }

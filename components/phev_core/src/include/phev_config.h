@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define IMAGE_PREFIX "firmware-"
 
@@ -20,6 +21,11 @@
 #define UPDATE_CONFIG_FORCE_UPDATE "forceUpdate"
 
 #define CONNECTION_CONFIG_JSON "carConnection"
+#define CONNECTION_CONFIG_HOST "host"
+#define CONNECTION_CONFIG_PORT "port"
+#define CONNECTION_CONFIG_SSID "ssid"
+#define CONNECTION_CONFIG_PASSWORD "password"
+
 
 typedef struct phevWifi_t
 {

@@ -79,8 +79,14 @@ void test_phev_config_connection(void)
 
     TEST_ASSERT_NOT_NULL(config);
     TEST_ASSERT_NOT_NULL(config->connectionConfig.host);
+    TEST_ASSERT_NOT_NULL(config->connectionConfig.carConnectionWifi.ssid);
+    TEST_ASSERT_NOT_NULL(config->connectionConfig.carConnectionWifi.password);
+    
     TEST_ASSERT_EQUAL_STRING("192.168.8.46",config->connectionConfig.host);
     
     TEST_ASSERT_EQUAL_INT(8080,config->connectionConfig.port);
+
+    TEST_ASSERT_EQUAL_STRING("REMOTE123456",config->connectionConfig.carConnectionWifi.ssid);
+    TEST_ASSERT_EQUAL_STRING("abcde123456",config->connectionConfig.carConnectionWifi.password);
     
 }
