@@ -6,12 +6,13 @@
     },
     "update": {
       "latestBuild": 999,
-      "overGsm": false,
-      "ssid": "BTHub6-P535",
-      "password": "S1mpsons",
+      "overGsm": true,
+      "ssid": "ssid",
+      "password": "password",
       "host": "storage.googleapis.com",
       "port": 80,
-      "path": "/espimages/develop/"
+      "path": "/espimages/develop/",
+      "forceUpdate": true
     },
     "carConnection": {
       "ssid": "REMOTE45cfsc",
