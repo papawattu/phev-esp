@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "msg_pipe.h"
+#include "msg_pipe_splitter.h"
 #include "msg_utils.h"
 
 void msg_pipe_loop(msg_pipe_ctx_t * ctx)
@@ -9,69 +10,6 @@ void msg_pipe_loop(msg_pipe_ctx_t * ctx)
     ctx->out->loop(ctx->out);
 }
 
-message_t * msg_pipe_concat(message_t * messages[], size_t size)
-{
-    size_t total = 0;
-    if(messages[0] == NULL) return NULL;
-    
-    uint8_t * data = malloc(messages[0]->length);
-
-    for(int i = 0;i < size; i++)
-    {
-        if(messages[i] == NULL) break;
-        data = realloc(data, total + messages[i]->length);
-        memcpy(data + total,messages[i]->data, messages[i]->length);
-        total += messages[i]->length;
-    }
-
-    if(total == 0) return NULL;
-
-    message_t * message = malloc(sizeof(message_t));
-
-    message->data = malloc(total);
-    memcpy(message->data, data, total);
-    message->length = total;
-    free(data);
-    return message;
-}
-message_t * msg_pipe_aggregrator(message_t * messages[], size_t size)
-{
-    return msg_pipe_concat(messages,size);
-}
-message_t * msg_pipe_splitter(msg_pipe_ctx_t *ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t *message)
-{
-    size_t totalBytesRead = 0;
-    message_t * next = NULL; 
-    message_t * messages[MAX_MESSAGES];
-
-    if(message == NULL) return NULL;
-
-    message_t * msg = message;
-
-    int numMessages = 0;
-
-    while(totalBytesRead < message->length && numMessages < MAX_MESSAGES && msg != NULL)
-    {
-        next = chain->splitter(ctx->user_context, message);
-
-        if(next == NULL) break;
-
-        totalBytesRead += next->length;
-        
-        message_t * msg = msg_pipe_transformChain(ctx, client, chain, next);
-        if(msg != NULL) {
-            messages[numMessages ++] = msg;
-        }
-    }
-    
-    message_t * ret = msg_pipe_aggregrator(messages,numMessages); 
-
-    for(int i=0;i< numMessages;i ++)
-    {
-        msg_utils_destroyMsg(messages[i]);
-    }
-    return ret;   
-}
 message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message) 
 {
     message_t * msg = message;

@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define MAX_MESSAGE_BUNDLE_SIZE 25
 typedef struct messagingClient_t messagingClient_t;
 
 typedef uint8_t data_t;
@@ -14,6 +15,12 @@ typedef struct message_t {
     const data_t * data;
     size_t length;
 }  message_t;
+
+typedef struct messageBundle_t {
+    int numMessages;
+    message_t * messages[MAX_MESSAGE_BUNDLE_SIZE];
+}  messageBundle_t;
+
 typedef void (* messagingClientHandler_t)(messagingClient_t *client, message_t *message);
 
 typedef void (* messagingSubscriptionCallback_t)(messagingClient_t *client, void * params, message_t *message);

@@ -132,3 +132,20 @@ void test_phev_config_not_update_firmware(void)
 
     TEST_ASSERT_FALSE(phev_config_checkForFirmwareUpdate(&config));
 }
+void test_phev_config_no_connections(void)
+{
+    phevState_t config = {
+        .connectedClients = 0,
+    };
+
+    TEST_ASSERT_FALSE(phev_config_checkForConnection(&config));
+}
+
+void test_phev_config_has_connections(void)
+{
+    phevState_t config = {
+        .connectedClients = 1,
+    };
+
+    TEST_ASSERT_TRUE(phev_config_checkForConnection(&config));
+}

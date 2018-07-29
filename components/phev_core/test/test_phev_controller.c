@@ -5,6 +5,8 @@
 #include "phev_controller.h"
 #include "mock_phev_core.h"
 #include "mock_msg_utils.h"
+#include "mock_phev_config.h"
+
 //#ifdef ESP_PLATFORM
 //#include "cJSON.h"
 //#else
@@ -64,43 +66,7 @@ void test_phev_controller_init_set_phev_ctx(void)
 
     TEST_ASSERT_NOT_NULL(ctx);
     TEST_ASSERT_EQUAL(dummyCtx, ctx->pipe->user_context);
-} /*
-void test_phev_controller_car_connection_config(void)
-{
-    char host[32];
-
-    tcpip_ctx_t tcpip_ctx;
-
-    messagingClient_t inClient = {
-        .ctx = &tcpip_ctx,
-    };
-    messagingClient_t outClient;
-
-    void * dummyCtx;
-
-    msg_pipe_ctx_t pipe = {
-        .in = &inClient,
-        .user_context = dummyCtx,
-    };
-
-    msg_pipe_IgnoreAndReturn(&pipe);
-    
-    phevSettings_t settings = {
-        .in     = &inClient,
-        .out    = &outClient,
-    };
-
-    phevCtx_t * ctx = phev_controller_init(&settings);
-
-    phev_controller_setCarConnectionConfig(ctx,"abc","123","127.0.0.1",8080);    
-
-    TEST_ASSERT_NOT_NULL(ctx->config);
-    TEST_ASSERT_EQUAL_STRING("abc", ctx->config->carConnectionWifi.ssid);
-    TEST_ASSERT_EQUAL_STRING("123", ctx->config->carConnectionWifi.password);
-    TEST_ASSERT_EQUAL_STRING("127.0.0.1", ctx->config->host);
-    TEST_ASSERT_EQUAL(8080, ctx->config->port);
-
-} */
+} 
 static int fake_publish_called = 0;
 void fake_publish(void * ctx, message_t * message)
 {
@@ -149,4 +115,86 @@ void test_phev_controller_initState(void)
     phev_controller_initState(&state);
 
     TEST_ASSERT_EQUAL(0, state.connectedClients);
+}
+
+void test_phev_controller_config_splitter_connected(void)
+{
+    const char * msg_data = "{ \"state\": { \"connectedClients\": 1 } }";
+    
+    message_t * message = malloc(sizeof(message_t));
+    
+    message->data = msg_data;
+    message->length = sizeof(msg_data);
+    
+    message_t * start = malloc(sizeof(message_t));
+    
+    start->data = "START";
+    start->length = sizeof("START");
+    
+    phevConfig_t config = {
+
+    };
+
+    phev_config_parseConfig_IgnoreAndReturn(&config);
+    phev_config_checkForConnection_IgnoreAndReturn(true);
+    phev_core_startMessageEncoded_IgnoreAndReturn(start);
+    message_t * out = phev_controller_configSplitter(NULL, message);
+    
+    TEST_ASSERT_NOT_NULL(out);
+    TEST_ASSERT_EQUAL_STRING(start->data,out->data);
+}
+void test_phev_controller_config_splitter_not_connected(void)
+{
+    const char * msg_data = "{ \"state\": { \"connectedClients\": 0 } }";
+    
+    message_t * message = malloc(sizeof(message_t));
+    
+    message->data = msg_data;
+    message->length = sizeof(msg_data);
+    
+    message_t * start = malloc(sizeof(message_t));
+    
+    start->data = "START";
+    start->length = sizeof("START");
+    
+    phevConfig_t config = {
+
+    };
+
+    phev_config_parseConfig_IgnoreAndReturn(&config);
+    phev_config_checkForConnection_IgnoreAndReturn(false);
+    phev_core_startMessageEncoded_IgnoreAndReturn(start);
+    phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
+    message_t * out = phev_controller_configSplitter(NULL, message);
+    
+    TEST_ASSERT_NULL(out);
+}
+void test_phev_controller_config_splitter_headLightsOn(void)
+{
+    const char * msg_data = "{ \"state\": { \"connectedClients\": 0 } }";
+    
+    message_t * message = malloc(sizeof(message_t));
+    
+    message->data = msg_data;
+    message->length = sizeof(msg_data);
+    
+    message_t * start = malloc(sizeof(message_t));
+    
+    start->data = "START";
+    start->length = sizeof("START");
+    
+    phevConfig_t config = {
+
+    };
+
+    phev_config_parseConfig_IgnoreAndReturn(&config);
+    phev_config_checkForConnection_IgnoreAndReturn(false);
+    phev_core_startMessageEncoded_IgnoreAndReturn(start);
+    phev_config_checkForHeadLightsOn_IgnoreAndReturn(true);
+    phev_core_simpleRequestCommandMessage_IgnoreAndReturn("on");
+    phev_core_convertToMessage_IgnoreAndReturn("on");
+    phev_core_destroyMessage_Ignore();
+    message_t * out = phev_controller_configSplitter(NULL, message);
+    
+    TEST_ASSERT_NOT_NULL(out);
 }

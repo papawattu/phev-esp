@@ -9,10 +9,10 @@
 
 typedef struct msg_pipe_ctx_t msg_pipe_ctx_t;
 
-typedef message_t *(*msg_pipe_splitter_t)(void *ctx, message_t *);
+typedef messageBundle_t *(*msg_pipe_splitter_t)(void *ctx, message_t *);
 typedef int (*msg_pipe_filter_t)(void *ctx, message_t *);
 typedef message_t *(*msg_pipe_responder_t)(void *ctx, message_t *);
-typedef message_t *(*msg_pipe_aggregator_t)(void *ctx, message_t *);
+typedef message_t *(*msg_pipe_aggregator_t)(void *ctx, messageBundle_t *);
 typedef message_t *(*msg_pipe_transformer_t)(void *ctx, message_t *);
 
 typedef struct msg_pipe_chain_t
@@ -66,5 +66,8 @@ message_t *msg_pipe_transformChain(msg_pipe_ctx_t *ctx, messagingClient_t *clien
 int msg_pipe_in_connect(msg_pipe_ctx_t * ctx);
 
 int msg_pipe_out_connect(msg_pipe_ctx_t * ctx);
+
+message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message);
+message_t * msg_pipe_callOutputTransformers(msg_pipe_ctx_t *ctx, message_t *message);
 
 #endif

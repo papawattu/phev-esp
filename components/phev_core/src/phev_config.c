@@ -156,3 +156,13 @@ bool phev_config_checkForFirmwareUpdate(const phevUpdateConfig_t * config)
 {
     return (config->latestBuild > config->currentBuild) || config->forceUpdate;
 }
+
+bool phev_config_checkForConnection(const phevState_t * state)
+{
+    return (state->connectedClients > 0);
+}
+
+bool phev_config_checkForHeadLightsOn(const phevState_t * state)
+{
+    return state->headLightsOn;
+}
