@@ -135,6 +135,7 @@ void test_phev_controller_config_splitter_connected(void)
 
     };
 
+    phev_config_checkForFirmwareUpdate_IgnoreAndReturn(false);
     phev_config_parseConfig_IgnoreAndReturn(&config);
     phev_config_checkForConnection_IgnoreAndReturn(true);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
@@ -164,6 +165,7 @@ void test_phev_controller_config_splitter_not_connected(void)
 
     };
 
+    phev_config_checkForFirmwareUpdate_IgnoreAndReturn(false);
     phev_config_parseConfig_IgnoreAndReturn(&config);
     phev_config_checkForConnection_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
@@ -190,6 +192,7 @@ void test_phev_controller_config_splitter_headLightsOn(void)
         .data = lightsOn,
         .length = 6,
     };
+    phev_config_checkForFirmwareUpdate_IgnoreAndReturn(false);
     phev_config_parseConfig_IgnoreAndReturn(&config);
     phev_config_checkForConnection_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(NULL);
@@ -207,4 +210,19 @@ void test_phev_controller_config_splitter_headLightsOn(void)
     TEST_ASSERT_NOT_NULL(out->messages[0]->data);
     
     TEST_ASSERT_EQUAL_MEMORY(lightsOn, out->messages[0]->data,6);
+}
+void test_phev_controller_splitter(void)
+{
+    const uint8_t * msg_data[] = {0x6f,0x04,0x01,0x02,0x00,0xff};
+    
+    message_t * message = malloc(sizeof(message_t));
+    
+    message->data = msg_data;
+    message->length = sizeof(msg_data);
+    
+    phev_core_extractMessage_IgnoreAndReturn(&msg_data);
+
+    messageBundle_t * messages = phev_controller_splitter(NULL, message);
+
+    TEST_ASSERT_EQUAL(1, messages->numMessages);
 }

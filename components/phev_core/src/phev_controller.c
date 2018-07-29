@@ -48,10 +48,15 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
 messageBundle_t * phev_controller_splitter(void * ctx, message_t * message)
 {
     message_t * out = phev_core_extractMessage(message->data, message->length);
+
+    if(out == NULL) return NULL;
+
+    messageBundle_t * messages = malloc(sizeof(messageBundle_t));
+
+    messages->numMessages = 0;
+    messages->messages[messages->numMessages++] = out;
     
-    //msg_utils_destroyMsg(message);
-    
-    return out;
+    return messages;
 }
 
 message_t * phev_controller_outputChainInputTransformer(void * ctx, message_t * message)
@@ -89,51 +94,6 @@ void phev_controller_initState(phevState_t * state)
 void phev_controller_initConfig(phevConfig_t * config)
 {
     phev_controller_initState(&config->state);
-}
-phevCtx_t * phev_controller_init(phevSettings_t * settings)
-{
-    phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
-
-    msg_pipe_chain_t * inputChain = malloc(sizeof(msg_pipe_chain_t));
-    msg_pipe_chain_t * outputChain = malloc(sizeof(msg_pipe_chain_t));
-
-    inputChain->inputTransformer = settings->inputTransformer;
-    inputChain->aggregator = NULL;
-    inputChain->splitter = phev_controller_configSplitter;
-    inputChain->filter = NULL;
-    inputChain->outputTransformer = NULL;
-    inputChain->responder = phev_controller_input_responder;
-    
-    outputChain->inputTransformer = phev_controller_outputChainInputTransformer;
-    outputChain->aggregator = NULL;
-    outputChain->splitter = phev_controller_splitter;
-    outputChain->filter = NULL;
-    outputChain->outputTransformer = phev_controller_outputChainOutputTransformer;
-    outputChain->responder = phev_controller_responder;
-    
-    msg_pipe_settings_t pipe_settings = {
-        .in = settings->in,
-        .out = settings->out,
-        .lazyConnect = 1,
-        .user_context = ctx,
-        .in_chain = inputChain,
-        .out_chain = outputChain,
-        .preOutConnectHook = phev_controller_preOutConnectHook,
-    };
-
-    ctx->startWifi = settings->startWifi;
-    ctx->outputTransformer = settings->outputTransformer;
-
-    ctx->config = (phevConfig_t *) malloc(sizeof(phevConfig_t));
-
-    ctx->pipe = msg_pipe(pipe_settings);
-    ctx->queueSize = 0;
-    ctx->currentPing = 0;
-    ctx->successfulPing = false;
-
-    phev_controller_initConfig(ctx->config);
-    
-    return ctx;
 }
 
 int phev_controller_handleEvent(phevEvent_t * event)
@@ -210,7 +170,10 @@ void phev_controller_resetPing(phevCtx_t * ctx)
 {
     ctx->currentPing = 0;
 }
+void phev_controller_performUpdate(long buildNumber)
+{
 
+}
 message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx)
 {
     phevMessage_t * headLightsOn = phev_core_simpleRequestCommandMessage(KO_WF_H_LAMP_CONT_SP, 1);
@@ -226,8 +189,14 @@ messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message
     
     messages->numMessages = 0;
 
-    if(phev_config_checkForConnection(&config->state)) {
-
+    if(phev_config_checkForFirmwareUpdate(&config->state)) 
+    {
+        phev_controller_performUpdate(config->updateConfig.latestBuild);
+        return NULL; // shouldn't get here under normal conditions
+    }
+    
+    if(phev_config_checkForConnection(&config->state)) 
+    {
         // replace with real MAC
 
         uint8_t mac[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -235,12 +204,56 @@ messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message
         messages->messages[messages->numMessages++] = phev_core_startMessageEncoded(2,mac);
     }
 
-    if(phev_config_checkForHeadLightsOn(&config->state)) {
-
+    if(phev_config_checkForHeadLightsOn(&config->state)) 
+    {
         messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOn(ctx);
     }
 
     return messages;
 } 
 
+phevCtx_t * phev_controller_init(phevSettings_t * settings)
+{
+    phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
 
+    msg_pipe_chain_t * inputChain = malloc(sizeof(msg_pipe_chain_t));
+    msg_pipe_chain_t * outputChain = malloc(sizeof(msg_pipe_chain_t));
+
+    inputChain->inputTransformer = settings->inputTransformer;
+    inputChain->aggregator = NULL;
+    inputChain->splitter = phev_controller_configSplitter;
+    inputChain->filter = NULL;
+    inputChain->outputTransformer = NULL;
+    inputChain->responder = phev_controller_input_responder;
+    
+    outputChain->inputTransformer = phev_controller_outputChainInputTransformer;
+    outputChain->aggregator = NULL;
+    outputChain->splitter = phev_controller_splitter;
+    outputChain->filter = NULL;
+    outputChain->outputTransformer = phev_controller_outputChainOutputTransformer;
+    outputChain->responder = phev_controller_responder;
+    
+    msg_pipe_settings_t pipe_settings = {
+        .in = settings->in,
+        .out = settings->out,
+        .lazyConnect = 1,
+        .user_context = ctx,
+        .in_chain = inputChain,
+        .out_chain = outputChain,
+        .preOutConnectHook = phev_controller_preOutConnectHook,
+    };
+
+    ctx->startWifi = settings->startWifi;
+    ctx->outputTransformer = settings->outputTransformer;
+
+    ctx->config = (phevConfig_t *) malloc(sizeof(phevConfig_t));
+
+    ctx->pipe = msg_pipe(pipe_settings);
+    ctx->queueSize = 0;
+    ctx->currentPing = 0;
+    ctx->successfulPing = false;
+
+    phev_controller_initConfig(ctx->config);
+    
+    return ctx;
+}
