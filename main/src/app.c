@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/stat.h>
 #include "msg_mqtt.h"
 #include "msg_gcp_mqtt.h"
 #include "msg_pipe.h"
@@ -131,7 +132,7 @@ int connectSocket(const char *host, uint16_t port)
 }
 int connectToCar(void)
 {
-    return connectSocket("192.168.1.64",8080);
+    return connectSocket("127.0.0.1",8080);
 }
 
 phevCtx_t * createPhevController(void)
@@ -177,6 +178,7 @@ void sendMessage(phevCtx_t * ctx, uint8_t * data, size_t length)
     mqtt_event_handler(&event);
 
 }
+#define FILENAME "main/resources/config.json"
 int main()
 {
 
@@ -186,6 +188,20 @@ int main()
 
     #if defined(__linux__)
     printf("Linux...\n");
+    FILE * configFile = fopen(FILENAME,"r");
+    if (configFile == NULL) {
+        printf("Cannot open file");
+        exit(-1);
+    }
+    
+    struct stat st;
+    stat(FILENAME, &st);
+    size_t size = st.st_size;
+    
+    char * buffer = malloc(size);
+
+    size_t num = fread(buffer,1,size,configFile);
+
     #endif
         
     phevCtx_t * ctx = createPhevController();
@@ -195,7 +211,7 @@ int main()
         .user_context = ((gcp_ctx_t *) ctx->pipe->in->ctx)->mqtt,
     };
     mqtt_event_handler(&event);
-    sendMessage(ctx, "Hello", 5);
+    sendMessage(ctx, buffer, size);
     
     while(1) 
     {

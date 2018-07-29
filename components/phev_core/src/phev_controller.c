@@ -49,13 +49,20 @@ messageBundle_t * phev_controller_splitter(void * ctx, message_t * message)
 {
     message_t * out = phev_core_extractMessage(message->data, message->length);
 
-    if(out == NULL) return NULL;
-
     messageBundle_t * messages = malloc(sizeof(messageBundle_t));
 
     messages->numMessages = 0;
     messages->messages[messages->numMessages++] = out;
     
+    int total = out->length;
+
+    while(message->length > total)
+    {
+        out = phev_core_extractMessage(message->data + total, message->length - total);
+        total += out->length;
+        messages->messages[messages->numMessages++] = out;
+        
+    }
     return messages;
 }
 

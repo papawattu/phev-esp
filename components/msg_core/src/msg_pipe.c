@@ -60,14 +60,18 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
                 out->numMessages ++;
             }
         } 
+        
+        message_t * ret  = NULL;
 
         if(chain->aggregator != NULL)
         {
-            return chain->aggregator(ctx->user_context,out);
+            ret = chain->aggregator(ctx->user_context,out);
         } else {
-            return msg_pipe_splitter_aggregrator(out);
+            ret = msg_pipe_splitter_aggregrator(out);
         }
-
+        free(out);
+        free(messages);
+        return ret;
     }  else {
 
         return msg_pipe_transformChain(ctx, client, chain, message);

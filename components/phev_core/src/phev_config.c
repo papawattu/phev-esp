@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "phev_config.h"
-#include "cJSON.h"
+//#include "cjson/cJson.h"
+#include <cjson/cJSON.h>
 
 char * getConfigString(cJSON * json, char * option) 
 {

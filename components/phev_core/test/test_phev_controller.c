@@ -211,18 +211,52 @@ void test_phev_controller_config_splitter_headLightsOn(void)
     
     TEST_ASSERT_EQUAL_MEMORY(lightsOn, out->messages[0]->data,6);
 }
-void test_phev_controller_splitter(void)
+void test_phev_controller_splitter_one_message(void)
 {
-    const uint8_t * msg_data[] = {0x6f,0x04,0x01,0x02,0x00,0xff};
+    const uint8_t msg_data[] = {0x6f,0x04,0x01,0x02,0x00,0xff};
     
     message_t * message = malloc(sizeof(message_t));
     
     message->data = msg_data;
     message->length = sizeof(msg_data);
     
-    phev_core_extractMessage_IgnoreAndReturn(&msg_data);
+    phev_core_extractMessage_IgnoreAndReturn(message);
 
     messageBundle_t * messages = phev_controller_splitter(NULL, message);
 
     TEST_ASSERT_EQUAL(1, messages->numMessages);
+}
+void test_phev_controller_splitter_two_messages(void)
+{
+    const uint8_t msg_data[] = {0x6f,0x04,0x01,0x01,0x00,0xff,0x6f,0x04,0x01,0x02,0x00,0xff};
+    const uint8_t msg1_data[] = {0x6f,0x04,0x01,0x01,0x00,0xff};
+    const uint8_t msg2_data[] = {0x6f,0x04,0x01,0x02,0x00,0xff};
+    
+    message_t * message = malloc(sizeof(message_t));
+    
+    message->data = msg_data;
+    message->length = sizeof(msg_data);
+    
+    message_t * message2 = malloc(sizeof(message_t));
+    
+    message2->data = msg1_data;
+    message2->length = sizeof(msg1_data);
+    
+    message_t * message3 = malloc(sizeof(message_t));
+    
+    message3->data = msg2_data;
+    message3->length = sizeof(msg2_data);
+    
+    phev_core_extractMessage_IgnoreAndReturn(message2);
+    phev_core_extractMessage_IgnoreAndReturn(message3);
+
+    messageBundle_t * messages = phev_controller_splitter(NULL, message);
+
+    TEST_ASSERT_EQUAL(2, messages->numMessages);
+    TEST_ASSERT_EQUAL(6, messages->messages[0]->length);
+    TEST_ASSERT_EQUAL(6, messages->messages[1]->length);
+    
+    TEST_ASSERT_EQUAL_MEMORY(msg1_data, messages->messages[0]->data, 6);
+    TEST_ASSERT_EQUAL_MEMORY(msg2_data, messages->messages[1]->data, 6);
+
 }
