@@ -137,11 +137,14 @@ void test_phev_controller_config_splitter_connected(void)
 
     phev_config_parseConfig_IgnoreAndReturn(&config);
     phev_config_checkForConnection_IgnoreAndReturn(true);
+    phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
-    message_t * out = phev_controller_configSplitter(NULL, message);
+    messageBundle_t * out = phev_controller_configSplitter(NULL, message);
     
     TEST_ASSERT_NOT_NULL(out);
-    TEST_ASSERT_EQUAL_STRING(start->data,out->data);
+    TEST_ASSERT_EQUAL(1,out->numMessages);
+    
+    TEST_ASSERT_EQUAL_STRING(start->data,out->messages[0]->data);
 }
 void test_phev_controller_config_splitter_not_connected(void)
 {
@@ -165,36 +168,43 @@ void test_phev_controller_config_splitter_not_connected(void)
     phev_config_checkForConnection_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
-    message_t * out = phev_controller_configSplitter(NULL, message);
+    messageBundle_t * out = phev_controller_configSplitter(NULL, message);
     
-    TEST_ASSERT_NULL(out);
+    TEST_ASSERT_NOT_NULL(out);
+    TEST_ASSERT_EQUAL(0,out->numMessages);
 }
 void test_phev_controller_config_splitter_headLightsOn(void)
 {
-    const char * msg_data = "{ \"state\": { \"connectedClients\": 0 } }";
+    const char * msg_data = "";
     
     message_t * message = malloc(sizeof(message_t));
     
     message->data = msg_data;
     message->length = sizeof(msg_data);
     
-    message_t * start = malloc(sizeof(message_t));
-    
-    start->data = "START";
-    start->length = sizeof("START");
-    
+    const uint8_t lightsOn[] = {0xf6,0x04,0x00,0x0a,0x02,0xff};
     phevConfig_t config = {
 
     };
-
+    message_t outMsg = {
+        .data = lightsOn,
+        .length = 6,
+    };
     phev_config_parseConfig_IgnoreAndReturn(&config);
     phev_config_checkForConnection_IgnoreAndReturn(false);
-    phev_core_startMessageEncoded_IgnoreAndReturn(start);
+    phev_core_startMessageEncoded_IgnoreAndReturn(NULL);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(true);
-    phev_core_simpleRequestCommandMessage_IgnoreAndReturn("on");
-    phev_core_convertToMessage_IgnoreAndReturn("on");
+    phev_core_simpleRequestCommandMessage_IgnoreAndReturn(NULL);
+    phev_core_convertToMessage_IgnoreAndReturn(&outMsg);
     phev_core_destroyMessage_Ignore();
-    message_t * out = phev_controller_configSplitter(NULL, message);
+    messageBundle_t * out = phev_controller_configSplitter(NULL, message);
     
     TEST_ASSERT_NOT_NULL(out);
+    TEST_ASSERT_EQUAL(1,out->numMessages);
+    TEST_ASSERT_NOT_NULL(out->messages[0]);
+    TEST_ASSERT_EQUAL(6,out->messages[0]->length);
+    
+    TEST_ASSERT_NOT_NULL(out->messages[0]->data);
+    
+    TEST_ASSERT_EQUAL_MEMORY(lightsOn, out->messages[0]->data,6);
 }

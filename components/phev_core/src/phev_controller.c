@@ -45,7 +45,7 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
     return NULL;
 
 }
-message_t * phev_controller_splitter(void * ctx, message_t * message)
+messageBundle_t * phev_controller_splitter(void * ctx, message_t * message)
 {
     message_t * out = phev_core_extractMessage(message->data, message->length);
     
@@ -219,9 +219,12 @@ message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx)
     
     return message;
 }
-message_t * phev_controller_configSplitter(void * ctx, message_t * message)
+messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message)
 {
     phevConfig_t * config = phev_config_parseConfig(message->data);
+    messageBundle_t * messages = malloc(sizeof(messageBundle_t));
+    
+    messages->numMessages = 0;
 
     if(phev_config_checkForConnection(&config->state)) {
 
@@ -229,15 +232,15 @@ message_t * phev_controller_configSplitter(void * ctx, message_t * message)
 
         uint8_t mac[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         
-        return phev_core_startMessageEncoded(2,mac);
+        messages->messages[messages->numMessages++] = phev_core_startMessageEncoded(2,mac);
     }
 
     if(phev_config_checkForHeadLightsOn(&config->state)) {
 
-        return phev_controller_turnHeadLightsOn(ctx);
+        messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOn(ctx);
     }
 
-    return NULL;
+    return messages;
 } 
 
 
