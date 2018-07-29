@@ -41,23 +41,46 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
 
     return msg;
 }
+message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t *message)
+{
+    if(chain->splitter != NULL)
+    {
+        messageBundle_t * messages = msg_pipe_splitter(ctx->user_context, chain, message);
+        
+        if(messages == NULL) return NULL;
+
+        messageBundle_t * out = malloc(sizeof(messageBundle_t));
+        
+        for(int i=0;i<messages->numMessages;i++) 
+        {
+            message_t * transMsg = msg_pipe_transformChain(ctx, client, chain, messages->messages[i]);
+            if(transMsg != NULL) 
+            {
+                out->messages[i] = transMsg;
+                out->numMessages ++;
+            }
+        } 
+
+        if(chain->aggregator != NULL)
+        {
+            return chain->aggregator(ctx->user_context,out);
+        } else {
+            return msg_pipe_splitter_aggregrator(out);
+        }
+
+    }  else {
+
+        return msg_pipe_transformChain(ctx, client, chain, message);
+    
+    }
+}
 message_t * msg_pipe_callInputTransformers(msg_pipe_ctx_t *ctx, message_t *message)
 {
-    if(ctx->in_chain->splitter != NULL)
-    {
-        return msg_pipe_splitter(ctx, ctx->in, ctx->in_chain, message);
-    }  else {
-        return msg_pipe_transformChain(ctx, ctx->in, ctx->in_chain, message);
-    }
+    return msg_pipe_callTransformers(ctx, ctx->in, ctx->in_chain, message);
 }
 message_t * msg_pipe_callOutputTransformers(msg_pipe_ctx_t *ctx, message_t *message)
 {
-    if(ctx->out_chain->splitter != NULL)
-    {
-        return msg_pipe_splitter(ctx, ctx->out, ctx->out_chain, message);
-    }  else {
-        return msg_pipe_transformChain(ctx, ctx->out, ctx->out_chain, message);
-    }
+    return msg_pipe_callTransformers(ctx, ctx->out, ctx->out_chain, message);
 }
 void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, message_t * message)
 {

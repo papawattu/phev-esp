@@ -28,11 +28,11 @@ message_t * msg_pipe_concat(messageBundle_t * messages)
     free(data);
     return message;
 }
-message_t * msg_pipe_aggregrator(messageBundle_t * messages)
+message_t * msg_pipe_splitter_aggregrator(messageBundle_t * messages)
 {
     return msg_pipe_concat(messages);
 }
-messageBundle_t * msg_pipe_splitter(msg_pipe_ctx_t *ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t *message)
+messageBundle_t * msg_pipe_splitter(msg_pipe_ctx_t *ctx, msg_pipe_chain_t * chain, message_t *message)
 {
     return chain->splitter(ctx, message);   
 }

@@ -26,7 +26,6 @@ messageBundle_t * mock_single_splitter(void * ctx, message_t *message)
 } 
 void test_should_split_single()
 {
-    messagingClient_t * client = NULL;
     msg_pipe_ctx_t * ctx = NULL;
     msg_pipe_chain_t chain = {
         .splitter = mock_single_splitter,
@@ -39,7 +38,7 @@ void test_should_split_single()
     memcpy(message->data, data, 4);
     message->length = 4;
     
-    messageBundle_t * out = msg_pipe_splitter(ctx, client, &chain, message);
+    messageBundle_t * out = msg_pipe_splitter(ctx, &chain, message);
     
     TEST_ASSERT_NOT_NULL(out);
     TEST_ASSERT_EQUAL(1,out->numMessages);
@@ -59,12 +58,12 @@ messageBundle_t * mock_double_splitter(void * ctx, message_t *message)
     message_t * first_message = malloc(sizeof(message_t));
     first_message->data = malloc(sizeof(first_data));
     memcpy(first_message->data, first_data, sizeof(first_data));
-    message->length = sizeof(first_data);
+    first_message->length = sizeof(first_data);
     
     message_t * second_message = malloc(sizeof(message_t));
     second_message->data = malloc(sizeof(second_data));
     memcpy(second_message->data, second_data, sizeof(second_data));
-    message->length = sizeof(second_data);
+    second_message->length = sizeof(second_data);
     
     messageBundle_t * out = malloc(sizeof(messageBundle_t));
 
@@ -79,7 +78,6 @@ messageBundle_t * mock_double_splitter(void * ctx, message_t *message)
 } 
 void test_should_split_double()
 {
-    messagingClient_t * client = NULL;
     msg_pipe_ctx_t * ctx = NULL;
     msg_pipe_chain_t chain = {
         .splitter = mock_double_splitter,
@@ -95,7 +93,7 @@ void test_should_split_double()
     memcpy(message->data, data, sizeof(data));
     message->length = sizeof(data);
     
-    messageBundle_t * out = msg_pipe_splitter(ctx, client, &chain, message);
+    messageBundle_t * out = msg_pipe_splitter(ctx, &chain, message);
     
     TEST_ASSERT_NOT_NULL(out);
     TEST_ASSERT_EQUAL(2,out->numMessages);
@@ -104,7 +102,38 @@ void test_should_split_double()
     TEST_ASSERT_NOT_NULL(out->messages[1]);
     TEST_ASSERT_EQUAL(1,mock_double_splitter_called);
     TEST_ASSERT_NOT_NULL(out->messages);
+    TEST_ASSERT_EQUAL(sizeof(first_data),out->messages[0]->length);
+    TEST_ASSERT_EQUAL(sizeof(second_data),out->messages[1]->length);
     TEST_ASSERT_EQUAL_HEX8_ARRAY(first_data,out->messages[0]->data,sizeof(first_data));
     TEST_ASSERT_EQUAL_HEX8_ARRAY(second_data,out->messages[1]->data,sizeof(second_data));
 
 } 
+void test_should_aggregate_message_bundle()
+{
+    messageBundle_t * messages = malloc(sizeof(messageBundle_t));
+    
+    const uint8_t data[] = {1,2,3,4,5,6,7,8};
+    const uint8_t first_data[] = {1,2,3,4};
+    const uint8_t second_data[] = {5,6,7,8};
+
+    message_t * first_message = malloc(sizeof(message_t));
+    first_message->data = malloc(sizeof(first_data));
+    memcpy(first_message->data, first_data, sizeof(first_data));
+    first_message->length = sizeof(first_data);
+    
+    message_t * second_message = malloc(sizeof(message_t));
+    second_message->data = malloc(sizeof(second_data));
+    memcpy(second_message->data, second_data, sizeof(second_data));
+    second_message->length = sizeof(second_data);
+    
+    messages->messages[0] = first_message;
+    messages->messages[1] = second_message;
+    messages->numMessages = 2;
+    
+    message_t * out = msg_pipe_splitter_aggregrator(messages);
+
+    TEST_ASSERT_NOT_NULL(out);
+    TEST_ASSERT_EQUAL(8,out->length);
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(data,out->data,sizeof(data));
+    
+}
