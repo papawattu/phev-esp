@@ -44,8 +44,6 @@
 
 #include "jwt.h"
 
-#include "json_bin.h"
-
 #include "ppp_client.h"
 
 //#define NO_PPP
@@ -654,87 +652,6 @@ message_t * transformJSONToHex(void * ctx, message_t *message)
     cJSON_Delete(json);
    
     return ret;
-}
-message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
-{
-    char * output;
-
-    if(message->type == RESPONSE_TYPE || message->command != 0x6f) 
-    {
-        return NULL;
-    }
-    
-    cJSON * response = cJSON_CreateObject();
-    if(response == NULL) 
-    {
-        ESP_LOGE(APP_TAG,"Cannot create JSON response");
-        return NULL;
-    }
-    cJSON * command = cJSON_CreateNumber(message->command);
-    if(command == NULL) 
-    {
-        ESP_LOGE(APP_TAG,"Cannot create JSON command response");
-        return NULL;
-    }
-    cJSON_AddItemToObject(response, "command", command);
-    
-    cJSON * type = NULL;
-    if(message->type == REQUEST_TYPE)
-    {
-        type = cJSON_CreateString("request");
-    } else {
-        type = cJSON_CreateString("response");
-    }
-    if(type == NULL) 
-    {
-        ESP_LOGE(APP_TAG,"Cannot create JSON type response");
-        return NULL;
-    }
-    
-    cJSON_AddItemToObject(response, "type", type);
-    
-    cJSON * reg = cJSON_CreateNumber(message->reg);
-    if(reg == NULL) 
-    {
-        ESP_LOGE(APP_TAG,"Cannot create JSON register response");
-        return NULL;
-    }
-    cJSON_AddItemToObject(response, "register", reg);  
-
-    cJSON * length = cJSON_CreateNumber(message->length);
-    if(length == NULL) 
-    {
-        ESP_LOGE(APP_TAG,"Cannot create JSON length response");
-        return NULL;
-    }
-    cJSON_AddItemToObject(response, "length", length);  
-
-    cJSON * data = cJSON_CreateArray();
-    if(data == NULL) 
-    {
-        ESP_LOGE(APP_TAG,"Cannot create JSON data array response");
-        return NULL;
-    }
-    cJSON_AddItemToObject(response, "data", data);  
-
-    for(int i=0; i < message->length - 3; i++)
-    {
-        cJSON * item = cJSON_CreateNumber(message->data[i]);
-        if (item == NULL)
-        {
-            return NULL;
-        }
-        cJSON_AddItemToArray(data, item);
-    }
-    
-    output = cJSON_Print(response); 
-
-    cJSON_Delete(response);
-
-    message_t * outputMessage = msg_utils_createMsg((uint8_t *) output, strlen(output));
-    //ESP_LOGI(APP_TAG,"%s",output);
-    free(output);
-    return outputMessage;
 }
 int connectToCar(const char *host, uint16_t port)
 {

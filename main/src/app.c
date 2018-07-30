@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
+#include <time.h>
 #include "msg_mqtt.h"
 #include "msg_gcp_mqtt.h"
 #include "msg_pipe.h"
@@ -216,10 +217,19 @@ int main()
     while(1) 
     {
         //uint8_t data[] = {0x6f,0x04,0x00,0x27,0x00,0x9a};
-        phev_controller_ping(ctx);
     //    phev_controller_ping(ctx);
     //    phev_controller_ping(ctx);
-        msg_pipe_loop(ctx->pipe);
+    //    phev_controller_ping(ctx);
+    //    msg_pipe_loop(ctx->pipe);
+        
+        time_t prev = time(0);
+        time_t now = time(0);
+        while(now < prev)
+        {
+            now = time(0);
+        }
+        //while(time(0) <= now);
+        printf("Ping %ld\n",now);
     }
     
 }

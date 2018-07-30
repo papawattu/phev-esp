@@ -37,6 +37,7 @@ setup:
 test: setup
 .PHONY: clean
 
+.PHONY: test_clean
 test_clean:
 	$(RM) -r $(BUILD_DIR)/test
 
@@ -46,7 +47,7 @@ CSRC = $(wildcard main/src/*.c) \
 OBJ = $(CSRC:.c=.o)
 DEP = $(OBJ:.o=.d) 
 
-app: $(OBJ)
+linux: $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.d: %.c

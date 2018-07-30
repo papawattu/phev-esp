@@ -6,6 +6,7 @@
 #include "mock_phev_core.h"
 #include "mock_msg_utils.h"
 #include "mock_phev_config.h"
+#include "mock_phev_response_handler.h"
 
 //#ifdef ESP_PLATFORM
 //#include "cJSON.h"

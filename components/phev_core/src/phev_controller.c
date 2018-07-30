@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "phev_controller.h"
+#include "phev_response_handler.h"
 #include "msg_pipe.h"
 #include "msg_utils.h"
 #include "msg_tcpip.h"
@@ -86,7 +87,7 @@ message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t *
     phev_core_decodeMessage(message->data,message->length, phevMessage);
     msg_utils_destroyMsg(message);
     
-    message_t * ret = phevCtx->outputTransformer(ctx, phevMessage);
+    message_t * ret = phev_response_handler(ctx, phevMessage);
     
     phev_core_destroyMessage(phevMessage);
     
@@ -226,7 +227,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     msg_pipe_chain_t * inputChain = malloc(sizeof(msg_pipe_chain_t));
     msg_pipe_chain_t * outputChain = malloc(sizeof(msg_pipe_chain_t));
 
-    inputChain->inputTransformer = settings->inputTransformer;
+    inputChain->inputTransformer = NULL;
     inputChain->aggregator = NULL;
     inputChain->splitter = phev_controller_configSplitter;
     inputChain->filter = NULL;
