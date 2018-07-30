@@ -137,227 +137,6 @@ msg_mqtt_t mqtt = {
     .subscribe = esp_mqtt_client_subscribe
 };
 
-static int socket_id = -1;
-
-static int read_until(char *buffer, char delim, int len)
-{
-//  /*TODO: delim check,buffer check,further: do an buffer length limited*/
-    int i = 0;
-    while (buffer[i] != delim && i < len) {
-        ++i;
-    }
-    return i + 1;
-}
-
-/* resolve a packet from http socket
- * return true if packet including \r\n\r\n that means http packet header finished,start to receive packet body
- * otherwise return false
- * */
-static bool read_past_http_header(char text[], int total_len, esp_ota_handle_t update_handle)
-{
-    /* i means current position */
-    int i = 0, i_read_len = 0;
-    while (text[i] != 0 && i < total_len) {
-        i_read_len = read_until(&text[i], '\n', total_len);
-        // if we resolve \r\n line,we think packet header is finished
-        if (i_read_len == 2) {
-            int i_write_len = total_len - (i + 2);
-            memset(ota_write_data, 0, BUFFSIZE);
-            /*copy first http packet body to write buffer*/
-            memcpy(ota_write_data, &(text[i + 2]), i_write_len);
-
-            esp_err_t err = esp_ota_write( update_handle, (const void *)ota_write_data, i_write_len);
-            if (err != ESP_OK) {
-                ESP_LOGE(APP_TAG, "Error: esp_ota_write failed (%s)!", esp_err_to_name(err));
-                return false;
-            } else {
-                ESP_LOGI(APP_TAG, "esp_ota_write header OK");
-                binary_file_length += i_write_len;
-            }
-            return true;
-        }
-        i += i_read_len;
-    }
-    return false;
-}
-static bool connect_to_http_server(const char * host, const uint16_t port)
-{
-    ESP_LOGI(APP_TAG, "Server IP: %s Server Port:%d", host, port);
-
-    int  http_connect_flag = -1;
-    struct sockaddr_in sock_info;
-    struct addrinfo *res;
-    struct in_addr *addr;
-    
-    const struct addrinfo hints = {
-        .ai_family = AF_INET,
-        .ai_socktype = SOCK_STREAM,
-    };
-
-    int err = getaddrinfo(host , "80", &hints, &res);
-
-    if(err != 0 || res == NULL) {
-        ESP_LOGE(APP_TAG, "DNS lookup failed err=%d res=%p", err, res);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        return false;
-     }
-
-        /* Code to print the resolved IP.
-
-           Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */
-    addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
-    ESP_LOGI(APP_TAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
-
-    socket_id = socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_id == -1) {
-        ESP_LOGE(APP_TAG, "Create socket failed!");
-        return false;
-    }
-
-    // set connect info
-    memset(&sock_info, 0, sizeof(struct sockaddr_in));
-    sock_info.sin_family = AF_INET;
-    sock_info.sin_addr = *addr;
-    sock_info.sin_port = htons(port);
-
-    // connect to http server
-    http_connect_flag = connect(socket_id, (struct sockaddr *)&sock_info, sizeof(sock_info));
-    if (http_connect_flag == -1) {
-        ESP_LOGE(APP_TAG, "Connect to server failed! errno=%d", errno);
-        close(socket_id);
-        return false;
-    } else {
-        ESP_LOGI(APP_TAG, "Connected to server");
-        return true;
-    }
-    return false;
-}
-
-static void ota_task(void *pvParameter)
-{
-    phevConfig_t * config = (phevConfig_t *) pvParameter;
-
-    if(config == NULL) 
-    {
-        ESP_LOGE(APP_TAG,"Config not passed to task");
-        return;
-    }
-
-    esp_err_t err;
-    /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
-    esp_ota_handle_t update_handle = 0 ;
-    const esp_partition_t *update_partition = NULL;
-
-    ESP_LOGI(APP_TAG, "Starting OTA ...");
-
-    const esp_partition_t *configured = esp_ota_get_boot_partition();
-    const esp_partition_t *running = esp_ota_get_running_partition();
-
-    if (configured != running) {
-        ESP_LOGW(APP_TAG, "Configured OTA boot partition at offset 0x%08x, but running from offset 0x%08x",
-                 configured->address, running->address);
-        ESP_LOGW(APP_TAG, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");
-    }
-    ESP_LOGI(APP_TAG, "Running partition type %d subtype %d (offset 0x%08x)",
-             running->type, running->subtype, running->address);
-
-    /* Wait for the callback to set the CONNECTED_BIT in the
-       event group.
-    */
-    
-    /*connect to http server*/
-    if (connect_to_http_server(config->updateHost,config->updatePort)) {
-        ESP_LOGI(APP_TAG, "Connected to http server");
-    } else {
-        ESP_LOGE(APP_TAG, "Connect to http server failed!");
-        return;
-    }
-
-    /*send GET request to http server*/
-    const char *GET_FORMAT =
-        "GET %s HTTP/1.0\r\n"
-        "Host: %s:%d\r\n"
-        "User-Agent: esp-idf/1.0 esp32\r\n\r\n";
-
-    char *http_request = NULL;
-    int get_len = asprintf(&http_request, GET_FORMAT, config->updateImageFullPath, config->updateHost, config->updatePort);
-    if (get_len < 0) {
-        ESP_LOGE(APP_TAG, "Failed to allocate memory for GET request buffer");
-        return;
-    }
-    int res = send(socket_id, http_request, get_len, 0);
-    free(http_request);
-
-    if (res < 0) {
-        ESP_LOGE(APP_TAG, "Send GET request to server failed %s", http_request);
-        return;
-    } else {
-        ESP_LOGI(APP_TAG, "Send GET request to server succeeded");
-    }
-
-    update_partition = esp_ota_get_next_update_partition(NULL);
-    ESP_LOGI(APP_TAG, "Writing to partition subtype %d at offset 0x%x",
-             update_partition->subtype, update_partition->address);
-    assert(update_partition != NULL);
-
-    err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE(APP_TAG, "esp_ota_begin failed (%s)", esp_err_to_name(err));
-        return;
-    }
-    ESP_LOGI(APP_TAG, "esp_ota_begin succeeded");
-
-    bool resp_body_start = false, socket_flag = true, http_200_flag = false;
-    /*deal with all receive packet*/
-    while (socket_flag) {
-        memset(text, 0, TEXT_BUFFSIZE);
-        memset(ota_write_data, 0, BUFFSIZE);
-        int buff_len = recv(socket_id, text, TEXT_BUFFSIZE, 0);
-        if (buff_len < 0) { /*receive error*/
-            ESP_LOGE(APP_TAG, "Error: receive data error! errno=%d", errno);
-            return;
-        } else if (buff_len > 0 && !resp_body_start) {  /*deal with response header*/
-            // only start ota when server response 200 state code
-            if (strstr(text, "200") == NULL && !http_200_flag) {
-                ESP_LOGE(APP_TAG, "ota url is invalid or bin is not exist");
-                return;
-            }
-            http_200_flag = true;
-            memcpy(ota_write_data, text, buff_len);
-            resp_body_start = read_past_http_header(text, buff_len, update_handle);
-        } else if (buff_len > 0 && resp_body_start) { /*deal with response body*/
-            memcpy(ota_write_data, text, buff_len);
-            err = esp_ota_write( update_handle, (const void *)ota_write_data, buff_len);
-            if (err != ESP_OK) {
-                ESP_LOGE(APP_TAG, "Error: esp_ota_write failed (%s)!", esp_err_to_name(err));
-                return;
-            }
-            binary_file_length += buff_len;
-            ESP_LOGD(APP_TAG, "Have written image length %d", binary_file_length);
-        } else if (buff_len == 0) {  /*packet over*/
-            socket_flag = false;
-            ESP_LOGI(APP_TAG, "Connection closed, all packets received");
-            close(socket_id);
-        } else {
-            ESP_LOGE(APP_TAG, "Unexpected recv result");
-        }
-    }
-
-    ESP_LOGI(APP_TAG, "Total Write binary data length : %d", binary_file_length);
-
-    if (esp_ota_end(update_handle) != ESP_OK) {
-        ESP_LOGE(APP_TAG, "esp_ota_end failed!");
-        return;
-    }
-    err = esp_ota_set_boot_partition(update_partition);
-    if (err != ESP_OK) {
-        ESP_LOGE(APP_TAG, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));
-        return;
-    }
-    ESP_LOGI(APP_TAG, "Prepare to restart system!");
-    esp_restart();
-    return ;
-}
 void getIatExp(char *iat, char *exp, int time_size)
 {
     time_t now;
@@ -494,81 +273,9 @@ int logWrite(int soc, uint8_t * buf, size_t len)
     
     return num;
 }
-
-char * getConfigString(cJSON * json, char * option) 
-{
-    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
-    if(value == NULL) {
-        ESP_LOGE(APP_TAG,"Cannot find option %s", option);
-        return NULL;
-    }
-
-    ESP_LOGI(APP_TAG,"Option %s set to %s", option, value->valuestring);
-    
-    return value->valuestring;
-}
-uint16_t getConfigInt(cJSON * json, char * option) 
-{
-    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
-    if(value == NULL) {
-        ESP_LOGE(APP_TAG,"Cannot find option %s", option);
-        return NULL;
-    }
-
-    ESP_LOGI(APP_TAG,"Option %s set to %d", option, value->valueint);
-    
-    return value->valueint;
-}
-
-long getConfigLong(cJSON * json, char * option) 
-{
-    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
-    if(value == NULL) {
-        ESP_LOGE(APP_TAG,"Cannot find option %s", option);
-        return 0;
-    }
-
-    ESP_LOGI(APP_TAG,"Option %s set to %ld", option, (long) value->valuedouble);
-    
-    return (long) value->valuedouble;
-}
-bool getConfigBool(cJSON * json, char * option) 
-{
-    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
-    if(value == NULL) {
-        ESP_LOGW(APP_TAG,"Cannot find option %s defaulting to false", option);
-        return false;
-    }
-
-    if(cJSON_IsTrue(value)) {
-        ESP_LOGI(APP_TAG,"Option %s set to true", option);
-    } else {
-        ESP_LOGI(APP_TAG,"Option %s set to false", option);
-    }
-    
-    return cJSON_IsTrue(value);
-}
-    
+/*    
 void checkForUpdate(phevCtx_t * ctx, cJSON * json)
 {
-    cJSON * update = cJSON_GetObjectItemCaseSensitive(json, UPDATE_NAME);
-
-    if(update == NULL)
-    {
-        ESP_LOGE(APP_TAG, "Cannot find update config");
-    }
-    
-    long build = getConfigLong(json,LATEST_BUILD);
-
-    phev_controller_setUpdateConfig(ctx, getConfigString(update,UPDATE_SSID), 
-                                        getConfigString(update,UPDATE_PASSWORD),
-                                        getConfigString(update,UPDATE_HOST),
-                                        getConfigString(update,UPDATE_PATH),
-                                        getConfigInt(update,UPDATE_PORT),
-                                        build
-                                    );
-    
-    bool forceUpdate = getConfigBool(json, FORCE_UPDATE);
     
     if(build > BUILD_NUMBER || forceUpdate)
     {
@@ -591,68 +298,7 @@ void checkForUpdate(phevCtx_t * ctx, cJSON * json)
         ESP_LOGI(APP_TAG,"At latest firmware");
     }  
 }
-
-#define STATUS "status"
-#define HEAD_LIGHTS_ON "headLightsOn"
-
-message_t * checkStatus(phevCtx_t * ctx, cJSON *json)
-{
-    cJSON * status = cJSON_GetObjectItemCaseSensitive(json, STATUS);
-
-    if(status == NULL) {
-        ESP_LOGW(APP_TAG,"Cannot find status config");
-        return NULL;
-    }
-
-    if(getConfigBool(status, HEAD_LIGHTS_ON))
-    {
-        return phev_controller_turnHeadLightsOn(ctx);
-    } 
-
-    return NULL;
-
-}
-message_t * transformJSONToHex(void * ctx, message_t *message)
-{
-    phevCtx_t * phevCtx = (phevCtx_t *) ctx;
-    cJSON *json = cJSON_Parse((const char *) message->data);
-
-#ifndef NO_OTA
-    checkForUpdate(phevCtx,json);
-#endif
-    cJSON *connect = NULL;
-
-    connect = cJSON_GetObjectItemCaseSensitive(json, CONNECTED_CLIENTS);
-
-    if(connect == NULL) 
-    {
-        return NULL;
-    }
-    if (connect->valueint > 0)
-    {
-        cJSON * carConnection = cJSON_GetObjectItemCaseSensitive(json, CAR_CONNECTION);
-    
-        phev_controller_setCarConnectionConfig(phevCtx, getConfigString(carConnection,CAR_SSID), 
-                                                    getConfigString(carConnection,CAR_PASSWORD),
-                                                    getConfigString(carConnection,CAR_HOST),
-                                                    getConfigInt(carConnection,CAR_PORT)
-                                                    );
-        message_t out;
-        uint8_t * data;
-        //uint8_t mac[] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
-        uint8_t mac[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        
-        cJSON_Delete(json);
-
-        return phev_core_startMessageEncoded(2,mac);
-    }
-
-    message_t * ret = checkStatus(phevCtx, json);
-    
-    cJSON_Delete(json);
-   
-    return ret;
-}
+*/
 int connectToCar(const char *host, uint16_t port)
 {
     return connectSocket(host,port);
@@ -677,12 +323,12 @@ phevCtx_t * connectPipe(void)
         .write = logWrite,
     };
     
-     
+     // needs to be moved to new app.c
     phevSettings_t phev_settings = {
         .in = msg_gcp_createGcpClient(inSettings),
         .out = msg_tcpip_createTcpIpClient(outSettings),
-        .inputTransformer = transformJSONToHex,
-        .outputTransformer = transformHexToJSON,
+     //   .inputTransformer = transformJSONToHex,
+     //   .outputTransformer = transformHexToJSON,
         .startWifi = wifi_conn_init,
     };
 
@@ -730,8 +376,7 @@ void main_loop(void *pvParameter)
             ctx->pipe->in->connect(ctx->pipe->in);
 
         }   
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-            
+        vTaskDelay(100 / portTICK_PERIOD_MS);            
     }
 
     ESP_LOGI(APP_TAG,"Disconnected...");
@@ -786,8 +431,6 @@ static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword)
         pri->name[0], pri->name[1], pri->num,
         IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
         if(pri->name[0] == 'p') netif_set_default(pri);
-        //    SetDNSServer(dns);
-        //    return;
     }
 }
 
@@ -808,14 +451,11 @@ static void wifi_conn_init_update(const char * wifiSSID, const char * wifiPasswo
     ESP_ERROR_CHECK(esp_wifi_start());
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
-        for (struct netif *pri = netif_list; pri != NULL; pri=pri->next)
+    for (struct netif *pri = netif_list; pri != NULL; pri=pri->next)
     {
         ESP_LOGD(APP_TAG, "Interface priority is %c%c%d (" IPSTR "/" IPSTR " gateway " IPSTR ")",
         pri->name[0], pri->name[1], pri->num,
         IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
-     //   if(pri->name[0] == 'p') netif_set_default(pri);
-        //    SetDNSServer(dns);
-        //    return;
     }
 }
 static void sntp_task(void)
@@ -868,72 +508,6 @@ void start_app(void)
     xTaskCreate(&main_loop, "main_task", 4096, NULL, 5, NULL);    
 
 }
-void IRAM_ATTR timer_group0_isr(void *para)
-{
-    int timer_idx = (int) para;
-
-    //ESP_LOGI(APP_TAG,"Ping!!!");
-    /* Retrieve the interrupt status and the counter value
-       from the timer that reported the interrupt */
-    uint32_t intr_status = TIMERG0.int_st_timers.val;
-    TIMERG0.hw_timer[timer_idx].update = 1;
-    uint64_t timer_counter_value = 
-        ((uint64_t) TIMERG0.hw_timer[timer_idx].cnt_high) << 32
-        | TIMERG0.hw_timer[timer_idx].cnt_low;
-
-    /* Prepare basic event data
-       that will be then sent back to the main program task */
-    timer_event_t evt;
-    evt.timer_group = 0;
-    evt.timer_idx = timer_idx;
-    evt.timer_counter_value = timer_counter_value;
-
-    /* Clear the interrupt
-       and update the alarm time for the timer with without reload */
-    if ((intr_status & BIT(timer_idx)) && timer_idx == TIMER_0) {
-        evt.type = 0;
-        TIMERG0.int_clr_timers.t0 = 1;
-        timer_counter_value += (uint64_t) (INTERVAL_SEC * TIMER_SCALE);
-        TIMERG0.hw_timer[timer_idx].alarm_high = (uint32_t) (timer_counter_value >> 32);
-        TIMERG0.hw_timer[timer_idx].alarm_low = (uint32_t) timer_counter_value;
-    } else if ((intr_status & BIT(timer_idx)) && timer_idx == TIMER_1) {
-        evt.type = 0;
-        TIMERG0.int_clr_timers.t1 = 1;
-    } else {
-        evt.type = -1; // not supported even type
-    }
-
-    /* After the alarm has been triggered
-      we need enable it again, so it is triggered the next time */
-    TIMERG0.hw_timer[timer_idx].config.alarm_en = TIMER_ALARM_EN;
-
-    /* Now just send the event data back to the main program task */
-    xQueueSendFromISR(timer_queue, &evt, NULL);
-}
-
-void startTimer(void)
-{
-    timer_queue = xQueueCreate(10, sizeof(timer_event_t));
-    
-    timer_config_t config;
-    config.divider = TIMER_DIVIDER;
-    config.counter_dir = TIMER_COUNT_UP;
-    config.counter_en = TIMER_PAUSE;
-    config.alarm_en = TIMER_ALARM_EN;
-    config.intr_type = TIMER_INTR_LEVEL;
-    config.auto_reload = 0;
-    timer_init(TIMER_GROUP_0, TIMER_0, &config);
-
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0x00000000ULL);
-    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, INTERVAL_SEC * TIMER_SCALE);
-    timer_enable_intr(TIMER_GROUP_0, TIMER_0);
-    timer_isr_register(TIMER_GROUP_0, TIMER_0, timer_group0_isr, 
-        (void *) TIMER_0, ESP_INTR_FLAG_IRAM, NULL);
-
-    timer_start(TIMER_GROUP_0, TIMER_0);
-
-}
- 
 void resetGSMModule(int resetPin)
 {
     ESP_LOGI(APP_TAG,"Resetting GSM module");

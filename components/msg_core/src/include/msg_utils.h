@@ -2,6 +2,8 @@
 #define _MSG_UTILS_H_
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include "msg_core.h"
 
 static message_t * msg_utils_createMsg(uint8_t * data, size_t length)

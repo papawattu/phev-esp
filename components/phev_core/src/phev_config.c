@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include "phev_config.h"
-//#include "cjson/cJson.h"
+#ifdef __XTENSA__
+#include "cJSON.h"
+#else
 #include <cjson/cJSON.h>
-
+#endif
 char * getConfigString(cJSON * json, char * option) 
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);

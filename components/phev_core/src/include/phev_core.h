@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
 #include "msg_core.h"
 #define PHEV_OK 0
 

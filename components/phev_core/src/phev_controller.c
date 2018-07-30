@@ -192,7 +192,7 @@ message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx)
 }
 messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message)
 {
-    phevConfig_t * config = phev_config_parseConfig(message->data);
+    phevConfig_t * config = phev_config_parseConfig((char *) message->data);
     messageBundle_t * messages = malloc(sizeof(messageBundle_t));
     
     messages->numMessages = 0;

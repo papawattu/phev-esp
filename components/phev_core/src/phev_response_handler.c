@@ -1,6 +1,9 @@
 #include "phev_response_handler.h"
-
+#ifdef __XTENSA__
+#include "cJSON.h"
+#else
 #include <cjson/cJSON.h>
+#endif
 
 message_t * phev_response_handler(void * ctx, phevMessage_t *message)
 {
