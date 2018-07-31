@@ -1,8 +1,6 @@
 #ifndef _OTA_H_
 #define _OTA_H_
-
-#include "esp_ota_ops.h"
-
+#include <stdint.h>
 #define BUFFSIZE 1024
 #define TEXT_BUFFSIZE 1024
 

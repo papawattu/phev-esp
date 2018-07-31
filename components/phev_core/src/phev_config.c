@@ -76,7 +76,7 @@ void phev_config_setUpdateConfig(phevUpdateConfig_t * config, const char * ssid,
 
 void phev_config_parseUpdateConfig(phevConfig_t * config, cJSON * update)
 {
-    long build = getConfigLong(update,UPDATE_CONFIG_LATEST_BUILD);
+    int build = getConfigLong(update,UPDATE_CONFIG_LATEST_BUILD);
 
     phev_config_setUpdateConfig(&config->updateConfig, getConfigString(update,UPDATE_CONFIG_SSID), 
                                         getConfigString(update,UPDATE_CONFIG_PASSWORD),

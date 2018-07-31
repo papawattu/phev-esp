@@ -6,4 +6,5 @@ build
 *.d
 test1.exe
 app
+linux
 components/messaging/test/*_Runner.c

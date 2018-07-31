@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <time.h>
 #include "msg_mqtt.h"
 #include "msg_gcp_mqtt.h"
@@ -188,7 +189,7 @@ int main()
     #endif
 
     #if defined(__linux__)
-    printf("Linux...\n");
+    printf("Linux... Loading config from file\n");
     FILE * configFile = fopen(FILENAME,"r");
     if (configFile == NULL) {
         printf("Cannot open file");
@@ -211,25 +212,13 @@ int main()
         .event_id = MSG_MQTT_EVENT_CONNECTED,
         .user_context = ((gcp_ctx_t *) ctx->pipe->in->ctx)->mqtt,
     };
-    mqtt_event_handler(&event);
-    sendMessage(ctx, buffer, size);
-    
+    //mqtt_event_handler(&event);
+    //sendMessage(ctx, buffer, size);
+    phev_controller_setConfig(ctx, buffer);
     while(1) 
     {
-        //uint8_t data[] = {0x6f,0x04,0x00,0x27,0x00,0x9a};
-    //    phev_controller_ping(ctx);
-    //    phev_controller_ping(ctx);
-    //    phev_controller_ping(ctx);
-    //    msg_pipe_loop(ctx->pipe);
-        
-        time_t prev = time(0);
-        time_t now = time(0);
-        while(now < prev)
-        {
-            now = time(0);
-        }
-        //while(time(0) <= now);
-        printf("Ping %ld\n",now);
+        msg_pipe_loop(ctx->pipe);
+        sleep(1);
     }
     
 }

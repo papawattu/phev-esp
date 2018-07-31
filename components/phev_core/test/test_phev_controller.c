@@ -7,6 +7,7 @@
 #include "mock_msg_utils.h"
 #include "mock_phev_config.h"
 #include "mock_phev_response_handler.h"
+#include "mock_ota.h"
 
 //#ifdef ESP_PLATFORM
 //#include "cJSON.h"
@@ -107,7 +108,13 @@ void test_phev_controller_send_message(void)
 } 
 void test_phev_controller_initConfig(void)
 {
-
+    phevConfig_t config = {
+        .updateConfig = {
+            .currentBuild = 0,
+        },
+    };
+    phev_controller_initConfig(&config);
+    TEST_ASSERT_EQUAL(1,config.updateConfig.currentBuild);
 }
 void test_phev_controller_initState(void)
 {

@@ -15,7 +15,7 @@
 
 typedef struct phevCtx_t phevCtx_t;
 
-typedef void (* phevStartWifi_t)(const char * ssid, const char * password);
+typedef void (* phevStartWifi_t)(const char * ssid, const char * password, bool setPPPDefault);
 typedef struct phevSettings_t
 {
     messagingClient_t * in;
@@ -61,6 +61,7 @@ messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message
 
 void phev_controller_initConfig(phevConfig_t * config);
 void phev_controller_initState(phevState_t * state);
+void phev_controller_setConfig(phevCtx_t * ctx, char * config);
 
 
 #endif

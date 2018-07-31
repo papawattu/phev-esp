@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ota.h"
+#ifdef __XTENSA__
+#include "esp_ota_ops.h"
 #include "lwip/netif.h"
 #include "lwip/opt.h"
 #include "lwip/sockets.h"
@@ -230,3 +232,9 @@ void ota(const char * updateHost,const uint16_t updatePort, const char * updateI
     esp_restart();
     return ;
 }
+#else
+void ota(const char * updateHost,const uint16_t updatePort, const char * updateImageFullPath)
+{
+    printf("Pretend OTA");
+}
+#endif

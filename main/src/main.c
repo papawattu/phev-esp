@@ -77,9 +77,9 @@ static bool connected = false;
 esp_mqtt_client_handle_t client;
 
 char *createJwt(const char *project_id);
-static void wifi_conn_init_update(const char *ssid, const char * password);
-static void wifi_conn_init(const char *ssid, const char * password);
-void startTimer(void);
+//static void wifi_conn_init_update(const char *ssid, const char * password);
+static void wifi_conn_init(const char *ssid, const char * password, bool setPPPdefault);
+//void startTimer(void);
 
 //#define CONFIG_WIFI_SSID "BTHub6-P535"
 //#define CONFIG_WIFI_PASSWORD "S1mpsons"
@@ -408,14 +408,14 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
     return ESP_OK;
 }
 
-static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword)
+static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword, const bool setPPPdefault)
 {
     esp_wifi_stop();
     wifi_config_t wifi_config = {
         .sta.ssid = "",
         .sta.password = "",
     };
-    //memset(&wifi_config,0, sizeof(wifi_config_t));
+    
     strncpy((char *) wifi_config.sta.ssid, wifiSSID,strlen(wifiSSID));
     strncpy((char *) wifi_config.sta.password, wifiPassword,strlen(wifiPassword));
     
@@ -430,10 +430,10 @@ static void wifi_conn_init(const char * wifiSSID, const char * wifiPassword)
         ESP_LOGD(APP_TAG, "Interface priority is %c%c%d (" IPSTR "/" IPSTR " gateway " IPSTR ")",
         pri->name[0], pri->name[1], pri->num,
         IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
-        if(pri->name[0] == 'p') netif_set_default(pri);
+        if(pri->name[0] == 'p' && setPPPdefault) netif_set_default(pri);
     }
 }
-
+/*
 static void wifi_conn_init_update(const char * wifiSSID, const char * wifiPassword)
 {
     esp_wifi_stop();
@@ -457,7 +457,7 @@ static void wifi_conn_init_update(const char * wifiSSID, const char * wifiPasswo
         pri->name[0], pri->name[1], pri->num,
         IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
     }
-}
+} */
 static void sntp_task(void)
 {
     int retry = 0;

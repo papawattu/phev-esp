@@ -7,11 +7,12 @@
 #include "msg_pipe.h"
 #include "msg_utils.h"
 #include "msg_tcpip.h"
+#include "ota.h"
 
 void phev_controller_preOutConnectHook(msg_pipe_ctx_t * pipe)
 {
     phevCtx_t * ctx = (phevCtx_t *) pipe->user_context;
-    ctx->startWifi(ctx->config->connectionConfig.carConnectionWifi.ssid,ctx->config->connectionConfig.carConnectionWifi.password);
+    ctx->startWifi(ctx->config->connectionConfig.carConnectionWifi.ssid,ctx->config->connectionConfig.carConnectionWifi.password,true);
     ((tcpip_ctx_t *) ctx->pipe->out->ctx)->host = ctx->config->connectionConfig.host;
     ((tcpip_ctx_t *) ctx->pipe->out->ctx)->port = ctx->config->connectionConfig.port;
     //ctx->pipe->in->connect(ctx->pipe->in);
@@ -101,6 +102,7 @@ void phev_controller_initState(phevState_t * state)
 }
 void phev_controller_initConfig(phevConfig_t * config)
 {
+    config->updateConfig.currentBuild = BUILD_NUMBER;
     phev_controller_initState(&config->state);
 }
 
@@ -108,8 +110,6 @@ int phev_controller_handleEvent(phevEvent_t * event)
 {
     return PHEV_OK;
 }
-
-
 void phev_controller_sendCommand(phevCtx_t * ctx, phevMessage_t * message) 
 {
     int index = ctx->queueSize;
@@ -178,9 +178,14 @@ void phev_controller_resetPing(phevCtx_t * ctx)
 {
     ctx->currentPing = 0;
 }
-void phev_controller_performUpdate(long buildNumber)
+void phev_controller_performUpdate(phevCtx_t * ctx)
 {
-
+    if(!ctx->config->updateConfig.updateOverPPP)
+    {
+        ctx->startWifi(ctx->config->updateConfig.updateWifi.ssid,ctx->config->updateConfig.updateWifi.password,false);
+    }
+    ota(ctx->config->updateConfig.updateHost,ctx->config->updateConfig.updatePort, ctx->config->updateConfig.updateImageFullPath);
+    
 }
 message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx)
 {
@@ -189,6 +194,12 @@ message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx)
     phev_core_destroyMessage(headLightsOn);
     
     return message;
+}
+void phev_controller_setConfig(phevCtx_t * ctx, char * jsonConf)
+{
+    phevConfig_t * config = phev_config_parseConfig(jsonConf);
+    phev_controller_initConfig(ctx->config);
+    
 }
 messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message)
 {
@@ -199,7 +210,7 @@ messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message
 
     if(phev_config_checkForFirmwareUpdate(&config->state)) 
     {
-        phev_controller_performUpdate(config->updateConfig.latestBuild);
+        phev_controller_performUpdate(ctx);
         return NULL; // shouldn't get here under normal conditions
     }
     

@@ -43,7 +43,8 @@ test_clean:
 
 CSRC = $(wildcard main/src/*.c) \
        $(wildcard components/msg_core/src/*.c) \
-       $(wildcard components/phev_core/src/*.c)
+       $(wildcard components/phev_core/src/*.c) \
+	   $(wildcard components/ota/src/*.c)
 OBJ = $(CSRC:.c=.o)
 DEP = $(OBJ:.o=.d) 
 
