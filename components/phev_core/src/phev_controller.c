@@ -105,7 +105,14 @@ void phev_controller_initConfig(phevConfig_t * config)
     config->updateConfig.currentBuild = BUILD_NUMBER;
     phev_controller_initState(&config->state);
 }
-
+void phev_controller_updateConfig(phevCtx_t * ctx, phevConfig_t * config)
+{
+    if(ctx->config != NULL)
+    {
+        free(ctx->config);
+    }
+    ctx->config = config;
+}
 int phev_controller_handleEvent(phevEvent_t * event)
 {
     return PHEV_OK;
@@ -204,12 +211,6 @@ messageBundle_t * phev_controller_configToMessageBundle(phevConfig_t * config)
     messageBundle_t * messages = malloc(sizeof(messageBundle_t));
     messages->numMessages = 0;
     
-    if(phev_config_checkForFirmwareUpdate(&config->state)) 
-    {
- //       phev_controller_performUpdate(ctx);
-        return NULL; // shouldn't get here under normal conditions
-    }
-    
     if(phev_config_checkForConnection(&config->state)) 
     {
         // replace with real MAC
@@ -231,7 +232,11 @@ messageBundle_t * phev_controller_configToMessageBundle(phevConfig_t * config)
 void phev_controller_setConfig(phevCtx_t * ctx, char * jsonConf)
 {
     phevConfig_t * config = phev_config_parseConfig(jsonConf);
-    //phev_controller_initConfig(ctx->config);
+    
+    phev_controller_initConfig(ctx->config);
+    
+    phev_controller_updateConfig(ctx, config);
+
     messageBundle_t * messages = phev_controller_configToMessageBundle(config);   
 
     for(int i=0;i<messages->numMessages;i++)
@@ -245,14 +250,29 @@ messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message
 {
     phevConfig_t * config = phev_config_parseConfig((char *) message->data);
     
+    phev_controller_updateConfig(ctx, config);
+    
+    if(phev_config_checkForFirmwareUpdate(&config->state)) 
+    {
+        phev_controller_performUpdate(ctx);
+        return NULL; // shouldn't get here under normal conditions
+    }
+    
     return phev_controller_configToMessageBundle(config);
 } 
 void phev_controller_eventLoop(phevCtx_t * ctx)
 {
-    msg_pipe_loop(ctx->pipe);
     if(!ctx->pipe->in->connected)
     {
         ctx->pipe->in->connect(ctx->pipe->in);
+    } else {
+        if(!ctx->pipe->out->connected && ctx->currentPing > 0)
+        {
+            phev_controller_resetPing(ctx);
+        }
+        msg_pipe_loop(ctx->pipe);
+        
+        phev_controller_ping(ctx);
     }   
 }
 phevCtx_t * phev_controller_init(phevSettings_t * settings)

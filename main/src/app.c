@@ -15,44 +15,10 @@
 #include "phev_core.h"
 #include "phev_controller.h"
 
+#define FILENAME "main/resources/config.json"
+
 int global_sock;
 
-handle_t fake_mqtt_init(msg_mqtt_config_t * mqtt_cfg)
-{
-    return NULL;
-}
-void fake_mqtt_start()
-{
-
-}
-void fake_mqtt_publish()
-{
-
-}
-void fake_mqtt_subscribe()
-{
-
-}
-
-msg_mqtt_t mqtt = {
-    .init = fake_mqtt_init,
-    .start = fake_mqtt_start,
-    .publish = fake_mqtt_publish,
-    .subscribe = fake_mqtt_subscribe,
-};
-char * createJwt()
-{
-    return "";
-}
-
-message_t * transformJSONToHex(void * ctx, message_t *message)
-{
-    return NULL;
-}
-message_t * transformHexToJSON(void * ctx, phevMessage_t *message)
-{
-    return NULL;
-}
 void wifi_conn_init(void)
 {
 
@@ -62,6 +28,7 @@ void my_ms_to_timeval(int timeout_ms, struct timeval *tv)
     tv->tv_sec = timeout_ms / 1000;
     tv->tv_usec = (timeout_ms - (tv->tv_sec * 1000)) * 1000;
 }
+
 static int tcp_poll_read(int soc, int timeout_ms)
 {
     fd_set readset;
@@ -121,12 +88,15 @@ int connectSocket(const char *host, uint16_t port)
 
     if (sock == -1)
     {
-        return -1;
+        exit(1);
+        //return -1;
     }
     int ret = connect(sock, (struct sockaddr *)(&addr), sizeof(addr));
     if(ret == -1)
     {
-        return -1;
+        exit(1);
+        
+        //return -1;
     }
     
     global_sock = sock;
@@ -138,7 +108,7 @@ int connectToCar(void)
 }
 void outgoingHandler(messagingClient_t * client, message_t * message)
 {
-    printf("New Message");
+    printf("New Message\n");
 }
 message_t * incomingHandler(messagingClient_t *client) 
 {
@@ -160,7 +130,12 @@ messagingClient_t * setupAppMsgClient(void)
     messagingClient_t * client = msg_core_createMessagingClient(settings);
     return client;
 }
-phevCtx_t * createPhevController(void)
+char * createJwt()
+{
+    return "";
+}
+
+phevCtx_t * createPhevController(msg_mqtt_t mqtt)
 {
     gcpSettings_t inSettings = {
         .host = "mqtt.googleapis.com",
@@ -181,28 +156,17 @@ phevCtx_t * createPhevController(void)
     
      
     phevSettings_t phev_settings = {
+#if defined(__linux__)
         .in = setupAppMsgClient(),
+#else 
+        .in = msg_gcp_createGcpClient(inSettings),
+#endif
         .out = msg_tcpip_createTcpIpClient(outSettings),
         .startWifi = wifi_conn_init,
     };
 
     return phev_controller_init(&phev_settings);
 }
-void sendMessage(phevCtx_t * ctx, uint8_t * data, size_t length)
-{
-    mqtt_event_t event = {
-        .event_id = MSG_MQTT_EVENT_DATA,
-        .user_context = ((gcp_ctx_t *) ctx->pipe->in->ctx)->mqtt,
-        .data = data,
-        .data_len = length,
-        .topic = "",
-        .topic_len = 0,
-    };
-    mqtt_event_handler(&event);
-
-}
-#define FILENAME "main/resources/config.json"
-
 int main()
 {
 
@@ -211,6 +175,10 @@ int main()
     #endif
 
     #if defined(__linux__)
+    msg_mqtt_t mqtt = {};
+    
+    phevCtx_t * ctx = createPhevController(mqtt);
+
     printf("System is Linux...\nLoading config from file...");
     FILE * configFile = fopen(FILENAME,"r");
     if (configFile == NULL) {
@@ -227,17 +195,16 @@ int main()
     size_t num = fread(buffer,1,size,configFile);
     
     printf("Loaded...\n");
-    #endif
-        
-    phevCtx_t * ctx = createPhevController();
 
-    mqtt_event_t event = {
-        .event_id = MSG_MQTT_EVENT_CONNECTED,
-    //    .user_context = ((gcp_ctx_t *) ctx->pipe->in->ctx)->mqtt,
-    };
-    //mqtt_event_handler(&event);
-    //sendMessage(ctx, buffer, size);
     phev_controller_setConfig(ctx, buffer);
+
+    printf("Config set...\n");
+
+    #endif
+
+    printf("Build version :%d\n", ctx->config->updateConfig.currentBuild);
+    printf("Latest build version :%d\n", ctx->config->updateConfig.latestBuild);
+    
     printf("Starting message loop...\n");
 
     while(1) 

@@ -9,11 +9,7 @@
 #include "mock_phev_response_handler.h"
 #include "mock_ota.h"
 
-//#ifdef ESP_PLATFORM
-//#include "cJSON.h"
-//#else
 #include <cjson/cJSON.h>
-//#endif
 
 
 void test_handle_event(void)
@@ -267,4 +263,29 @@ void test_phev_controller_splitter_two_messages(void)
     TEST_ASSERT_EQUAL_MEMORY(msg1_data, messages->messages[0]->data, 6);
     TEST_ASSERT_EQUAL_MEMORY(msg2_data, messages->messages[1]->data, 6);
 
+}
+static int startWifiCalled = 0;
+
+void startWifiStub(void)
+{
+    startWifiCalled ++;
+}
+void test_phev_controller_performUpdate(void)
+{
+    
+    phevConfig_t config = {
+        .updateConfig = {
+            .updateOverPPP = false,
+        },
+    };
+    phevCtx_t ctx = {
+        .config = &config,
+        .startWifi = startWifiStub,
+    };
+    
+    ota_Ignore();
+
+    phev_controller_performUpdate(&ctx);
+
+    TEST_ASSERT_EQUAL(1,startWifiCalled);
 }
