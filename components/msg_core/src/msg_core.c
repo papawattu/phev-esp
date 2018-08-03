@@ -14,17 +14,36 @@ int msg_core_stop(messagingClient_t *client)
 }
 int msg_core_connect(messagingClient_t *client)
 {
-    return client->connect(client);
+    return 0;
 }
 int msg_core_publish(messagingClient_t *client, message_t *message)
 {
     client->outgoingHandler(client, message);
     return 0;
 }
+
+message_t * msg_core_incomingNop(messagingClient_t *client)
+{
+    return NULL;
+}
+void msg_core_outgoingNop(messagingClient_t *client, message_t *message)
+{
+    return;
+}
 int msg_core_registerHandlers(messagingClient_t *client, messagingClientHandler_t incoming, messagingClientHandler_t outgoing) 
 {
-    client->incomingHandler = incoming;
-    client->outgoingHandler = outgoing;
+    if(incoming) 
+    {
+        client->incomingHandler = incoming;
+    } else {
+        client->incomingHandler = msg_core_incomingNop;
+    }
+    if(outgoing) 
+    {
+        client->outgoingHandler = outgoing;
+    } else {
+        client->outgoingHandler = msg_core_outgoingNop;
+    }
     return 0;
 }
 
@@ -76,10 +95,12 @@ messagingClient_t * msg_core_createMessagingClient(messagingSettings_t settings)
     msg_core_messagingClientInit(&client);
     msg_core_registerHandlers(client, settings.incomingHandler,settings.outgoingHandler);
 
-    client->start = settings.start;
-    client->stop = settings.stop;
-    client->connect = settings.connect;
+    if(settings.start) client->start = settings.start;
+    if(settings.stop) client->stop = settings.stop;
+    if(settings.connect) client->connect = settings.connect;
+    
     client->connected = 0;
+    
     client->ctx = settings.ctx;
 
     return client;

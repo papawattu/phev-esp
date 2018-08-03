@@ -1,4 +1,4 @@
-EXEC := app
+EXEC := phev
 PROJECT_NAME := phev-esp
 BUILD_NUMBER ?= 1
 SHELL := /bin/bash
@@ -50,7 +50,7 @@ CSRC = $(wildcard main/src/*.c) \
 OBJ = $(CSRC:.c=.o)
 DEP = $(OBJ:.o=.d) 
 
-linux: $(OBJ)
+$(EXEC): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.d: %.c

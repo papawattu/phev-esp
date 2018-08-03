@@ -213,6 +213,15 @@ void test_messaging_client_connect()
 
     TEST_ASSERT_EQUAL(1,connected);
 }
+void test_messaging_client_connect_default()
+{
+    messagingSettings_t settings = {};
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
+
+    TEST_ASSERT_NOT_NULL(client->connect);
+    int ret = client->connect(client);
+    TEST_ASSERT_EQUAL(0,ret);
+}
 static int mock_pub_called = 0;
 static int mock_sub_called = 0;
 message_t *latest_message;
@@ -238,6 +247,43 @@ void subscription(messagingClient_t *client, void * params, message_t *message)
     uint8_t data[] = {0x0,0x01};
     TEST_ASSERT_EQUAL_HEX8_ARRAY(data,message->data,2);
     TEST_ASSERT_EQUAL(2,message->length);
+}
+void test_create_messaging_client_default_settings()
+{
+    messagingSettings_t settings;
+
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
+
+    TEST_ASSERT_NOT_NULL(client);
+    TEST_ASSERT_NOT_NULL(client->start);
+    TEST_ASSERT_NOT_NULL(client->stop);
+    TEST_ASSERT_NOT_NULL(client->connect);
+    TEST_ASSERT_NOT_NULL(client->incomingHandler);
+    TEST_ASSERT_NOT_NULL(client->outgoingHandler);
+}
+void test_create_messaging_client_default_settings_call_start()
+{
+    messagingSettings_t settings;
+
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
+
+    client->start(client);
+}
+void test_create_messaging_client_default_settings_call_stop()
+{
+    messagingSettings_t settings;
+
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
+
+    client->stop(client);
+}
+void test_create_messaging_client_default_settings_call_connect()
+{
+    messagingSettings_t settings;
+
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
+
+    //client->connect(client);
 }
 /*
 void test_messaging_pub_sub()

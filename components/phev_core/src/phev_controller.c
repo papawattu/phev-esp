@@ -195,6 +195,14 @@ message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx)
     
     return message;
 }
+void phev_controller_actionConfigChanges(phevCtx_t * ctx)
+{
+    //if(ctx->configChange)
+    {
+        
+    }
+
+}
 void phev_controller_setConfig(phevCtx_t * ctx, char * jsonConf)
 {
     phevConfig_t * config = phev_config_parseConfig(jsonConf);

@@ -137,6 +137,25 @@ int connectToCar(void)
     return connectSocket("127.0.0.1",8080);
 }
 
+message_t * incomingHandler(messagingClient_t *client) 
+{
+    return NULL;
+}
+int dummy_connect(messagingClient_t * client)
+{
+    client->connected = true;
+    return 0;
+}
+messagingClient_t * setupAppMsgClient(void)
+{
+    messagingSettings_t settings = {
+        .connect = dummy_connect,
+        .incomingHandler = incomingHandler,
+    };
+
+    messagingClient_t * client = msg_core_createMessagingClient(settings);
+    return client;
+}
 phevCtx_t * createPhevController(void)
 {
     gcpSettings_t inSettings = {
@@ -158,10 +177,8 @@ phevCtx_t * createPhevController(void)
     
      
     phevSettings_t phev_settings = {
-        .in = msg_gcp_createGcpClient(inSettings),
+        .in = setupAppMsgClient(),
         .out = msg_tcpip_createTcpIpClient(outSettings),
-        .inputTransformer = transformJSONToHex,
-        .outputTransformer = transformHexToJSON,
         .startWifi = wifi_conn_init,
     };
 
@@ -181,6 +198,7 @@ void sendMessage(phevCtx_t * ctx, uint8_t * data, size_t length)
 
 }
 #define FILENAME "main/resources/config.json"
+
 int main()
 {
 
@@ -189,7 +207,7 @@ int main()
     #endif
 
     #if defined(__linux__)
-    printf("Linux... Loading config from file\n");
+    printf("System is Linux...\nLoading config from file...");
     FILE * configFile = fopen(FILENAME,"r");
     if (configFile == NULL) {
         printf("Cannot open file");
@@ -203,18 +221,21 @@ int main()
     char * buffer = malloc(size);
 
     size_t num = fread(buffer,1,size,configFile);
-
+    
+    printf("Loaded...\n");
     #endif
         
     phevCtx_t * ctx = createPhevController();
 
     mqtt_event_t event = {
         .event_id = MSG_MQTT_EVENT_CONNECTED,
-        .user_context = ((gcp_ctx_t *) ctx->pipe->in->ctx)->mqtt,
+    //    .user_context = ((gcp_ctx_t *) ctx->pipe->in->ctx)->mqtt,
     };
     //mqtt_event_handler(&event);
     //sendMessage(ctx, buffer, size);
-    phev_controller_setConfig(ctx, buffer);
+    //phev_controller_setConfig(ctx, buffer);
+    printf("Starting message loop...\n");
+
     while(1) 
     {
         msg_pipe_loop(ctx->pipe);

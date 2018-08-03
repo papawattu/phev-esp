@@ -52,4 +52,5 @@ struct messagingClient_t {
 
 messagingClient_t * msg_core_createMessagingClient(messagingSettings_t); 
 void msg_core_call_subs(messagingClient_t *, message_t*);
+int msg_core_connect(messagingClient_t *);
 #endif
