@@ -138,6 +138,10 @@ void phev_controller_connect(phevCtx_t * ctx)
 } 
 void phev_controller_sendMessage(phevCtx_t * ctx, message_t * message)
 {
+    if(!ctx->pipe->out->connected && ctx->pipe->out->connect)
+    {
+        ctx->pipe->out->connect(ctx->pipe->out);
+    }
     ctx->pipe->out->publish(ctx->pipe->out, message);
 }
 void phev_controller_ping(phevCtx_t * ctx)
@@ -187,7 +191,7 @@ void phev_controller_performUpdate(phevCtx_t * ctx)
     ota(ctx->config->updateConfig.updateHost,ctx->config->updateConfig.updatePort, ctx->config->updateConfig.updateImageFullPath);
     
 }
-message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx)
+message_t * phev_controller_turnHeadLightsOn(void)
 {
     phevMessage_t * headLightsOn = phev_core_simpleRequestCommandMessage(KO_WF_H_LAMP_CONT_SP, 1);
     message_t * message = phev_core_convertToMessage(headLightsOn);
@@ -195,30 +199,14 @@ message_t * phev_controller_turnHeadLightsOn(phevCtx_t * ctx)
     
     return message;
 }
-void phev_controller_actionConfigChanges(phevCtx_t * ctx)
+messageBundle_t * phev_controller_configToMessageBundle(phevConfig_t * config)
 {
-    //if(ctx->configChange)
-    {
-        
-    }
-
-}
-void phev_controller_setConfig(phevCtx_t * ctx, char * jsonConf)
-{
-    phevConfig_t * config = phev_config_parseConfig(jsonConf);
-    phev_controller_initConfig(ctx->config);
-    
-}
-messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message)
-{
-    phevConfig_t * config = phev_config_parseConfig((char *) message->data);
     messageBundle_t * messages = malloc(sizeof(messageBundle_t));
-    
     messages->numMessages = 0;
-
+    
     if(phev_config_checkForFirmwareUpdate(&config->state)) 
     {
-        phev_controller_performUpdate(ctx);
+ //       phev_controller_performUpdate(ctx);
         return NULL; // shouldn't get here under normal conditions
     }
     
@@ -233,12 +221,40 @@ messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message
 
     if(phev_config_checkForHeadLightsOn(&config->state)) 
     {
-        messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOn(ctx);
+        messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOn();
     }
 
     return messages;
-} 
 
+}
+
+void phev_controller_setConfig(phevCtx_t * ctx, char * jsonConf)
+{
+    phevConfig_t * config = phev_config_parseConfig(jsonConf);
+    //phev_controller_initConfig(ctx->config);
+    messageBundle_t * messages = phev_controller_configToMessageBundle(config);   
+
+    for(int i=0;i<messages->numMessages;i++)
+    {
+        phev_controller_sendMessage(ctx,messages->messages[i]);
+    
+    }
+}
+
+messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message)
+{
+    phevConfig_t * config = phev_config_parseConfig((char *) message->data);
+    
+    return phev_controller_configToMessageBundle(config);
+} 
+void phev_controller_eventLoop(phevCtx_t * ctx)
+{
+    msg_pipe_loop(ctx->pipe);
+    if(!ctx->pipe->in->connected)
+    {
+        ctx->pipe->in->connect(ctx->pipe->in);
+    }   
+}
 phevCtx_t * phev_controller_init(phevSettings_t * settings)
 {
     phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
@@ -247,18 +263,18 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     msg_pipe_chain_t * outputChain = malloc(sizeof(msg_pipe_chain_t));
 
     inputChain->inputTransformer = NULL;
-    inputChain->aggregator = NULL;
     inputChain->splitter = phev_controller_configSplitter;
     inputChain->filter = NULL;
     inputChain->outputTransformer = NULL;
     inputChain->responder = phev_controller_input_responder;
+    inputChain->aggregator = NULL;
     
     outputChain->inputTransformer = phev_controller_outputChainInputTransformer;
-    outputChain->aggregator = NULL;
     outputChain->splitter = phev_controller_splitter;
     outputChain->filter = NULL;
     outputChain->outputTransformer = phev_controller_outputChainOutputTransformer;
     outputChain->responder = phev_controller_responder;
+    outputChain->aggregator = NULL;
     
     msg_pipe_settings_t pipe_settings = {
         .in = settings->in,
@@ -284,3 +300,5 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     
     return ctx;
 }
+
+

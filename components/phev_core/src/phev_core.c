@@ -74,7 +74,7 @@ message_t * phev_core_extractMessage(const uint8_t *data, const size_t len)
         memcpy(message->data, data, message->length);
         return message;
     } else {
-        return NULL;
+        return NULL;    
     }
 }
 

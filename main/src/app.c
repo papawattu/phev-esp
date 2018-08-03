@@ -136,7 +136,10 @@ int connectToCar(void)
 {
     return connectSocket("127.0.0.1",8080);
 }
-
+void outgoingHandler(messagingClient_t * client, message_t * message)
+{
+    printf("New Message");
+}
 message_t * incomingHandler(messagingClient_t *client) 
 {
     return NULL;
@@ -151,6 +154,7 @@ messagingClient_t * setupAppMsgClient(void)
     messagingSettings_t settings = {
         .connect = dummy_connect,
         .incomingHandler = incomingHandler,
+        .outgoingHandler = outgoingHandler,
     };
 
     messagingClient_t * client = msg_core_createMessagingClient(settings);
@@ -233,12 +237,12 @@ int main()
     };
     //mqtt_event_handler(&event);
     //sendMessage(ctx, buffer, size);
-    //phev_controller_setConfig(ctx, buffer);
+    phev_controller_setConfig(ctx, buffer);
     printf("Starting message loop...\n");
 
     while(1) 
     {
-        msg_pipe_loop(ctx->pipe);
+        phev_controller_eventLoop(ctx);
         sleep(1);
     }
     

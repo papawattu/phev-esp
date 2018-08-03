@@ -7,4 +7,5 @@ build
 test1.exe
 app
 linux
+phev
 components/messaging/test/*_Runner.c

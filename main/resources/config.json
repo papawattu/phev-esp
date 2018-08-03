@@ -1,7 +1,7 @@
 {
     "state": {
       "connectedClients": 1,
-      "headLightsOn": true,
+      "headLightsOn": false,
       "parkLightsOn": true,
       "airConOn": true
     },
