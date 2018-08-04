@@ -230,6 +230,13 @@ messageBundle_t * phev_controller_configToMessageBundle(phevConfig_t * config)
 
 }
 
+void phev_controller_sendMessageBundle(phevCtx_t * ctx, messageBundle_t * messages)
+{
+    for(int i=0;i<messages->numMessages;i++)
+    {
+        phev_controller_sendMessage(ctx,messages->messages[i]);
+    }
+}
 void phev_controller_setConfig(phevCtx_t * ctx, char * jsonConf)
 {
     phevConfig_t * config = phev_config_parseConfig(jsonConf);
@@ -240,11 +247,7 @@ void phev_controller_setConfig(phevCtx_t * ctx, char * jsonConf)
 
     messageBundle_t * messages = phev_controller_configToMessageBundle(config);   
 
-    for(int i=0;i<messages->numMessages;i++)
-    {
-        phev_controller_sendMessage(ctx,messages->messages[i]);
-    
-    }
+    phev_controller_sendMessageBundle(ctx, messages);
 }
 
 messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message)
