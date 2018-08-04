@@ -135,22 +135,21 @@ void test_phev_controller_config_splitter_connected(void)
     start->data = "START";
     start->length = sizeof("START");
     
-    phevConfig_t config = {
-
-    };
-
+    phevConfig_t * config = malloc(sizeof(phevConfig_t));
+    phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
+    
     phev_config_checkForFirmwareUpdate_IgnoreAndReturn(false);
-    phev_config_parseConfig_IgnoreAndReturn(&config);
+    phev_config_parseConfig_IgnoreAndReturn(config);
     phev_config_checkForConnection_IgnoreAndReturn(true);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
-    messageBundle_t * out = phev_controller_configSplitter(NULL, message);
+    messageBundle_t * out = phev_controller_configSplitter(ctx, message);
     
     TEST_ASSERT_NOT_NULL(out);
     TEST_ASSERT_EQUAL(1,out->numMessages);
     
     TEST_ASSERT_EQUAL_STRING(start->data,out->messages[0]->data);
-}
+}  
 void test_phev_controller_config_splitter_not_connected(void)
 {
     const char * msg_data = "{ \"state\": { \"connectedClients\": 0 } }";
@@ -165,20 +164,19 @@ void test_phev_controller_config_splitter_not_connected(void)
     start->data = "START";
     start->length = sizeof("START");
     
-    phevConfig_t config = {
-
-    };
-
+    phevConfig_t * config = malloc(sizeof(phevConfig_t));
+    phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
+    
     phev_config_checkForFirmwareUpdate_IgnoreAndReturn(false);
-    phev_config_parseConfig_IgnoreAndReturn(&config);
+    phev_config_parseConfig_IgnoreAndReturn(config);
     phev_config_checkForConnection_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
-    messageBundle_t * out = phev_controller_configSplitter(NULL, message);
+    messageBundle_t * out = phev_controller_configSplitter(ctx, message);
     
     TEST_ASSERT_NOT_NULL(out);
     TEST_ASSERT_EQUAL(0,out->numMessages);
-}
+} 
 void test_phev_controller_config_splitter_headLightsOn(void)
 {
     const char * msg_data = "";
@@ -189,22 +187,23 @@ void test_phev_controller_config_splitter_headLightsOn(void)
     message->length = sizeof(msg_data);
     
     const uint8_t lightsOn[] = {0xf6,0x04,0x00,0x0a,0x02,0xff};
-    phevConfig_t config = {
-
-    };
     message_t outMsg = {
         .data = lightsOn,
         .length = 6,
     };
+
+    phevConfig_t * config = malloc(sizeof(phevConfig_t));
+    phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
+
     phev_config_checkForFirmwareUpdate_IgnoreAndReturn(false);
-    phev_config_parseConfig_IgnoreAndReturn(&config);
+    phev_config_parseConfig_IgnoreAndReturn(config);
     phev_config_checkForConnection_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(NULL);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(true);
     phev_core_simpleRequestCommandMessage_IgnoreAndReturn(NULL);
     phev_core_convertToMessage_IgnoreAndReturn(&outMsg);
     phev_core_destroyMessage_Ignore();
-    messageBundle_t * out = phev_controller_configSplitter(NULL, message);
+    messageBundle_t * out = phev_controller_configSplitter(ctx, message);
     
     TEST_ASSERT_NOT_NULL(out);
     TEST_ASSERT_EQUAL(1,out->numMessages);
@@ -214,22 +213,23 @@ void test_phev_controller_config_splitter_headLightsOn(void)
     TEST_ASSERT_NOT_NULL(out->messages[0]->data);
     
     TEST_ASSERT_EQUAL_MEMORY(lightsOn, out->messages[0]->data,6);
-}
+} 
 void test_phev_controller_splitter_one_message(void)
 {
     const uint8_t msg_data[] = {0x6f,0x04,0x01,0x02,0x00,0xff};
     
     message_t * message = malloc(sizeof(message_t));
-    
+    phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
+
     message->data = msg_data;
     message->length = sizeof(msg_data);
     
     phev_core_extractMessage_IgnoreAndReturn(message);
 
-    messageBundle_t * messages = phev_controller_splitter(NULL, message);
+    messageBundle_t * messages = phev_controller_splitter(ctx, message);
 
     TEST_ASSERT_EQUAL(1, messages->numMessages);
-}
+} 
 void test_phev_controller_splitter_two_messages(void)
 {
     const uint8_t msg_data[] = {0x6f,0x04,0x01,0x01,0x00,0xff,0x6f,0x04,0x01,0x02,0x00,0xff};
@@ -250,11 +250,13 @@ void test_phev_controller_splitter_two_messages(void)
     
     message3->data = msg2_data;
     message3->length = sizeof(msg2_data);
+
+    phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
     
     phev_core_extractMessage_IgnoreAndReturn(message2);
     phev_core_extractMessage_IgnoreAndReturn(message3);
 
-    messageBundle_t * messages = phev_controller_splitter(NULL, message);
+    messageBundle_t * messages = phev_controller_splitter(ctx, message);
 
     TEST_ASSERT_EQUAL(2, messages->numMessages);
     TEST_ASSERT_EQUAL(6, messages->messages[0]->length);
@@ -269,23 +271,22 @@ static int startWifiCalled = 0;
 void startWifiStub(void)
 {
     startWifiCalled ++;
-}
+} 
 void test_phev_controller_performUpdate(void)
 {
     
-    phevConfig_t config = {
-        .updateConfig = {
-            .updateOverPPP = false,
-        },
-    };
-    phevCtx_t ctx = {
-        .config = &config,
-        .startWifi = startWifiStub,
-    };
+    phevConfig_t * config = malloc(sizeof(phevConfig_t));
+    phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
+   // phevUpdateConfig_t 
+
+    config->updateConfig.updateOverPPP = false;
+    
+    ctx->config = config;
+    ctx->startWifi = startWifiStub;
     
     ota_Ignore();
 
-    phev_controller_performUpdate(&ctx);
+    phev_controller_performUpdate(ctx);
 
     TEST_ASSERT_EQUAL(1,startWifiCalled);
 }
