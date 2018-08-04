@@ -54,7 +54,7 @@ static int tcp_read(int soc, uint8_t *buffer, int len, int timeout_ms)
 int logRead(int soc, uint8_t * buf, size_t len)
 {
 
-    int num = tcp_read(soc,buf,len,10000);
+    int num = tcp_read(soc,buf,len,100);
 
     if(num > 0) 
     {
@@ -88,15 +88,15 @@ int connectSocket(const char *host, uint16_t port)
 
     if (sock == -1)
     {
-        exit(1);
-        //return -1;
+        //exit(1);
+        return -1;
     }
     int ret = connect(sock, (struct sockaddr *)(&addr), sizeof(addr));
     if(ret == -1)
     {
-        exit(1);
+        //exit(1);
         
-        //return -1;
+        return -1;
     }
     
     global_sock = sock;
@@ -207,10 +207,17 @@ int main()
     
     printf("Starting message loop...\n");
 
+    time_t now,prev;
+    time(&now);
+    time(&prev);
+    printf("Time is %d\n", now);
+
     while(1) 
     {
         phev_controller_eventLoop(ctx);
-        sleep(1);
+        //sleep(1);
+
+        
     }
     
 }

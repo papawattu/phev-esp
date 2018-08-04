@@ -188,6 +188,7 @@ void phev_controller_ping(phevCtx_t * ctx)
 void phev_controller_resetPing(phevCtx_t * ctx)
 {
     ctx->currentPing = 0;
+    ctx->lastPingTime = 0;
 }
 void phev_controller_performUpdate(phevCtx_t * ctx)
 {
@@ -262,6 +263,8 @@ messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message
 } 
 void phev_controller_eventLoop(phevCtx_t * ctx)
 {
+    time_t now;
+
     if(!ctx->pipe->in->connected)
     {
         ctx->pipe->in->connect(ctx->pipe->in);
@@ -271,8 +274,11 @@ void phev_controller_eventLoop(phevCtx_t * ctx)
             phev_controller_resetPing(ctx);
         }
         msg_pipe_loop(ctx->pipe);
-        
-        phev_controller_ping(ctx);
+        time(&now);
+        if(now > ctx->lastPingTime) {
+            phev_controller_ping(ctx);
+            time(&ctx->lastPingTime);
+        }
     }   
 }
 phevCtx_t * phev_controller_init(phevSettings_t * settings)
@@ -315,6 +321,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     ctx->queueSize = 0;
     ctx->currentPing = 0;
     ctx->successfulPing = false;
+    ctx->lastPingTime = 0;
 
     phev_controller_initConfig(ctx->config);
     

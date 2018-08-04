@@ -1,6 +1,7 @@
 #ifndef _PHEV_CONTROLLER_H_
 #define _PHEV_CONTROLLER_H_
 #include <stdbool.h>
+#include <time.h>
 #include "phev_core.h"
 #include "phev_config.h"
 
@@ -37,6 +38,7 @@ struct phevCtx_t {
     int (* connect)(const char*, uint16_t);
     uint8_t currentPing;
     bool successfulPing;
+    time_t lastPingTime;
 }; 
 
 typedef struct phevEvent_t
