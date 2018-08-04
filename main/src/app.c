@@ -207,18 +207,9 @@ int main()
     
     printf("Starting message loop...\n");
 
-    time_t now,prev;
-    time(&now);
-    time(&prev);
-    printf("Time is %d\n", now);
-
     while(1) 
     {
         phev_controller_eventLoop(ctx);
-        //sleep(1);
-
-        
-    }
-    
+    }    
 }
 #endif

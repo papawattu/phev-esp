@@ -31,8 +31,8 @@ RUN curl https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/root/google-cloud-sdk/bin
 ENV CMOCK_DIR /usr/src/cmock
 ENV CJSON_DIR /usr/src/cJSON
-ENV LD_LIBRARY_PATH /usr/local/lib
-ENV LD_RUN_PATH /usr/local/lib
+#ENV LD_LIBRARY_PATH /usr/local/lib
+#ENV LD_RUN_PATH /usr/local/lib
 COPY . /usr/src/phev-esp
 WORKDIR /usr/src/phev-esp
 RUN make test
