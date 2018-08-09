@@ -34,6 +34,9 @@ message_t * msg_pipe_concat(messageBundle_t * messages)
     for(int i = 0;i < messages->numMessages; i++)
     {
         if(messages->messages[i] == NULL) break;
+        
+        LOG_BUFFER_HEXDUMP(APP_TAG,messages->messages[i]->data,messages->messages[i]->length,LOG_DEBUG);
+    
         data = realloc(data, total + messages->messages[i]->length);
         memcpy(data + total, messages->messages[i]->data, messages->messages[i]->length);
         total += messages->messages[i]->length;
@@ -46,6 +49,9 @@ message_t * msg_pipe_concat(messageBundle_t * messages)
     message->data = malloc(total);
     memcpy(message->data, data, total);
     message->length = total;
+    
+    LOG_BUFFER_HEXDUMP(APP_TAG,message->data,message->length,LOG_DEBUG);
+    
     free(data);
     LOG_V(APP_TAG,"END - concat");
     
