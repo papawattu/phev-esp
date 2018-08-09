@@ -18,7 +18,7 @@
     "carConnection": {
       "ssid": "REMOTE123456",
       "password": "abcde123456",
-      "host": "192.168.8.46",
+      "host": "127.0.0.1",
       "port": 8080
     }
   }

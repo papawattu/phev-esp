@@ -75,33 +75,6 @@ void fake_publish(void * ctx, message_t * message)
     TEST_ASSERT_EQUAL_MEMORY(data,message->data,3);
     fake_publish_called ++;
 }
-void test_phev_controller_send_message(void)
-{
-    messagingClient_t outClient = {
-        .publish = fake_publish,
-    };
-
-    
-    msg_pipe_ctx_t pipe = {
-        .out = &outClient,
-    };
-
-    msg_pipe_IgnoreAndReturn(&pipe);
-    
-    phevSettings_t settings = {
-        .out    = &outClient,
-    };
-
-    uint8_t data[] = {1,2,3};
-
-    message_t * message = msg_utils_createMsg(data,sizeof(data));
-
-    phevCtx_t * ctx = phev_controller_init(&settings);
-
-    phev_controller_sendMessage(ctx,  message);
-
-    TEST_ASSERT_EQUAL(1, fake_publish_called);
-} 
 void test_phev_controller_initConfig(void)
 {
     phevConfig_t config = {
@@ -120,7 +93,6 @@ void test_phev_controller_initState(void)
 
     TEST_ASSERT_EQUAL(0, state.connectedClients);
 }
-
 void test_phev_controller_config_splitter_connected(void)
 {
     const char * msg_data = "{ \"state\": { \"connectedClients\": 1 } }";
@@ -135,11 +107,28 @@ void test_phev_controller_config_splitter_connected(void)
     start->data = "START";
     start->length = sizeof("START");
     
-    phevConfig_t * config = malloc(sizeof(phevConfig_t));
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = true,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+        
+    };
+
     phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
     
     phev_config_checkForFirmwareUpdate_IgnoreAndReturn(false);
-    phev_config_parseConfig_IgnoreAndReturn(config);
+    phev_config_parseConfig_IgnoreAndReturn(&config);
     phev_config_checkForConnection_IgnoreAndReturn(true);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
@@ -149,7 +138,7 @@ void test_phev_controller_config_splitter_connected(void)
     TEST_ASSERT_EQUAL(1,out->numMessages);
     
     TEST_ASSERT_EQUAL_STRING(start->data,out->messages[0]->data);
-}  
+}   
 void test_phev_controller_config_splitter_not_connected(void)
 {
     const char * msg_data = "{ \"state\": { \"connectedClients\": 0 } }";
@@ -164,11 +153,27 @@ void test_phev_controller_config_splitter_not_connected(void)
     start->data = "START";
     start->length = sizeof("START");
     
-    phevConfig_t * config = malloc(sizeof(phevConfig_t));
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = true,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+        
+    };
     phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
     
     phev_config_checkForFirmwareUpdate_IgnoreAndReturn(false);
-    phev_config_parseConfig_IgnoreAndReturn(config);
+    phev_config_parseConfig_IgnoreAndReturn(&config);
     phev_config_checkForConnection_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
@@ -192,11 +197,27 @@ void test_phev_controller_config_splitter_headLightsOn(void)
         .length = 6,
     };
 
-    phevConfig_t * config = malloc(sizeof(phevConfig_t));
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = true,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+        
+    };
     phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
 
     phev_config_checkForFirmwareUpdate_IgnoreAndReturn(false);
-    phev_config_parseConfig_IgnoreAndReturn(config);
+    phev_config_parseConfig_IgnoreAndReturn(&config);
     phev_config_checkForConnection_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(NULL);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(true);
@@ -275,13 +296,26 @@ void startWifiStub(void)
 void test_phev_controller_performUpdate(void)
 {
     
-    phevConfig_t * config = malloc(sizeof(phevConfig_t));
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = false,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+        
+    };
     phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
-   // phevUpdateConfig_t 
-
-    config->updateConfig.updateOverPPP = false;
     
-    ctx->config = config;
+    ctx->config = &config;
     ctx->startWifi = startWifiStub;
     
     ota_Ignore();
@@ -289,4 +323,140 @@ void test_phev_controller_performUpdate(void)
     phev_controller_performUpdate(ctx);
 
     TEST_ASSERT_EQUAL(1,startWifiCalled);
+    TEST_ASSERT_TRUE(ctx->otaUpdating);
+    
+} 
+void test_phev_controller_configIsNotSet(void)
+{
+        
+    phevSettings_t phev_settings = {
+        
+    };
+
+    msg_pipe_IgnoreAndReturn(NULL);
+    phevCtx_t * ctx = phev_controller_init(&phev_settings);
+
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_NULL(ctx->config);
+}
+void test_phev_controller_connectionConfigIsSet(void)
+{
+        
+    phevSettings_t phev_settings = {
+        
+    };
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = true,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+        
+    };
+
+    msg_pipe_IgnoreAndReturn(NULL);
+    phevCtx_t * ctx = phev_controller_init(&phev_settings);
+
+    phev_controller_setConfig(ctx,&config);
+
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_NOT_NULL(ctx->config);
+    TEST_ASSERT_EQUAL_STRING(config.connectionConfig.host, ctx->config->connectionConfig.host);
+    TEST_ASSERT_EQUAL(config.connectionConfig.port, ctx->config->connectionConfig.port);
+    TEST_ASSERT_EQUAL_STRING(config.connectionConfig.carConnectionWifi.ssid, ctx->config->connectionConfig.carConnectionWifi.ssid);
+    TEST_ASSERT_EQUAL_STRING(config.connectionConfig.carConnectionWifi.password, ctx->config->connectionConfig.carConnectionWifi.password);
+    
+}
+void test_phev_controller_updateConfigIsSet(void)
+{
+        
+    phevSettings_t phev_settings = {
+        
+    };
+
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = true,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+    };
+
+    msg_pipe_IgnoreAndReturn(NULL);
+    phevCtx_t * ctx = phev_controller_init(&phev_settings);
+
+    phev_controller_setConfig(ctx,&config);
+
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_NOT_NULL(ctx->config);
+    TEST_ASSERT_EQUAL(config.updateConfig.latestBuild, ctx->config->updateConfig.latestBuild);
+    TEST_ASSERT_EQUAL(config.updateConfig.currentBuild, ctx->config->updateConfig.currentBuild);
+    TEST_ASSERT_TRUE(ctx->config->updateConfig.updateOverPPP);
+    TEST_ASSERT_EQUAL_STRING(config.updateConfig.updateWifi.ssid, ctx->config->updateConfig.updateWifi.ssid);
+    TEST_ASSERT_EQUAL_STRING(config.updateConfig.updateWifi.password, ctx->config->updateConfig.updateWifi.password);
+    TEST_ASSERT_EQUAL_STRING(config.updateConfig.updatePath, ctx->config->updateConfig.updatePath);
+    TEST_ASSERT_EQUAL_STRING(config.updateConfig.updateHost, ctx->config->updateConfig.updateHost);
+    TEST_ASSERT_EQUAL(config.updateConfig.updatePort, ctx->config->updateConfig.updatePort);
+    TEST_ASSERT_EQUAL_STRING(config.updateConfig.updateImageFullPath, ctx->config->updateConfig.updateImageFullPath);
+    TEST_ASSERT_TRUE(ctx->config->updateConfig.forceUpdate);
+
+}
+void test_phev_controller_configStateIsSet(void)
+{
+        
+    phevSettings_t phev_settings = {
+        
+    };
+
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = true,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+        .state.connectedClients = 1,
+        .state.headLightsOn = true,
+        .state.parkLightsOn = true,
+        .state.airConOn = true,
+    };
+
+    msg_pipe_IgnoreAndReturn(NULL);
+    phevCtx_t * ctx = phev_controller_init(&phev_settings);
+
+    phev_controller_setConfig(ctx,&config);
+
+    TEST_ASSERT_NOT_NULL(ctx);
+    TEST_ASSERT_NOT_NULL(ctx->config);
+    TEST_ASSERT_EQUAL(config.state.connectedClients, ctx->config->state.connectedClients);
+    TEST_ASSERT_TRUE(ctx->config->state.headLightsOn);
+    TEST_ASSERT_TRUE(ctx->config->state.parkLightsOn);
+    TEST_ASSERT_TRUE(ctx->config->state.airConOn);
+    
 }

@@ -79,6 +79,7 @@ message_t * phev_core_convertToMessage(phevMessage_t * message);
 static char * phev_core_strdup (const char *s) {
     char *d = malloc (strlen (s) + 1);   // Space for length plus nul
     if (d == NULL) return NULL;          // No memory
+    //if(s == NULL) return NULL;
     strcpy (d,s);                        // Copy the characters
     return d;                            // Return the new string
 }

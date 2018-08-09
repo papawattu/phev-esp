@@ -39,6 +39,7 @@ struct phevCtx_t {
     uint8_t currentPing;
     bool successfulPing;
     time_t lastPingTime;
+    bool otaUpdating;
 }; 
 
 typedef struct phevEvent_t
@@ -57,17 +58,19 @@ void phev_controller_resetPing(phevCtx_t * ctx);
 void phev_controller_setUpdateConfig(phevCtx_t * ctx, const char * ssid, const char * password, const char * host, const char * path, uint16_t port, int build);
 message_t * phev_controller_input_responder(void * ctx, message_t * message);
 void phev_controller_sendMessage(phevCtx_t * ctx, message_t * message);
+void phev_controller_sendMessageBundle(phevCtx_t * ctx, messageBundle_t * messages);
 message_t * phev_controller_turnHeadLightsOn(void);
 messageBundle_t * phev_controller_splitter(void * ctx, message_t * message);    
 messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message);
 
 void phev_controller_initConfig(phevConfig_t * config);
 void phev_controller_initState(phevState_t * state);
-void phev_controller_setConfig(phevCtx_t * ctx, char * config);
+void phev_controller_setConfig(phevCtx_t * ctx, phevConfig_t * config);
+void phev_controller_setConfigJson(phevCtx_t * ctx, char * config);
+
 void phev_controller_eventLoop(phevCtx_t * ctx);
 void phev_controller_performUpdate(phevCtx_t * ctx);
 
 
 
 #endif
-

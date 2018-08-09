@@ -1,6 +1,6 @@
 EXEC := phev
 PROJECT_NAME := phev-esp
-BUILD_NUMBER ?= 1
+BUILD_NUMBER ?= 9999999999
 SHELL := /bin/bash
 BUILD_DIR ?= ./build
 COMP_DIR := ./components/**
@@ -31,7 +31,7 @@ include $(IDF_PATH)/make/project.mk
 endif
 
 MKDIR_P ?= mkdir -p
-
+	
 setup:
 	$(MKDIR_P) $(dir $@)
 	ruby $(CMOCK_DIR)/scripts/create_makefile.rb
@@ -46,7 +46,12 @@ test_clean:
 CSRC = $(wildcard main/src/*.c) \
        $(wildcard components/msg_core/src/*.c) \
        $(wildcard components/phev_core/src/*.c) \
-	   $(wildcard components/ota/src/*.c)
+	   $(wildcard components/ota/src/*.c) \
+	   $(wildcard components/phev_app/src/*.c) \
+	   $(wildcard components/logger/src/*.c) \
+	   $(wildcard components/tcp_client/src/*.c) \
+	   $(wildcard components/wifi_client/src/*.c) \
+	   $(wildcard components/gcp_jwt/src/*.c)
 OBJ = $(CSRC:.c=.o)
 DEP = $(OBJ:.o=.d) 
 

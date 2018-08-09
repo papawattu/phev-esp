@@ -3,5 +3,6 @@
 #
 # (Uses default behaviour of compiling all source files in directory, adding 'include' to include path.)
 
-COMPONENT_SRCDIRS=src
-COMPONENT_EMBED_TXTFILES := rsa_private2.pem
+COMPONENT_SRCDIRS := src
+COMPONENT_ADD_INCLUDEDIRS := src/include
+COMPONENT_EMBED_TXTFILES := resources/rsa_private2.pem

@@ -11,6 +11,8 @@
 #include "lwip/dns.h"
 #include "esp_log.h"
 
+const static char *APP_TAG = "OTA";
+
 
 static int socket_id = -1;
 
@@ -122,7 +124,7 @@ void ota(const char * updateHost,const uint16_t updatePort, const char * updateI
     esp_ota_handle_t update_handle = 0 ;
     const esp_partition_t *update_partition = NULL;
 
-    ESP_LOGI(APP_TAG, "Starting OTA ...");
+    ESP_LOGI(APP_TAG, "Starting OTA ... Update host %s port %d path %s",updateHost, updatePort, updateImageFullPath);
 
     const esp_partition_t *configured = esp_ota_get_boot_partition();
     const esp_partition_t *running = esp_ota_get_running_partition();

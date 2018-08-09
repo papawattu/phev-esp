@@ -37,10 +37,12 @@
 #define STATE_CONFIG_PARKLIGHTS_ON "parkLightsOn"
 #define STATE_CONFIG_AIRCON_ON "airConOn"
 
+#define MAX_WIFI_SSID_LEN 32
+#define MAX_WIFI_PASSWORD_LEN 64
 typedef struct phevWifi_t
 {
-    char ssid[32];
-    char password[64];
+    char ssid[MAX_WIFI_SSID_LEN];
+    char password[MAX_WIFI_PASSWORD_LEN];
 } phevWifi_t;
 
 typedef struct phevState_t {
@@ -79,5 +81,6 @@ phevConfig_t * phev_config_parseConfig(const char * config);
 bool phev_config_checkForFirmwareUpdate(const phevUpdateConfig_t * config);
 bool phev_config_checkForConnection(const phevState_t * state);
 bool phev_config_checkForHeadLightsOn(const phevState_t * state);
+char * phev_config_displayConfig(const phevConfig_t * config);
 
 #endif

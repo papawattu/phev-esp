@@ -5,6 +5,9 @@
 #include <netinet/in.h>
 #include "msg_tcpip.h"
 #include "msg_utils.h"
+#include "logger.h"
+
+const static char *APP_TAG = "MSG_TCPIP";
 
 int msg_tcpip_start(messagingClient_t *client)
 {
@@ -16,21 +19,32 @@ int msg_tcpip_stop(messagingClient_t *client)
 }
 int msg_tcpip_connect(messagingClient_t *client)
 {
+    LOG_V(APP_TAG,"START - connect");
     tcpip_ctx_t * ctx = (tcpip_ctx_t *) client->ctx;
+    LOG_D(APP_TAG,"Context Host %s Port %d",ctx->host,ctx->port);
     int s = 0;
     if((s = ctx->connect(ctx->host,ctx->port)) > -1) 
     {
+        LOG_D(APP_TAG,"Connected to server");
+    
         ctx->socket = s;
         client->connected = 1;
-        return OK;
+        LOG_V(APP_TAG,"END - connect");
+    
+        return 0;
     } else {
+        LOG_E(APP_TAG,"Failed to connected to server : %d",s);
+    
         ctx->socket = -1;
         client->connected = 0;
+        LOG_V(APP_TAG,"END - connect");
+    
         return -1;
     }
 }
 message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
 {
+    LOG_V(APP_TAG,"START - incomingHandler");
     if (client->connected)
     {
         tcpip_ctx_t *ctx = (tcpip_ctx_t *)client->ctx;
@@ -38,16 +52,23 @@ message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
 
         if (len > 0 && len < TCPIP_CLIENT_READ_BUF_SIZE)
         {
+            LOG_D(APP_TAG,"Got message size %d",len);
+    
             return msg_utils_createMsg(ctx->readBuffer,len);
         } 
         if(len < 0) {
+            LOG_E(APP_TAG,"Read returned error : %d",len);
+    
             client->connected = 0;
         }
     }
+    LOG_V(APP_TAG,"END - incomingHandler");
     return NULL;
 }
 void msg_tcpip_outgoingHandler(messagingClient_t *client, message_t *message)
 {
+    LOG_V(APP_TAG,"START - outgoingHandler");
+    
     tcpip_ctx_t *ctx = (tcpip_ctx_t *)client->ctx;
     if(client->connected)
     {
@@ -56,12 +77,15 @@ void msg_tcpip_outgoingHandler(messagingClient_t *client, message_t *message)
             int num = ctx->write(ctx->socket, message->data, message->length);
             if(num != message->length)
             {
+                LOG_E(APP_TAG,"Write returned error : %d",num);
                 client->connected = 0;
             } else {
                // msg_utils_destroyMsg(message);
             }
         }
     }
+    LOG_V(APP_TAG,"END - outgoingHandler");
+    
 }
 messagingClient_t *msg_tcpip_createTcpIpClient(tcpIpSettings_t settings)
 {

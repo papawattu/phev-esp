@@ -40,7 +40,7 @@ void phev_config_setUpdateConfig(phevUpdateConfig_t * config, const char * ssid,
                                         const char * host,
                                         const char * path,
                                         uint16_t port,
-                                        int build,
+                                        long long unsigned build,
                                         bool updateOverPPP,
                                         bool forceUpdate
                                         )
@@ -59,7 +59,7 @@ void phev_config_setUpdateConfig(phevUpdateConfig_t * config, const char * ssid,
     strcpy(config->updatePath,path);
     
     const char * buildPath = NULL;     
-    asprintf(&buildPath,"%s%s%010d.bin", config->updatePath,IMAGE_PREFIX,build);
+    asprintf(&buildPath,"%s%s%010llu.bin", config->updatePath,IMAGE_PREFIX,build);
     
     config->updateImageFullPath = buildPath;
 
@@ -76,7 +76,7 @@ void phev_config_setUpdateConfig(phevUpdateConfig_t * config, const char * ssid,
 
 void phev_config_parseUpdateConfig(phevConfig_t * config, cJSON * update)
 {
-    int build = getConfigLong(update,UPDATE_CONFIG_LATEST_BUILD);
+    unsigned long long build = getConfigLong(update,UPDATE_CONFIG_LATEST_BUILD);
 
     phev_config_setUpdateConfig(&config->updateConfig, getConfigString(update,UPDATE_CONFIG_SSID), 
                                         getConfigString(update,UPDATE_CONFIG_PASSWORD),
@@ -106,13 +106,21 @@ void phev_config_parseStateConfig(phevConfig_t * config, cJSON * state)
     config->state.parkLightsOn = getConfigBool(state, STATE_CONFIG_PARKLIGHTS_ON);
     config->state.airConOn = getConfigBool(state, STATE_CONFIG_AIRCON_ON);
 }
+char * phev_config_displayConfig(const phevConfig_t * config)
+{
+    const char * FORMAT = "Config\nCar Connection\n\tHost %s\n\tPort %d\n\tSSID %s\n\tPassword %s\n";
+    char * out = NULL;
+    asprintf(&out,FORMAT,config->connectionConfig.host, config->connectionConfig.port,
+            config->connectionConfig.carConnectionWifi.ssid, config->connectionConfig.carConnectionWifi.password);
+    return out;
+}
 phevConfig_t * phev_config_parseConfig(const char * config)
 {
     phevConfig_t * phevConfig = malloc(sizeof(phevConfig_t));
 
     cJSON * json = cJSON_Parse((const char *) config);
 
-    char * string = cJSON_Print(json);
+    //char * string = cJSON_Print(json);
 
     if(json == NULL)
     {

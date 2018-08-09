@@ -41,7 +41,7 @@ ENV IDF_PATH /usr/src/esp-idf
 ENV PATH $PATH:/usr/esp/xtensa-esp32-elf/bin
 ENV PATH /usr/esp/xtensa-esp32-elf/bin:$IDF_PATH/tools:$PATH
 RUN date +%s > /root/build_number
-RUN BUILD=`cat /root/build_number` make
+RUN BUILD_NUMBER=`cat /root/build_number` make
 RUN cp /usr/src/phev-esp/build/phev-esp.bin /root/firmware-`cat /root/build_number`.bin
 RUN gsutil cp /root/firmware-`cat /root/build_number`.bin gs://espimages/develop/ 
 #RUN gcloud iot devices configs get-value --device my-device2 --region us-central1 --registry my-registry | jq .latestBuild=`cat /root/build_number` > /root/config.json

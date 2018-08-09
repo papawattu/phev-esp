@@ -71,4 +71,7 @@ int msg_pipe_out_connect(msg_pipe_ctx_t * ctx);
 message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message);
 message_t * msg_pipe_callOutputTransformers(msg_pipe_ctx_t *ctx, message_t *message);
 
+void msg_pipe_outboundPublish(msg_pipe_ctx_t * ctx, message_t * message);
+void msg_pipe_inboundPublish(msg_pipe_ctx_t * ctx, message_t * message);
+
 #endif
