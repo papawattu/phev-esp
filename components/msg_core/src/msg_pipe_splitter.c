@@ -29,6 +29,8 @@ message_t * msg_pipe_concat(messageBundle_t * messages)
         return NULL;
     }
     
+    LOG_D(APP_TAG,"Message length %d",messages->messages[0]->length);
+        
     uint8_t * data = malloc(messages->messages[0]->length);
 
     for(int i = 0;i < messages->numMessages; i++)
@@ -61,7 +63,7 @@ message_t * msg_pipe_splitter_aggregrator(messageBundle_t * messages)
 {
     LOG_V(APP_TAG,"START - aggregrator");
     
-    messageBundle_t * out = msg_pipe_concat(messages);
+    message_t * out = msg_pipe_concat(messages);
 
     LOG_V(APP_TAG,"END - aggregrator");
     
