@@ -11,9 +11,7 @@ message_t * msg_utils_concatMessages(message_t * message1, message_t * message2)
     memcpy(data, message1->data, message1->length);
     memcpy(data + message1->length, message2->data, message2->length);
     
-    message_t out = {
-        .data = data,
-        .length = totalSize,
-    }; 
-    return msg_utils_copyMsg(&out);
+    message_t * out = msg_utils_createMsg(data,totalSize);
+     
+    return msg_utils_copyMsg(out);
 }

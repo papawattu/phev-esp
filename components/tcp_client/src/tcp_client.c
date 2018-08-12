@@ -82,6 +82,8 @@ int tcp_client_read(int soc, uint8_t * buf, size_t len)
     int num = tcp_read(soc,buf,len,TCP_READ_TIMEOUT);
 
     LOG_D(APP_TAG,"Read %d bytes from tcp stream", num);
+    LOG_BUFFER_HEXDUMP(APP_TAG,buf, num,LOG_DEBUG);
+    
     
     LOG_V(APP_TAG,"END - read");
     

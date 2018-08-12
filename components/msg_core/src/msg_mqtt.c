@@ -9,20 +9,11 @@
 void dataEvent(mqtt_event_handle_t event)
 {
     char *topic = malloc(event->topic_len + 1);
-    uint8_t *data = malloc(event->data_len + 1);
-    
-    memcpy(data, event->data, event->data_len);
-    data[event->data_len] = 0;
-    
-    
-    message_t * message = malloc(sizeof(message_t));
 
-    message->data = data;
-    message->length = event->data_len;
-    
+    message_t * message = msg_utils_createMsg((uint8_t *) event->data,event->data_len);
+
     ((msg_mqtt_t *) event->user_context)->incoming_cb(((msg_mqtt_t *) event->user_context)->client, message);
     free(topic);
-    free(data);
     
 }
 

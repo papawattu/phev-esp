@@ -41,6 +41,7 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
         if(response != NULL)
         {
             client->publish(client,response);
+            LOG_D(APP_TAG,"Destroy message after publish");
             msg_utils_destroyMsg(response);
         }
     }
@@ -60,9 +61,14 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
     {
         messageBundle_t * messages = msg_pipe_splitter(ctx->user_context, chain, message);
         
+        LOG_D(APP_TAG,"Destroy message after splitter");
+            
+        msg_utils_destroyMsg(message);
+
         if(messages == NULL) return NULL;
 
         messageBundle_t * out = malloc(sizeof(messageBundle_t));
+        
         out->numMessages = 0;
         
         for(int i=0;i<messages->numMessages;i++) 
@@ -70,27 +76,62 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
             message_t * transMsg = msg_pipe_transformChain(ctx, client, chain, messages->messages[i]);
             if(transMsg != NULL) 
             {
-                out->messages[i] = transMsg;
-                out->numMessages ++;
+                LOG_D(APP_TAG,"Message %d", out->numMessages);
+                LOG_BUFFER_HEXDUMP(APP_TAG,transMsg->data,transMsg->length,LOG_DEBUG);
+                
+                out->messages[out->numMessages++] = transMsg;
             }
         } 
+        //LOG_D(APP_TAG,"Destroy messages after transformChain 1");
+            
+        //msg_utils_destroyMsgBundle(messages);
         
+        if(out->numMessages == 0)
+        {
+            LOG_D(APP_TAG,"Destroy out message bundle no messages");
+            
+            msg_utils_destroyMsgBundle(out);
+            return NULL;
+        }
         message_t * ret  = NULL;
 
         if(chain->aggregator != NULL)
         {
-            ret = chain->aggregator(ctx->user_context,out);
+            if(out != NULL)
+            {
+                ret = chain->aggregator(ctx->user_context,out);
+                LOG_D(APP_TAG,"Destroy message bundle after aggregator");
+            
+                msg_utils_destroyMsgBundle(out);
+            }
         } else {
-            ret = msg_pipe_splitter_aggregrator(out);
+            if(out != NULL)
+            {
+                LOG_D(APP_TAG,"Before splitter aggregator");
+            
+                LOG_MSG_BUNDLE(APP_TAG,out);
+                
+                ret = msg_pipe_splitter_aggregrator(out);
+                //LOG_D(APP_TAG,"Destroy message bundle after default aggregator");
+            
+                //msg_utils_destroyMsgBundle(out);
+                LOG_D(APP_TAG,"After splitter aggregator");
+            
+                LOG_MSG_BUNDLE(APP_TAG,out);
+                
+            }
         }
-        free(out);
-        free(messages);
         LOG_V(APP_TAG,"END - callTransformers");
     
         return ret;
     }  else {
         
         message_t * ret = msg_pipe_transformChain(ctx, client, chain, message);
+        
+        LOG_D(APP_TAG,"Destroy message after transformChain 2");
+            
+        msg_utils_destroyMsg(message);
+        
         LOG_V(APP_TAG,"END - callTransformers");
     
         return ret;
@@ -101,6 +142,9 @@ message_t * msg_pipe_callInputTransformers(msg_pipe_ctx_t *ctx, message_t *messa
 {
     LOG_V(APP_TAG,"START - callInputTransformers");
     message_t * out = msg_pipe_callTransformers(ctx, ctx->in, ctx->in_chain, message);
+    
+    //msg_utils_destroyMsg(message);
+        
     LOG_V(APP_TAG,"END - callInputTransformers");
     
     return out;
@@ -111,6 +155,10 @@ message_t * msg_pipe_callOutputTransformers(msg_pipe_ctx_t *ctx, message_t *mess
     
     message_t * ret = msg_pipe_callTransformers(ctx, ctx->out, ctx->out_chain, message);
     
+    //LOG_D(APP_TAG,"Destroy message after callTransformers");
+            
+    //msg_utils_destroyMsg(message);
+        
     LOG_V(APP_TAG,"END - callOutputTransformers");
     return ret;
 }
@@ -125,7 +173,9 @@ void msg_pipe_outboundPublish(msg_pipe_ctx_t * ctx, message_t * message)
     if(message != NULL) 
     {
         outboundClient->publish(outboundClient, message);
-        //msg_utils_destroyMsg(message);
+        LOG_D(APP_TAG,"Destroy message after outboundClient publish");
+            
+        msg_utils_destroyMsg(message);
     }
     LOG_V(APP_TAG,"END - outboundPublish");
     
@@ -142,9 +192,11 @@ void msg_pipe_inboundPublish(msg_pipe_ctx_t * ctx, message_t * message)
     if(message != NULL) 
     {
         inboundClient->publish(inboundClient, message);
+        LOG_D(APP_TAG,"Destroy message after inboundClient publish");
+            
         msg_utils_destroyMsg(message);
     }
-    LOG_V(APP_TAG,"START - inboundPublish");
+    LOG_V(APP_TAG,"END - inboundPublish");
     
 }
 
@@ -160,7 +212,10 @@ void msg_pipe_inboundSubscription(messagingClient_t *client, void * params, mess
     {
           out = msg_pipe_callInputTransformers(pipe, message);
     }
-    msg_pipe_outboundPublish(pipe,out);
+    if(out != NULL)
+    {
+        msg_pipe_outboundPublish(pipe,out);
+    }
     LOG_V(APP_TAG,"END - inboundSubscription");
     
 }
@@ -168,6 +223,8 @@ void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, mes
 {
     LOG_V(APP_TAG,"START - outboundSubscription");
     
+    if(message == NULL || message->length ==0) return;
+
     messagingClient_t *inboundClient = ((msg_pipe_ctx_t *) params)->in;
     message_t * out = message;
     msg_pipe_ctx_t * pipe = (msg_pipe_ctx_t *) params;
@@ -176,8 +233,10 @@ void msg_pipe_outboundSubscription(messagingClient_t *client, void * params, mes
     {
         out = msg_pipe_callOutputTransformers(pipe, message);
     }
-    
-    msg_pipe_inboundPublish(pipe, out);
+    if(out != NULL)
+    {
+        msg_pipe_inboundPublish(pipe, out);
+    }
     LOG_V(APP_TAG,"END - outboundSubscription");
     
 }

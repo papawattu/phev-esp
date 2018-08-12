@@ -2,7 +2,12 @@
 #include "msg_pipe_splitter.h"
 #include "mock_msg_core.h"
 #include "mock_msg_pipe.h"
-
+#include "mock_logger.h"
+#include "msg_utils.h"
+void setUp() 
+{
+    hexdump_Ignore();
+}
 static int splitterSingleCalled = 0;
 message_t * splitter_single_message(message_t * message)
 {
@@ -16,7 +21,7 @@ messageBundle_t * mock_single_splitter(void * ctx, message_t *message)
 {
     messageBundle_t * out = malloc(sizeof(messageBundle_t));
 
-    out->messages[0] = message;
+    out->messages[0] = msg_utils_copyMsg(message);
 
     out->numMessages = 1;
 
@@ -33,10 +38,7 @@ void test_should_split_single()
 
     const uint8_t data[] = {1,2,3,4};
 
-    message_t * message = malloc(sizeof(message_t));
-    message->data = malloc(4);
-    memcpy(message->data, data, 4);
-    message->length = 4;
+    message_t * message = msg_utils_createMsg(&data,sizeof(data));
     
     messageBundle_t * out = msg_pipe_splitter(ctx, &chain, message);
     
@@ -55,15 +57,9 @@ messageBundle_t * mock_double_splitter(void * ctx, message_t *message)
     const uint8_t first_data[] = {1,2,3,4};
     const uint8_t second_data[] = {5,6,7,8};
 
-    message_t * first_message = malloc(sizeof(message_t));
-    first_message->data = malloc(sizeof(first_data));
-    memcpy(first_message->data, first_data, sizeof(first_data));
-    first_message->length = sizeof(first_data);
+    message_t * first_message = msg_utils_createMsg(&first_data,sizeof(first_data));
     
-    message_t * second_message = malloc(sizeof(message_t));
-    second_message->data = malloc(sizeof(second_data));
-    memcpy(second_message->data, second_data, sizeof(second_data));
-    second_message->length = sizeof(second_data);
+    message_t * second_message = msg_utils_createMsg(&second_data,sizeof(second_data));
     
     messageBundle_t * out = malloc(sizeof(messageBundle_t));
 
@@ -88,10 +84,7 @@ void test_should_split_double()
     const uint8_t second_data[] = {5,6,7,8};
 
 
-    message_t * message = malloc(sizeof(message_t));
-    message->data = malloc(sizeof(data));
-    memcpy(message->data, data, sizeof(data));
-    message->length = sizeof(data);
+    message_t * message = msg_utils_createMsg(&data,sizeof(data));
     
     messageBundle_t * out = msg_pipe_splitter(ctx, &chain, message);
     
@@ -116,15 +109,9 @@ void test_should_aggregate_message_bundle()
     const uint8_t first_data[] = {1,2,3,4};
     const uint8_t second_data[] = {5,6,7,8};
 
-    message_t * first_message = malloc(sizeof(message_t));
-    first_message->data = malloc(sizeof(first_data));
-    memcpy(first_message->data, first_data, sizeof(first_data));
-    first_message->length = sizeof(first_data);
+    message_t * first_message = msg_utils_createMsg(&first_data,sizeof(first_data));
     
-    message_t * second_message = malloc(sizeof(message_t));
-    second_message->data = malloc(sizeof(second_data));
-    memcpy(second_message->data, second_data, sizeof(second_data));
-    second_message->length = sizeof(second_data);
+    message_t * second_message = msg_utils_createMsg(&second_data,sizeof(second_data));
     
     messages->messages[0] = first_message;
     messages->messages[1] = second_message;
@@ -136,4 +123,4 @@ void test_should_aggregate_message_bundle()
     TEST_ASSERT_EQUAL(8,out->length);
     TEST_ASSERT_EQUAL_HEX8_ARRAY(data,out->data,sizeof(data));
     
-}
+} 

@@ -1,15 +1,20 @@
 #include "phev_response_handler.h"
+#include "logger.h"
 #ifdef __XTENSA__
 #include "cJSON.h"
 #else
 #include <cjson/cJSON.h>
 #endif
 
+const static char *APP_TAG = "PHEV_RESPONSE_HANDLER";
+
 message_t * phev_response_handler(void * ctx, phevMessage_t *message)
 {
+    LOG_V(APP_TAG,"START - responseHandler");
+    
     char * output;
 
-    if(message->type == RESPONSE_TYPE || message->command != 0x6f) 
+    if(message->type == RESPONSE_TYPE)// || message->command != 0x6f) 
     {
         return NULL;
     }
@@ -73,9 +78,12 @@ message_t * phev_response_handler(void * ctx, phevMessage_t *message)
     
     output = cJSON_Print(response); 
 
+    message_t * outputMessage = msg_utils_createMsg((uint8_t *) output, strlen(output)+1);
+    LOG_BUFFER_HEXDUMP(APP_TAG,outputMessage->data,outputMessage->length,LOG_DEBUG);
     cJSON_Delete(response);
 
-    message_t * outputMessage = msg_utils_createMsg((uint8_t *) output, strlen(output));
     free(output);
+    LOG_V(APP_TAG,"END - responseHandler");
+    
     return outputMessage;
 }

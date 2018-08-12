@@ -46,15 +46,12 @@ message_t * msg_pipe_concat(messageBundle_t * messages)
 
     if(total == 0) return NULL;
 
-    message_t * message = malloc(sizeof(message_t));
-
-    message->data = malloc(total);
-    memcpy(message->data, data, total);
-    message->length = total;
+    message_t * message = msg_utils_createMsg(data,total);
     
     LOG_BUFFER_HEXDUMP(APP_TAG,message->data,message->length,LOG_DEBUG);
     
     free(data);
+    
     LOG_V(APP_TAG,"END - concat");
     
     return message;
@@ -65,6 +62,10 @@ message_t * msg_pipe_splitter_aggregrator(messageBundle_t * messages)
     
     message_t * out = msg_pipe_concat(messages);
 
+    LOG_D(APP_TAG,"Freeing message bundle after concat");
+
+    msg_utils_destroyMsgBundle(messages);
+
     LOG_V(APP_TAG,"END - aggregrator");
     
     return out;
@@ -73,7 +74,9 @@ messageBundle_t * msg_pipe_splitter(msg_pipe_ctx_t *ctx, msg_pipe_chain_t * chai
 {
     LOG_V(APP_TAG,"START - splitter");
     
-    return chain->splitter(ctx, message); 
+    messageBundle_t * out = chain->splitter(ctx, message);
+    
+    //msg_utils_destroyMsg(message);
     LOG_V(APP_TAG,"END - splitter");
-      
+    return out;  
 }

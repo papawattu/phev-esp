@@ -460,3 +460,116 @@ void test_phev_controller_configStateIsSet(void)
     TEST_ASSERT_TRUE(ctx->config->state.airConOn);
     
 }
+void test_phev_controller_configToMessageBundle_no_updates(void)
+{
+
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = true,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+        .state.connectedClients = 0,
+        .state.headLightsOn = false,
+        .state.parkLightsOn = false,
+        .state.airConOn = false,
+    };
+
+    phev_config_checkForConnection_IgnoreAndReturn(false);
+    //phev_core_startMessageEncoded_IgnoreAndReturn(NULL);
+    phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
+
+    messageBundle_t * messages = phev_controller_configToMessageBundle(&config);
+
+    TEST_ASSERT_NOT_NULL(messages);
+    TEST_ASSERT_EQUAL(0,messages->numMessages);
+}
+void test_phev_controller_configToMessageBundle_new_connection(void)
+{
+
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = true,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+        .state.connectedClients = 1,
+        .state.headLightsOn = false,
+        .state.parkLightsOn = false,
+        .state.airConOn = false,
+    };
+
+    uint8_t data[] = {1,2,3,4};
+    message_t * start = msg_utils_createMsg(&data ,4);
+    phev_config_checkForConnection_IgnoreAndReturn(true);
+    phev_core_startMessageEncoded_IgnoreAndReturn(start);
+    phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
+
+    messageBundle_t * messages = phev_controller_configToMessageBundle(&config);
+
+    TEST_ASSERT_NOT_NULL(messages);
+    TEST_ASSERT_EQUAL(1,messages->numMessages);
+    TEST_ASSERT_NOT_NULL(messages->messages[0]);
+    TEST_ASSERT_EQUAL(4,messages->messages[0]->length);
+    TEST_ASSERT_EQUAL_MEMORY(&data, messages->messages[0]->data,4);
+
+}
+void test_phev_controller_configToMessageBundle_head_lights_on(void)
+{
+
+    phevConfig_t config = {
+        .connectionConfig.host = "127.0.0.1",
+        .connectionConfig.port = 8080,
+        .connectionConfig.carConnectionWifi.ssid = "SSID",
+        .connectionConfig.carConnectionWifi.password = "password",
+        .updateConfig.latestBuild = 1234,
+        .updateConfig.currentBuild = 1234567,  
+        .updateConfig.updateOverPPP = true,  
+        .updateConfig.updateWifi.ssid = "SSID123",
+        .updateConfig.updateWifi.password = "password123",
+        .updateConfig.updatePath = "/path12345678",
+        .updateConfig.updateHost = "update.host.com",
+        .updateConfig.updatePort = 80,
+        .updateConfig.updateImageFullPath = "http://update.host.com/path",
+        .updateConfig.forceUpdate = true,
+        .state.connectedClients = 1,
+        .state.headLightsOn = false,
+        .state.parkLightsOn = false,
+        .state.airConOn = false,
+    };
+
+    uint8_t data[] = {1,2,3,4};
+    message_t * cmd = msg_utils_createMsg(&data ,4);
+    phev_config_checkForConnection_IgnoreAndReturn(false);
+    phev_core_simpleRequestCommandMessage_IgnoreAndReturn(cmd);
+    phev_core_convertToMessage_IgnoreAndReturn(cmd);
+    phev_core_destroyMessage_Ignore();
+    phev_config_checkForHeadLightsOn_IgnoreAndReturn(true);
+
+    messageBundle_t * messages = phev_controller_configToMessageBundle(&config);
+
+    TEST_ASSERT_NOT_NULL(messages);
+    TEST_ASSERT_EQUAL(1,messages->numMessages);
+    TEST_ASSERT_NOT_NULL(messages->messages[0]);
+    TEST_ASSERT_EQUAL(4,messages->messages[0]->length);
+    TEST_ASSERT_EQUAL_MEMORY(&data, messages->messages[0]->data,4);
+
+}

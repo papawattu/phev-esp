@@ -35,6 +35,7 @@ message_t * phev_controller_input_responder(void * ctx, message_t * message) {
 }
 message_t * phev_controller_responder(void * ctx, message_t * message)
 {
+    LOG_V(APP_TAG,"START - responder");
     phevCtx_t * phevCtx = (phevCtx_t *) ctx;
     if(message != NULL) {
 
@@ -55,13 +56,16 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
         free(phevMsg.data);
         
     }
+    LOG_V(APP_TAG,"END - responder");
     return NULL;
 
 }
 messageBundle_t * phev_controller_splitter(void * ctx, message_t * message)
 {
+    LOG_V(APP_TAG,"START - splitter");
     message_t * out = phev_core_extractMessage(message->data, message->length);
 
+    if(out == NULL) return NULL;
     messageBundle_t * messages = malloc(sizeof(messageBundle_t));
 
     messages->numMessages = 0;
@@ -72,36 +76,53 @@ messageBundle_t * phev_controller_splitter(void * ctx, message_t * message)
     while(message->length > total)
     {
         out = phev_core_extractMessage(message->data + total, message->length - total);
-        total += out->length;
-        messages->messages[messages->numMessages++] = out;
+        if(out!= NULL)
+        {
+            total += out->length;
+            messages->messages[messages->numMessages++] = out;
+        } else {
+            break;
+        }
         
     }
+    LOG_V(APP_TAG,"END - splitter");
     return messages;
 }
 
 message_t * phev_controller_outputChainInputTransformer(void * ctx, message_t * message)
 {
+    LOG_V(APP_TAG,"START - outputChainInputTransformer");
     phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
 
     int length = phev_core_decodeMessage(message->data, message->length, phevMessage);
+    LOG_D(APP_TAG,"Destroy message after decodeMessage");
+            
     msg_utils_destroyMsg(message);
     
     message_t * ret = phev_core_convertToMessage(phevMessage);
 
     phev_core_destroyMessage(phevMessage);
+    LOG_V(APP_TAG,"END - outputChainInputTransformer");
+    
     return ret;
 }
 
 message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t * message)
 {
+    LOG_V(APP_TAG,"START - outputChainOutputTransformer");
+    
     phevCtx_t * phevCtx = (phevCtx_t *) ctx;
     phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
     phev_core_decodeMessage(message->data,message->length, phevMessage);
-    msg_utils_destroyMsg(message);
+    LOG_D(APP_TAG,"Destroy message after decodeMessage");
+            
+    //msg_utils_destroyMsg(message);
     
     message_t * ret = phev_response_handler(ctx, phevMessage);
     
     phev_core_destroyMessage(phevMessage);
+    
+    LOG_V(APP_TAG,"START - outputChainOutputTransformer");
     
     return ret;
 }
@@ -208,8 +229,10 @@ void phev_controller_connect(phevCtx_t * ctx)
 void phev_controller_sendMessage(phevCtx_t * ctx, message_t * message)
 {
     LOG_V(APP_TAG,"START - phev sendMessage");
-    
-    msg_pipe_outboundPublish(ctx->pipe, message);
+    if(message != NULL)
+    {
+        msg_pipe_outboundPublish(ctx->pipe, message);
+    }
     
     LOG_V(APP_TAG,"END - phev sendMessage");
     
@@ -427,7 +450,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     ctx->startWifi = settings->startWifi;
     ctx->outputTransformer = settings->outputTransformer;
 
-    //ctx->config = (phevConfig_t *) malloc(sizeof(phevConfig_t));
+    ctx->config = NULL;
 
     ctx->pipe = msg_pipe(pipe_settings);
     ctx->queueSize = 0;

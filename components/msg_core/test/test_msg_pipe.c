@@ -2,9 +2,10 @@
 #include "mock_msg_core.h"
 #include "mock_msg_pipe_splitter.h"
 #include "msg_pipe.h"
+#include "mock_logger.h"
 void setUp() 
 {
-
+    hexdump_Ignore();
 }
 void tearDown()
 {

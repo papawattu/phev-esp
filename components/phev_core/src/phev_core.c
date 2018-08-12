@@ -67,11 +67,9 @@ message_t * phev_core_extractMessage(const uint8_t *data, const size_t len)
 {
     if(phev_core_validate_buffer(data, len) != 0)
     {
-        message_t * message = malloc(sizeof(message_t));
+        
+        message_t * message = msg_utils_createMsg(data,len);
 
-        message->data = malloc(data[1] + 2);
-        message->length = data[1] + 2;
-        memcpy(message->data, data, message->length);
         return message;
     } else {
         return NULL;    

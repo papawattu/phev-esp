@@ -12,7 +12,8 @@ typedef struct messagingClient_t messagingClient_t;
 typedef uint8_t data_t;
 
 typedef struct message_t {
-    const data_t * data;
+    uint32_t id;
+    data_t * data;
     size_t length;
 }  message_t;
 
