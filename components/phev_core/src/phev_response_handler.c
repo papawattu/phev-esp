@@ -14,7 +14,7 @@ message_t * phev_response_handler(void * ctx, phevMessage_t *message)
     
     char * output;
 
-    if(message->type == RESPONSE_TYPE)// || message->command != 0x6f) 
+    if(message->type == RESPONSE_TYPE || message->command != 0x6f) 
     {
         return NULL;
     }
@@ -78,7 +78,7 @@ message_t * phev_response_handler(void * ctx, phevMessage_t *message)
     
     output = cJSON_Print(response); 
 
-    message_t * outputMessage = msg_utils_createMsg((uint8_t *) output, strlen(output)+1);
+    message_t * outputMessage = msg_utils_createMsg((uint8_t *) output, strlen(output));
     LOG_BUFFER_HEXDUMP(APP_TAG,outputMessage->data,outputMessage->length,LOG_DEBUG);
     cJSON_Delete(response);
 
