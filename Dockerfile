@@ -44,13 +44,10 @@ RUN date +%s > /root/build_number
 RUN BUILD_NUMBER=`cat /root/build_number` make
 RUN cp /usr/src/phev-esp/build/phev-esp.bin /root/firmware-`cat /root/build_number`.bin
 RUN gsutil cp /root/firmware-`cat /root/build_number`.bin gs://espimages/develop/ 
-ENV GOOGLE_PROJECT [PROJECT_REDACTED]
-ENV GOOGLE_CLIENT_EMAIL [EMAIL_REDACTED]
-ENV GOOGLE_CLUSTER_ZONE [ZONE_REDACTED]
-ENV GOOGLE_CLUSTER_NAME [CLUSTER_REDACTED]
+ENV GOOGLE_PROJECT phev-db3fa
 ENV GOOGLE_APPLICATION_CREDENTIALS /root/service_key.json
-COPY ${GOOGLE_PROJECT}_service_key.json /root/service_key.json
+COPY phev-db3fa.json /root/service_key.json
 RUN gcloud config set project $GOOGLE_PROJECT
 RUN gcloud auth activate-service-account --key-file /root/service_key.json
-RUN gcloud iot devices configs get-value --device my-device2 --region us-central1 --registry my-registry | jq .latestBuild=`cat /root/build_number` > /root/config.json
-RUN gcloud iot devices configs update --config-file =/root/config.json --device my-device2 --region us-central1 --registry my-registry
+RUN gcloud iot devices configs get-value --device my-device2 --region us-central1 --registry my-registry | jq .update.latestBuild=`cat /root/build_number` > /root/config.json
+RUN gcloud iot devices configs update --config-file /root/config.json --device my-device2 --region us-central1 --registry my-registry
