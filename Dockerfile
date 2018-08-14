@@ -7,8 +7,8 @@ RUN wget -q https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c44
 RUN tar -xzf xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
 RUN gem install bundler
 WORKDIR /usr/src
-RUN git clone https://github.com/openssl/openssl
-RUN cd openssl && ./config && make && make install
+#RUN git clone https://github.com/openssl/openssl
+#RUN cd openssl && ./config && make && make install
 RUN git clone https://github.com/benmcollins/libjwt.git
 RUN git clone https://github.com/DaveGamble/cJSON.git
 RUN git clone https://github.com/papawattu/jansson.git
