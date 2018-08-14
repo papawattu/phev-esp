@@ -53,6 +53,6 @@ RUN gcloud config set project ${GOOGLE_PROJECT}
 #RUN gcloud config set account ${GOOGLE_ACCOUNT}
 #RUN gcloud auth activate-service-account --key-file /root/service_key.json
 #RUN gcloud auth login
-RUN gcloud auth application-default login
+#RUN gcloud auth application-default login
 RUN gcloud iot devices configs get-value --device my-device2 --region us-central1 --registry my-registry | jq .update.latestBuild=`cat /root/build_number` > /root/config.json
 RUN gcloud iot devices configs update --config-file /root/config.json --device my-device2 --region us-central1 --registry my-registry
