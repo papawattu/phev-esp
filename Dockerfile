@@ -25,7 +25,11 @@ RUN \
 RUN cd jansson && cmake .
 WORKDIR /usr/src/cmock
 RUN bundle install
-RUN curl https://sdk.cloud.google.com | bash
+RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
+    echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+    apt-get update -y && apt-get install google-cloud-sdk -y
+#RUN curl https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/root/google-cloud-sdk/bin
 ENV CMOCK_DIR /usr/src/cmock
 ENV CJSON_DIR /usr/src/cJSON
