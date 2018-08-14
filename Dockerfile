@@ -47,11 +47,11 @@ RUN BUILD_NUMBER=`cat /root/build_number` make
 RUN cp /usr/src/phev-esp/build/phev-esp.bin /root/firmware-`cat /root/build_number`.bin
 RUN gsutil cp /root/firmware-`cat /root/build_number`.bin gs://espimages/develop/ 
 ENV GOOGLE_PROJECT phev-db3fa
-ENV GOOGLE_ACCOUNT 557258334399@cloudbuild.gserviceaccount.com
+ENV GOOGLE_ACCOUNT configupdate@phev-db3fa.iam.gserviceaccount.com
 #COPY phev-db3fa.json /root/service_key.json
 RUN gcloud config set project ${GOOGLE_PROJECT}
 RUN gcloud config set account ${GOOGLE_ACCOUNT}
-#RUN gcloud auth activate-service-account --key-file /root/service_key.json
+RUN gcloud auth activate-service-account --key-file main/resources/phev-config-update.json
 #RUN gcloud auth login
 #RUN gcloud auth application-default login
 RUN gcloud iot devices configs get-value --device my-device2 --region us-central1 --registry my-registry | jq .update.latestBuild=`cat /root/build_number` > /root/config.json

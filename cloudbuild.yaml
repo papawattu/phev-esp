@@ -1,4 +1,13 @@
 steps:
+- name: gcr.io/cloud-builders/gcloud
+  args:
+  - kms
+  - decrypt
+  - --ciphertext-file=main/resources/phev-config-update.json.enc
+  - --plaintext-file=main/resources/phev-config-update.json
+  - --location=global
+  - --keyring=test
+  - --key=config
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA', '-t','gcr.io/$PROJECT_ID/phev-esp:latest','.' ]
 images:
