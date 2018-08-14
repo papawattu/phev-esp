@@ -50,7 +50,7 @@ ENV GOOGLE_PROJECT phev-db3fa
 ENV GOOGLE_ACCOUNT 557258334399@cloudbuild.gserviceaccount.com
 #COPY phev-db3fa.json /root/service_key.json
 RUN gcloud config set project ${GOOGLE_PROJECT}
-#RUN gcloud config set account ${GOOGLE_ACCOUNT}
+RUN gcloud config set account ${GOOGLE_ACCOUNT}
 #RUN gcloud auth activate-service-account --key-file /root/service_key.json
 #RUN gcloud auth login
 #RUN gcloud auth application-default login
