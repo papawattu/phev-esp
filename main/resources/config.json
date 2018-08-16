@@ -1,24 +1,24 @@
 {
-    "state": {
-      "connectedClients": 1,
-      "headLightsOn": false,
-      "parkLightsOn": true,
-      "airConOn": true
-    },
-    "update": {
-      "latestBuild": 999,
-      "overGsm": true,
-      "ssid": "ssid",
-      "password": "password",
-      "host": "storage.googleapis.com",
-      "port": 80,
-      "path": "/espimages/develop/",
-      "forceUpdate": true
-    },
-    "carConnection": {
-      "ssid": "REMOTE123456",
-      "password": "abcde123456",
-      "host": "127.0.0.1",
-      "port": 8080
-    }
+  "state": {
+    "connectedClients": 1,
+    "headLightsOn": false,
+    "parkLightsOn": false,
+    "airConOn": false
+  },
+  "update": {
+    "latestBuild": 1534284490,
+    "overGsm": true,
+    "ssid": "BTHub6-P535",
+    "password": "S1mpsons",
+    "host": "storage.googleapis.com",
+    "port": 80,
+    "path": "/espimages/develop/",
+    "forceUpdate": false
+  },
+  "carConnection": {
+    "ssid": "BTHub6-P535",
+    "password": "S1mpsons",
+    "host": "192.168.1.64",
+    "port": 8080
   }
+}

@@ -86,6 +86,7 @@ messageBundle_t * phev_controller_splitter(void * ctx, message_t * message)
         
     }
     LOG_V(APP_TAG,"END - splitter");
+    msg_utils_destroyMsgBundle(messages);
     return messages;
 }
 

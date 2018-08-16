@@ -26,8 +26,9 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
 
     if(chain->inputTransformer != NULL) 
     {
-        msg = chain->inputTransformer(ctx->user_context, msg);
+        msg = chain->inputTransformer(ctx->user_context, message);
     }
+    msg_utils_destroyMsg(message);
     if(chain->filter != NULL)
     {
         if(!chain->filter(ctx->user_context, msg))
@@ -45,13 +46,17 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
             msg_utils_destroyMsg(response);
         }
     }
+    message_t * out = NULL;
+
     if(chain->outputTransformer != NULL)
     {
-        msg = chain->outputTransformer(ctx->user_context, msg);
+        out = chain->outputTransformer(ctx->user_context, msg);
     }
+    msg_utils_destroyMsg(msg);
+
     LOG_V(APP_TAG,"END - transformChain");
     
-    return msg;
+    return out;
 }
 message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t *message)
 {
