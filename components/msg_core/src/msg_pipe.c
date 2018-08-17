@@ -21,7 +21,12 @@ void msg_pipe_loop(msg_pipe_ctx_t * ctx)
 message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message) 
 {
     LOG_V(APP_TAG,"START - transformChain");
-    
+
+    if(message == NULL)
+    {
+        LOG_D(APP_TAG,"Tranform incoming message is NULL");
+        return NULL;
+    }    
     message_t * msg = message;
 
     if(chain->inputTransformer != NULL) 

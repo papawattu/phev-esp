@@ -12,7 +12,7 @@
 
 #include <cjson/cJSON.h>
 
-void setup(void)
+void setUp(void)
 {
     hexdump_Ignore();
 }
