@@ -26,6 +26,7 @@ inline static message_t * msg_utils_createMsg(uint8_t * data, size_t length)
     memcpy(message->data, data, length);
     message->length = length;
     LOG_D(MSG_UTILS_APP_TAG,"Created Message ID %ul length %d",message->id,message->length);
+    LOG_BUFFER_HEXDUMP(MSG_UTILS_APP_TAG,message->data,message->length,LOG_DEBUG);
     LOG_V(MSG_UTILS_APP_TAG,"END - createMsg");
     
     return message;

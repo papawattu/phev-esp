@@ -149,7 +149,7 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
         
         LOG_D(APP_TAG,"Destroy message after transformChain 2");
             
-        msg_utils_destroyMsg(message);
+        //msg_utils_destroyMsg(message);
         
         LOG_V(APP_TAG,"END - callTransformers");
     
