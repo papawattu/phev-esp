@@ -7,7 +7,7 @@
   },
   "update": {
     "latestBuild": 1534284490,
-    "overGsm": true,
+    "overGsm": false,
     "ssid": "BTHub6-P535",
     "password": "S1mpsons",
     "host": "storage.googleapis.com",
