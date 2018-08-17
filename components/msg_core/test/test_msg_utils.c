@@ -1,7 +1,11 @@
 #include "unity.h"
 #include "msg_utils.h"
+#include "mock_logger.h"
 
-
+void setUp(void)
+{
+    hexdump_Ignore();
+}
 void test_create_msg(void)
 {
     uint8_t data[] = {1,2,3,4};

@@ -3,7 +3,7 @@
 #include "mock_msg_core.h"
 #include "msg_utils.h"
 #include "msg_mqtt.h"
-
+#include "mock_logger.h"
 
 #define TOPIC "topic"
 #define MSG_ID 1234
@@ -15,6 +15,10 @@ static int mock_init_Called = 0;
 static int mock_start_Called = 0;
 static int mock_publish_Called = 0;
 
+void setUp(void)
+{
+    hexdump_Ignore();
+}
 
 handle_t mock_init(const msg_mqtt_config_t *config) 
 {

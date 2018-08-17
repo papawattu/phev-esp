@@ -1,12 +1,11 @@
 #include "unity.h"
 #include "mock_msg_core.h"
 #include "msg_tcpip.h"
-
+#include "mock_logger.h"
 static int dummyReadNoMessageCalled = 0;
 static int dummyReadCalled = 0;
 static int dummyWriteCalled = 0;
 static int dummyConnectCalled = 0;
-
 
 int dummyRead_noMessage(int socket,uint8_t* buf, size_t size)
 {
@@ -34,7 +33,7 @@ int dummyConnect(messagingClient_t *client)
 
 void setUp(void)
 {
-    
+    hexdump_Ignore();
 }
 void test_create_tcpip_client(void)
 {
