@@ -63,6 +63,8 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
 messageBundle_t * phev_controller_splitter(void * ctx, message_t * message)
 {
     LOG_V(APP_TAG,"START - splitter");
+    
+    LOG_BUFFER_HEXDUMP(APP_TAG, message->data,message->length,LOG_DEBUG);
     message_t * out = phev_core_extractMessage(message->data, message->length);
 
     if(out == NULL) return NULL;

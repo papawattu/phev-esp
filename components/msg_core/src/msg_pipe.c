@@ -80,9 +80,9 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
     {
         messageBundle_t * messages = msg_pipe_splitter(ctx->user_context, chain, message);
         
-        LOG_D(APP_TAG,"Destroy message after splitter");
+        //LOG_D(APP_TAG,"Destroy message after splitter");
             
-        msg_utils_destroyMsg(message);
+        //msg_utils_destroyMsg(message);
 
         if(messages == NULL) return NULL;
 

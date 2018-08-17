@@ -16,9 +16,9 @@
     "forceUpdate": false
   },
   "carConnection": {
-    "ssid": "BTHub6-P535",
-    "password": "S1mpsons",
-    "host": "192.168.1.64",
+    "ssid": "REMOTE45cfsc",
+    "password": "fhcm852767",
+    "host": "192.168.8.46",
     "port": 8080
   }
 }

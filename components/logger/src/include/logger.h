@@ -10,10 +10,10 @@ void msgBundleDump(const char * tag, messageBundle_t * bundle);
 void hexdump(char * tag, unsigned char * buffer, int length, int level);
 
 #define LOG_DEBUG 0
-#define LOG_I(TAG, FORMAT , ...) printf ("INFO - " FORMAT "\n", ##__VA_ARGS__)
-#define LOG_V(TAG, FORMAT , ...) printf ("VERBOSE - " FORMAT "\n", ##__VA_ARGS__)
-#define LOG_D(TAG, FORMAT , ...) printf ("DEBUG - " FORMAT "\n", ##__VA_ARGS__)
-#define LOG_E(TAG, FORMAT , ...) printf ("ERROR - " FORMAT "\n", ##__VA_ARGS__)
+#define LOG_I(TAG, FORMAT , ...) printf ("INFO - %s: " FORMAT "\n", TAG, ##__VA_ARGS__)
+#define LOG_V(TAG, FORMAT , ...) printf ("VERBOSE - %s: " FORMAT "\n", TAG, ##__VA_ARGS__)
+#define LOG_D(TAG, FORMAT , ...) printf ("DEBUG - %s: " FORMAT "\n", TAG, ##__VA_ARGS__)
+#define LOG_E(TAG, FORMAT , ...) printf ("ERROR - %s: " FORMAT "\n", TAG, ##__VA_ARGS__)
 #define LOG_BUFFER_HEXDUMP(TAG, BUFFER, LENGTH, LEVEL) hexdump(TAG, BUFFER, LENGTH, LEVEL)
 #define LOG_MSG_BUNDLE(TAG, BUNDLE) msgBundleDump(TAG, BUNDLE)
 #else
