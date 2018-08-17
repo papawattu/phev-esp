@@ -8,6 +8,7 @@ void msgBundleDump(const char * tag, messageBundle_t * bundle);
 #ifdef __linux__
 
 void hexdump(char * tag, unsigned char * buffer, int length, int level);
+
 #define LOG_DEBUG 0
 #define LOG_I(TAG, FORMAT , ...) printf ("INFO - " FORMAT "\n", ##__VA_ARGS__)
 #define LOG_V(TAG, FORMAT , ...) printf ("VERBOSE - " FORMAT "\n", ##__VA_ARGS__)

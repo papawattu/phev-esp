@@ -9,12 +9,12 @@ const static char *APP_TAG = "MSG_PIPE";
 
 void msg_pipe_loop(msg_pipe_ctx_t * ctx)
 {
-    LOG_V(APP_TAG,"START - loop");
+    //LOG_V(APP_TAG,"START - loop");
     
     ctx->in->loop(ctx->in);
     ctx->out->loop(ctx->out);
 
-    LOG_V(APP_TAG,"END - loop");
+    //LOG_V(APP_TAG,"END - loop");
     
 }
 
@@ -27,8 +27,13 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
     if(chain->inputTransformer != NULL) 
     {
         msg = chain->inputTransformer(ctx->user_context, message);
+        if(msg == NULL)
+        {
+            LOG_D(APP_TAG,"Not a valid input message");
+            return NULL;
+        }
     }
-    msg_utils_destroyMsg(message);
+    //msg_utils_destroyMsg(message);
     if(chain->filter != NULL)
     {
         if(!chain->filter(ctx->user_context, msg))
@@ -51,6 +56,10 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
     if(chain->outputTransformer != NULL)
     {
         out = chain->outputTransformer(ctx->user_context, msg);
+        if(out == NULL) 
+        {
+            LOG_D(APP_TAG,"Output transformer returned NULL");
+        }
     }
     msg_utils_destroyMsg(msg);
 

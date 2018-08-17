@@ -125,7 +125,7 @@ int main()
 
     LOG_I(APP_TAG,"Config set...");
 
-    char * configTxt = displayConfig(ctx->config); 
+    char * configTxt = app_displayConfig(ctx->config); 
     
     LOG_I(APP_TAG,"Build version :%d", ctx->config->updateConfig.currentBuild);
     LOG_I(APP_TAG,"Latest build version :%d", ctx->config->updateConfig.latestBuild);

@@ -96,13 +96,22 @@ message_t * phev_controller_outputChainInputTransformer(void * ctx, message_t * 
     phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
 
     int length = phev_core_decodeMessage(message->data, message->length, phevMessage);
-    LOG_D(APP_TAG,"Destroy message after decodeMessage");
             
-    msg_utils_destroyMsg(message);
+    if(length == 0) {
+        LOG_E(APP_TAG,"Invalid message received");
+        LOG_BUFFER_HEXDUMP(APP_TAG,message->data,message->length,LOG_DEBUG);
+        //msg_utils_destroyMsg(message);
     
+        return NULL;
+    }
     message_t * ret = phev_core_convertToMessage(phevMessage);
 
     phev_core_destroyMessage(phevMessage);
+    
+    LOG_D(APP_TAG,"Destroy message after decodeMessage");
+    
+    msg_utils_destroyMsg(message);
+    
     LOG_V(APP_TAG,"END - outputChainInputTransformer");
     
     return ret;
@@ -391,7 +400,7 @@ messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message
 } 
 void phev_controller_eventLoop(phevCtx_t * ctx)
 {
-    LOG_V(APP_TAG,"START - eventLoop");
+    //LOG_V(APP_TAG,"START - eventLoop");
     
     time_t now;
 
@@ -414,7 +423,7 @@ void phev_controller_eventLoop(phevCtx_t * ctx)
             time(&ctx->lastPingTime);
         }
     }
-    LOG_V(APP_TAG,"END - eventLoop");
+    //LOG_V(APP_TAG,"END - eventLoop");
        
 }
 phevCtx_t * phev_controller_init(phevSettings_t * settings)

@@ -12,7 +12,7 @@
 
 const static char *MSG_UTILS_APP_TAG = "MSG_UTILS";
 
-static message_t * msg_utils_createMsg(uint8_t * data, size_t length)
+inline static message_t * msg_utils_createMsg(uint8_t * data, size_t length)
 {
     LOG_V(MSG_UTILS_APP_TAG,"START - createMsg");
     message_t * message = malloc(sizeof(message_t));
@@ -30,7 +30,7 @@ static message_t * msg_utils_createMsg(uint8_t * data, size_t length)
     
     return message;
 }
-static void msg_utils_destroyMsg(message_t * message)
+inline static void msg_utils_destroyMsg(message_t * message)
 {
     LOG_V(MSG_UTILS_APP_TAG,"START - destroyMsg");
     
@@ -47,7 +47,7 @@ static void msg_utils_destroyMsg(message_t * message)
     LOG_V(MSG_UTILS_APP_TAG,"END - destroyMsg");
     
 }
-static void msg_utils_destroyMsgBundle(messageBundle_t * messages) 
+inline static void msg_utils_destroyMsgBundle(messageBundle_t * messages) 
 {
     LOG_V(MSG_UTILS_APP_TAG,"START - destroyMsgBundle");
     
@@ -64,7 +64,7 @@ static void msg_utils_destroyMsgBundle(messageBundle_t * messages)
     LOG_V(MSG_UTILS_APP_TAG,"END - destroyMsgBundle");
     
 }
-static message_t * msg_utils_copyMsg(message_t * message)
+inline static message_t * msg_utils_copyMsg(message_t * message)
 {
     LOG_V(MSG_UTILS_APP_TAG,"START - copyMsg");
     

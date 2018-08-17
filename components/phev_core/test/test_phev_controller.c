@@ -8,9 +8,14 @@
 #include "mock_phev_config.h"
 #include "mock_phev_response_handler.h"
 #include "mock_ota.h"
+#include "mock_logger.h"
 
 #include <cjson/cJSON.h>
 
+void setup(void)
+{
+    hexdump_Ignore();
+}
 
 void test_handle_event(void)
 {

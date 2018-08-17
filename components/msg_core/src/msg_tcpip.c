@@ -44,7 +44,7 @@ int msg_tcpip_connect(messagingClient_t *client)
 }
 message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
 {
-    LOG_V(APP_TAG,"START - incomingHandler");
+    //LOG_V(APP_TAG,"START - incomingHandler");
     if (client->connected)
     {
         tcpip_ctx_t *ctx = (tcpip_ctx_t *)client->ctx;
@@ -62,7 +62,7 @@ message_t *msg_tcpip_incomingHandler(messagingClient_t *client)
             client->connected = 0;
         }
     }
-    LOG_V(APP_TAG,"END - incomingHandler");
+    //LOG_V(APP_TAG,"END - incomingHandler");
     return NULL;
 }
 void msg_tcpip_outgoingHandler(messagingClient_t *client, message_t *message)
