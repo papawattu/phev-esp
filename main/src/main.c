@@ -109,6 +109,10 @@ xQueueHandle timer_queue;
 
 const static char *APP_TAG = "Main";
 
+
+extern const char config_json_start[] asm("_binary_config_json_start");
+extern const char config_json_end[]   asm("_binary_config_json_end");
+
 void messagePublished(mqtt_event_handle_t event)
 {
     ESP_LOGD(APP_TAG,"Publish Callback");
@@ -125,6 +129,17 @@ void main_loop(void *pvParameter)
 
     phevCtx_t * ctx = app_createPhevController(mqtt);
 
+    phev_controller_setConfigJson(ctx, config_json_start);
+    
+    ESP_LOGI(APP_TAG,"Config set...");
+
+    char * configTxt = displayConfig(ctx->config); 
+    
+    ESP_LOGI(APP_TAG,"Build version :%d", ctx->config->updateConfig.currentBuild);
+    ESP_LOGI(APP_TAG,"Latest build version :%d", ctx->config->updateConfig.latestBuild);
+    ESP_LOGI(APP_TAG,"%s",configTxt);
+
+    phev_controller_updateConfig(ctx, ctx->config);
     
     ESP_LOGI(APP_TAG,"Waiting to connect...");
     
