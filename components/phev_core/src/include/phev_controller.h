@@ -56,6 +56,8 @@ void phev_controller_ping(phevCtx_t * ctx);
 void phev_controller_resetPing(phevCtx_t * ctx);
 
 void phev_controller_setUpdateConfig(phevCtx_t * ctx, const char * ssid, const char * password, const char * host, const char * path, uint16_t port, int build);
+void phev_controller_updateConfig(phevCtx_t * ctx, phevConfig_t * config);
+    
 message_t * phev_controller_input_responder(void * ctx, message_t * message);
 void phev_controller_sendMessage(phevCtx_t * ctx, message_t * message);
 void phev_controller_sendMessageBundle(phevCtx_t * ctx, messageBundle_t * messages);

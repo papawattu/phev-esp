@@ -5,5 +5,4 @@
 
 COMPONENT_SRCDIRS := src
 COMPONENT_ADD_INCLUDEDIRS := src/include
-COMPONENT_EMBED_TXTFILES := resources/rsa_private2.pem
 COMPONENT_EMBED_TXTFILES := resources/config.json
