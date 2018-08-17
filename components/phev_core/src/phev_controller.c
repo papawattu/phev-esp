@@ -382,11 +382,11 @@ messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message
     LOG_D(APP_TAG,"No new update");
     
     
-    //messageBundle_t * messages = phev_controller_configToMessageBundle(phevCtx->config);
+    messageBundle_t * messages = phev_controller_configToMessageBundle(phevCtx->config);
     
     LOG_V(APP_TAG,"END - configSplitter");
     
-    return NULL; //messages; 
+    return messages; 
 
 } 
 void phev_controller_eventLoop(phevCtx_t * ctx)
@@ -425,7 +425,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     msg_pipe_chain_t * outputChain = malloc(sizeof(msg_pipe_chain_t));
 
     inputChain->inputTransformer = NULL;
-    inputChain->splitter = phev_controller_configSplitter;
+    inputChain->splitter = NULL; //phev_controller_configSplitter;
     inputChain->filter = NULL;
     inputChain->outputTransformer = NULL;
     inputChain->responder = phev_controller_input_responder;
