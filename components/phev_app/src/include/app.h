@@ -6,6 +6,6 @@
 #include "gcp_jwt.h"
 
 phevCtx_t * app_createPhevController(msg_mqtt_t mqtt);
-
+char * app_displayConfig(phevConfig_t * config);
 
 #endif

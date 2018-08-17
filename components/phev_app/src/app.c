@@ -38,7 +38,7 @@ int dummy_connect(messagingClient_t * client)
     return 0;
 }
 
-char * displayConfig(phevConfig_t * config)
+char * app_displayConfig(phevConfig_t * config)
 {
     const char * FORMAT = "Config\nCar Connection\n\tHost %s\n\tPort %d\n\tSSID %s\n\tPassword %s\n";
     char * out = NULL;

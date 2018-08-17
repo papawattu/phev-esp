@@ -133,7 +133,7 @@ void main_loop(void *pvParameter)
     
     ESP_LOGI(APP_TAG,"Config set...");
 
-    char * configTxt = displayConfig(ctx->config); 
+    char * configTxt = app_displayConfig(ctx->config); 
     
     ESP_LOGI(APP_TAG,"Build version :%d", ctx->config->updateConfig.currentBuild);
     ESP_LOGI(APP_TAG,"Latest build version :%d", ctx->config->updateConfig.latestBuild);
