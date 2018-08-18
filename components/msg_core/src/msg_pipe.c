@@ -76,17 +76,17 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
 {
     LOG_V(APP_TAG,"START - callTransformers");
     
+    message_t * ret  = NULL;
+    messageBundle_t * messages = NULL;
+    messageBundle_t * out = NULL;
+
     if(chain->splitter != NULL)
     {
-        messageBundle_t * messages = msg_pipe_splitter(ctx->user_context, chain, message);
-        
-        //LOG_D(APP_TAG,"Destroy message after splitter");
-            
-        //msg_utils_destroyMsg(message);
+        messages = msg_pipe_splitter(ctx->user_context, chain, message);
+ 
+        if(messages == NULL || messages->numMessages == 0) return NULL;
 
-        if(messages == NULL) return NULL;
-
-        messageBundle_t * out = malloc(sizeof(messageBundle_t));
+        out = malloc(sizeof(messageBundle_t));
         
         out->numMessages = 0;
         
@@ -94,16 +94,28 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
             
         for(int i=0;i<messages->numMessages;i++) 
         {
-            message_t * transMsg = msg_pipe_transformChain(ctx, client, chain, messages->messages[i]);
-            if(transMsg != NULL) 
+            if(messages->messages[i] != NULL) 
             {
-                LOG_D(APP_TAG,"Message %d", out->numMessages);
-                LOG_BUFFER_HEXDUMP(APP_TAG,transMsg->data,transMsg->length,LOG_DEBUG);
+                message_t * transMsg = msg_pipe_transformChain(ctx, client, chain, messages->messages[i]);
+                if(transMsg != NULL) 
+                {
+                    LOG_D(APP_TAG,"Message %d", out->numMessages);
+                    LOG_BUFFER_HEXDUMP(APP_TAG,transMsg->data,transMsg->length,LOG_DEBUG);
                 
-                out->messages[out->numMessages++] = transMsg;
+                    out->messages[out->numMessages++] = transMsg;
+                } else {
+                    LOG_D(APP_TAG,"NULL returned from transform chain");
+                }
+            } else {
+                LOG_E(APP_TAG, "Not expected message %d to be NULL, numMessages is %d",i,messages->numMessages);
+                return NULL;
             }
         } 
         
+        LOG_D(APP_TAG,"Destroy messages (messages) after transform loop");
+        
+        msg_utils_destroyMsgBundle(messages);
+                
         LOG_D(APP_TAG,"Transform Loop finished %d ", out->numMessages);
         
         if(out->numMessages == 0)
@@ -113,42 +125,29 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
             msg_utils_destroyMsgBundle(out);
             return NULL;
         }
-        message_t * ret  = NULL;
-
-        if(chain->aggregator != NULL)
+        
+        if(chain->aggregator != NULL && out != NULL)
         {
-            if(out != NULL)
-            {
-                ret = chain->aggregator(ctx->user_context,out);
-                LOG_D(APP_TAG,"Destroy message bundle after aggregator");     
-            }
-        } else {
-            if(out != NULL)
-            {
-                LOG_D(APP_TAG,"Before splitter aggregator");
+            LOG_D(APP_TAG,"Custom aggregator");
+            ret = chain->aggregator(ctx->user_context,out);     
             
-                LOG_MSG_BUNDLE(APP_TAG,out);
-                
-                ret = msg_pipe_splitter_aggregrator(out);
-            }
+        } else {
+            LOG_D(APP_TAG,"Default aggregator");
+        
+            ret = msg_pipe_splitter_aggregrator(out);
         }
         LOG_BUFFER_HEXDUMP(APP_TAG,ret->data,ret->length,LOG_DEBUG);
-        LOG_D(APP_TAG,"Destroy message bundle after default aggregator");
         
         LOG_D(APP_TAG,"Destroy messages (out) after transformChain 1");
         
         msg_utils_destroyMsgBundle(out);
-
-        LOG_D(APP_TAG,"Destroy messages (messages) after transformChain 1");
-        
-        msg_utils_destroyMsgBundle(messages);
-            
+    
         LOG_V(APP_TAG,"END - callTransformers -1");
         
         return ret;
     }  else {
         
-        message_t * ret = msg_pipe_transformChain(ctx, client, chain, message);
+        ret = msg_pipe_transformChain(ctx, client, chain, message);
         
         //LOG_D(APP_TAG,"Destroy message after transformChain 2");
             
