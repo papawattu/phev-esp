@@ -436,7 +436,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     msg_pipe_chain_t * outputChain = malloc(sizeof(msg_pipe_chain_t));
 
     inputChain->inputTransformer = NULL;
-    inputChain->splitter = NULL; //phev_controller_configSplitter;
+    inputChain->splitter = phev_controller_configSplitter;
     inputChain->filter = NULL;
     inputChain->outputTransformer = NULL;
     inputChain->responder = phev_controller_input_responder;
