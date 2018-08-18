@@ -20,7 +20,7 @@
 #include "phev_controller.h"
 #include "tcp_client.h"
 #include "wifi_client.h"
-#define FILENAME "main/resources/config.json"
+#define FILENAME "main/resources/config-local.json"
 
 const static char *APP_TAG = "PHEV_APP";
 

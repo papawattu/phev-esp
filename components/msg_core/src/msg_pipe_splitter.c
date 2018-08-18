@@ -62,10 +62,6 @@ message_t * msg_pipe_splitter_aggregrator(messageBundle_t * messages)
     
     message_t * out = msg_pipe_concat(messages);
 
-    LOG_D(APP_TAG,"Freeing message bundle after concat");
-
-    msg_utils_destroyMsgBundle(messages);
-
     LOG_V(APP_TAG,"END - aggregrator");
     
     return out;

@@ -42,8 +42,10 @@ inline static void msg_utils_destroyMsg(message_t * message)
         if(message->data != NULL)
         {
             free(message->data);
+            message->data = NULL;
         }
         free(message);
+        message = NULL;
     }
     LOG_V(MSG_UTILS_APP_TAG,"END - destroyMsg");
     
@@ -62,6 +64,7 @@ inline static void msg_utils_destroyMsgBundle(messageBundle_t * messages)
         }
     }
     free(messages);
+    messages = NULL;
     LOG_V(MSG_UTILS_APP_TAG,"END - destroyMsgBundle");
     
 }

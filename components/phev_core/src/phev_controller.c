@@ -45,8 +45,12 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
 
         if((phevMsg.type == REQUEST_TYPE)) // && (phevMsg.command == 0x6f))
         {
-        
-            return phev_core_convertToMessage(phev_core_responseHandler(&phevMsg));
+            phevMessage_t * msg = phev_core_responseHandler(&phevMsg);
+            message_t * out = phev_core_convertToMessage(msg);
+            phev_core_destroyMessage(msg);
+            LOG_V(APP_TAG,"END - responder - 1");
+    
+            return out;
         } else {
             if(phevMsg.command == 0x9f) {
                 phevCtx->currentPing = (message->data[3] + 1) % 100;
@@ -56,7 +60,7 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
         free(phevMsg.data);
         
     }
-    LOG_V(APP_TAG,"END - responder");
+    LOG_V(APP_TAG,"END - responder 2");
     return NULL;
 
 }
@@ -87,8 +91,9 @@ messageBundle_t * phev_controller_splitter(void * ctx, message_t * message)
         }
         
     }
+    LOG_D(APP_TAG,"Split messages into %d",messages->numMessages);
+    LOG_MSG_BUNDLE(APP_TAG,messages);
     LOG_V(APP_TAG,"END - splitter");
-    //msg_utils_destroyMsgBundle(messages);
     return messages;
 }
 
@@ -126,15 +131,19 @@ message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t *
     phevCtx_t * phevCtx = (phevCtx_t *) ctx;
     phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
     phev_core_decodeMessage(message->data,message->length, phevMessage);
-    LOG_D(APP_TAG,"Destroy message after decodeMessage");
+    //LOG_D(APP_TAG,"Destroy message after decodeMessage");
             
     //msg_utils_destroyMsg(message);
     
     message_t * ret = phev_response_handler(ctx, phevMessage);
     
+    if(ret == NULL)
+    {
+        LOG_D(APP_TAG,"No Response required");
+    }
     phev_core_destroyMessage(phevMessage);
     
-    LOG_V(APP_TAG,"START - outputChainOutputTransformer");
+    LOG_V(APP_TAG,"END - outputChainOutputTransformer");
     
     return ret;
 }

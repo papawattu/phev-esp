@@ -64,7 +64,7 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
         if(out == NULL) 
         {
             LOG_D(APP_TAG,"Output transformer returned NULL");
-        }
+        } 
     }
     msg_utils_destroyMsg(msg);
 
@@ -90,6 +90,8 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
         
         out->numMessages = 0;
         
+        LOG_D(APP_TAG,"Transform Loop %d ", messages->numMessages);
+            
         for(int i=0;i<messages->numMessages;i++) 
         {
             message_t * transMsg = msg_pipe_transformChain(ctx, client, chain, messages->messages[i]);
@@ -101,9 +103,8 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
                 out->messages[out->numMessages++] = transMsg;
             }
         } 
-        //LOG_D(APP_TAG,"Destroy messages after transformChain 1");
-            
-        //msg_utils_destroyMsgBundle(messages);
+        
+        LOG_D(APP_TAG,"Transform Loop finished %d ", out->numMessages);
         
         if(out->numMessages == 0)
         {
@@ -119,9 +120,7 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
             if(out != NULL)
             {
                 ret = chain->aggregator(ctx->user_context,out);
-                LOG_D(APP_TAG,"Destroy message bundle after aggregator");
-            
-                msg_utils_destroyMsgBundle(out);
+                LOG_D(APP_TAG,"Destroy message bundle after aggregator");     
             }
         } else {
             if(out != NULL)
@@ -131,27 +130,31 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
                 LOG_MSG_BUNDLE(APP_TAG,out);
                 
                 ret = msg_pipe_splitter_aggregrator(out);
-                //LOG_D(APP_TAG,"Destroy message bundle after default aggregator");
-            
-                //msg_utils_destroyMsgBundle(out);
-                LOG_D(APP_TAG,"After splitter aggregator");
-            
-                LOG_MSG_BUNDLE(APP_TAG,out);
-                
             }
         }
-        LOG_V(APP_TAG,"END - callTransformers");
-    
+        LOG_BUFFER_HEXDUMP(APP_TAG,ret->data,ret->length,LOG_DEBUG);
+        LOG_D(APP_TAG,"Destroy message bundle after default aggregator");
+        
+        LOG_D(APP_TAG,"Destroy messages (out) after transformChain 1");
+        
+        msg_utils_destroyMsgBundle(out);
+
+        LOG_D(APP_TAG,"Destroy messages (messages) after transformChain 1");
+        
+        msg_utils_destroyMsgBundle(messages);
+            
+        LOG_V(APP_TAG,"END - callTransformers -1");
+        
         return ret;
     }  else {
         
         message_t * ret = msg_pipe_transformChain(ctx, client, chain, message);
         
-        LOG_D(APP_TAG,"Destroy message after transformChain 2");
+        //LOG_D(APP_TAG,"Destroy message after transformChain 2");
             
         //msg_utils_destroyMsg(message);
         
-        LOG_V(APP_TAG,"END - callTransformers");
+        LOG_V(APP_TAG,"END - callTransformers -2");
     
         return ret;
     
