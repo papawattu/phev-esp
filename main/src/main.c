@@ -129,17 +129,17 @@ void main_loop(void *pvParameter)
 
     phevCtx_t * ctx = app_createPhevController(mqtt);
 
-    phev_controller_setConfigJson(ctx, config_json_start);
+//    phev_controller_setConfigJson(ctx, config_json_start);
     
-    ESP_LOGI(APP_TAG,"Config set...");
+//    ESP_LOGI(APP_TAG,"Config set...");
 
-    char * configTxt = app_displayConfig(ctx->config); 
+//    char * configTxt = app_displayConfig(ctx->config); 
     
-    ESP_LOGI(APP_TAG,"Build version :%d", ctx->config->updateConfig.currentBuild);
-    ESP_LOGI(APP_TAG,"Latest build version :%d", ctx->config->updateConfig.latestBuild);
-    ESP_LOGI(APP_TAG,"%s",configTxt);
+//    ESP_LOGI(APP_TAG,"Build version :%d", ctx->config->updateConfig.currentBuild);
+//    ESP_LOGI(APP_TAG,"Latest build version :%d", ctx->config->updateConfig.latestBuild);
+//    ESP_LOGI(APP_TAG,"%s",configTxt);
 
-    phev_controller_updateConfig(ctx, ctx->config);
+//    phev_controller_updateConfig(ctx, ctx->config);
     
     ESP_LOGI(APP_TAG,"Waiting to connect...");
     
@@ -147,21 +147,23 @@ void main_loop(void *pvParameter)
     {
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
-    ESP_LOGI(APP_TAG,"Connected...");
+    ESP_LOGI(APP_TAG,"Connected To GCP IOT...");
     
     int x = 0;
     while(1) 
     {
-        if(!ctx->otaUpdating) phev_controller_eventLoop(ctx);
-        vTaskDelay(50 / portTICK_PERIOD_MS);
-        x++;
-        if(x % 100 == 0) 
+        if(!ctx->otaUpdating) 
         {
-            x = 0;
-            ESP_LOGI(APP_TAG, "Free heap %d", system_get_free_heap_size());
-        }
-    }  
-} 
+            phev_controller_eventLoop(ctx);
+            vTaskDelay(50 / portTICK_PERIOD_MS);
+            if(x++ % 1000 == 0) 
+            {
+                x = 0;
+                ESP_LOGI(APP_TAG, "Free heap %d", system_get_free_heap_size());
+            }
+        }  
+    } 
+}
 
 static void sntp_task(void)
 {

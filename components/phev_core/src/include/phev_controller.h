@@ -14,6 +14,15 @@
 #define KO_WF_DATE_INFO_SYNC_SP 5
 #define KO_WF_H_LAMP_CONT_SP 10
 
+#ifndef __linux__ 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#define PHEV_SEC_DELAY(n) vTaskDelay((n*1000) / portTICK_PERIOD_MS) 
+#else
+#define PHEV_SEC_DELAY(n) sleep(n) 
+#endif
+
 typedef struct phevCtx_t phevCtx_t;
 
 typedef void (* phevStartWifi_t)(const char * ssid, const char * password, bool setPPPDefault);
