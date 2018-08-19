@@ -65,6 +65,8 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
         {
             LOG_D(APP_TAG,"Output transformer returned NULL");
         } 
+    } else {
+        out = msg_utils_copyMsg(msg);
     }
     //msg_utils_destroyMsg(msg);
 
@@ -90,7 +92,7 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
         
         out->numMessages = 0;
         
-        LOG_D(APP_TAG,"Transform Loop %d ", messages->numMessages);
+        LOG_D(APP_TAG,"Transform Loop - number of messages :%d ", messages->numMessages);
             
         for(int i=0;i<messages->numMessages;i++) 
         {
