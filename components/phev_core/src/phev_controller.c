@@ -115,10 +115,6 @@ message_t * phev_controller_outputChainInputTransformer(void * ctx, message_t * 
 
     phev_core_destroyMessage(phevMessage);
     
-    LOG_D(APP_TAG,"Destroy message after decodeMessage");
-    
-    //msg_utils_destroyMsg(message);
-    
     LOG_V(APP_TAG,"END - outputChainInputTransformer");
     
     return ret;
@@ -131,9 +127,6 @@ message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t *
     phevCtx_t * phevCtx = (phevCtx_t *) ctx;
     phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
     phev_core_decodeMessage(message->data,message->length, phevMessage);
-    //LOG_D(APP_TAG,"Destroy message after decodeMessage");
-            
-    //msg_utils_destroyMsg(message);
     
     message_t * ret = phev_response_handler(ctx, phevMessage);
     
