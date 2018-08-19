@@ -117,7 +117,7 @@ message_t * phev_controller_outputChainInputTransformer(void * ctx, message_t * 
     
     LOG_D(APP_TAG,"Destroy message after decodeMessage");
     
-    msg_utils_destroyMsg(message);
+    //msg_utils_destroyMsg(message);
     
     LOG_V(APP_TAG,"END - outputChainInputTransformer");
     

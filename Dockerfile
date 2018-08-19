@@ -55,4 +55,4 @@ RUN gsutil cp /root/firmware-`cat /root/build_number`.bin gs://espimages/develop
 #RUN gcloud auth application-default login
 RUN gcloud iot devices configs get-value --device my-device2 --region us-central1 --registry my-registry | jq .update.latestBuild=`cat /root/build_number` > /root/config.json
 RUN gcloud iot devices configs update --config-file /root/config.json --device my-device2 --region us-central1 --registry my-registry
-RUN echo ">>  ${BUILD_NUMBER}  <<"
+RUN cat /root/build_number
