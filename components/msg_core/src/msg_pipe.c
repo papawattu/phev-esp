@@ -66,7 +66,7 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
             LOG_D(APP_TAG,"Output transformer returned NULL");
         } 
     }
-    msg_utils_destroyMsg(msg);
+    //msg_utils_destroyMsg(msg);
 
     LOG_V(APP_TAG,"END - transformChain");
     

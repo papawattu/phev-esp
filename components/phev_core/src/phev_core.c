@@ -113,14 +113,22 @@ message_t * phev_core_extractMessage(const uint8_t *data, const size_t len)
 int phev_core_encodeMessage(phevMessage_t *message,uint8_t ** data)
 {
     LOG_V(APP_TAG,"START - encodeMessage");
-        
-    uint8_t * d = malloc(message->length + 5);
 
+    uint8_t * d = NULL;
+
+    if(d[1] > 0)
+    {
+        d = malloc(message->length + 5);
+    }    
+    
     d[0] = message->command;
     d[1] = message->length +3;
     d[2] = message->type;
     d[3] = message->reg;
-    memcpy(d + 4, message->data, message->length);
+    if(d[1] > 0) 
+    {
+        memcpy(d + 4, message->data, message->length);
+    }
     d[message->length + 4] = phev_core_checksum(d);
 
     *data = d;
