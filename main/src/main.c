@@ -157,7 +157,7 @@ void main_loop(void *pvParameter)
             phev_controller_eventLoop(ctx);
             vTaskDelay(50 / portTICK_PERIOD_MS);
             x++;
-            if(x % 2000 == 0) 
+            if(x % 100 == 0) 
             {
                 x = 0;
                 ESP_LOGI(APP_TAG, "Free heap %d", system_get_free_heap_size());

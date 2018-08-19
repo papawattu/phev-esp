@@ -420,14 +420,14 @@ void phev_controller_eventLoop(phevCtx_t * ctx)
     
             phev_controller_resetPing(ctx);
 
-            if(ctx->config != NULL)
+        /*    if(ctx->config != NULL)
             {
                 while(ctx->pipe->out->connect(ctx->pipe->out) != 0) 
                 {
                     LOG_E(APP_TAG,"Retrying after 10 seconds");
                     PHEV_SEC_DELAY(10);
                 }
-            }
+        */    }
         }
         msg_pipe_loop(ctx->pipe);
         time(&now);
