@@ -34,7 +34,7 @@
 #define TCP_HTONS htons
 #endif
 
-#define TCP_READ_TIMEOUT 100
+#define TCP_READ_TIMEOUT 1000
 
 int tcp_client_connectSocket(const char *host, uint16_t port); 
 

@@ -153,9 +153,9 @@ void main_loop(void *pvParameter)
     while(1) 
     {
         if(!ctx->otaUpdating) phev_controller_eventLoop(ctx);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
         x++;
-        if(x % 30 == 0) 
+        if(x % 100 == 0) 
         {
             x = 0;
             ESP_LOGI(APP_TAG, "Free heap %d", system_get_free_heap_size());
