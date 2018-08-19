@@ -9,7 +9,7 @@ TEST_DIR ?= $(COMP_DIR)/test
 CJSON_DIR ?= /usr/local/include/cjson/
 INC_DIRS := $(shell find $(COMP_DIR) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
-CPPFLAGS ?= $(INC_FLAGS) -DBUILD_NUMBER=$(BUILD_NUMBER) -MMD -Wall -Wextra -g -O0
+CPPFLAGS ?= $(INC_FLAGS) -DBUILD_NUMBER=$(BUILD_NUMBER) -MMD -Wall -Wextra -g -O0 -Wno-error=maybe-uninitialized -Wno-error -Wno-error=type-limits -Wno-unused-variable -Wno-error=cpp -Wno-unused-function
 CFLAGS += -g -O0
 TEST_BUILD_DIR ?= $(BUILD_DIR)/test
 TEST_MAKEFILE = $(TEST_BUILD_DIR)/MakefileTestSupport
