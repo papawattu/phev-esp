@@ -9,7 +9,7 @@ void setUp(void)
     hexdump_Ignore();
 }
 
-/*
+
 const uint8_t singleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x10, 0x06, 0x06, 0x13, 0x05, 0x13, 0x01, 0xd3};
 const uint8_t doubleMessage[] = {0x6f, 0x0a, 0x00, 0x12, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff, 0x6f, 0x0a, 0x00, 0x13, 0x11, 0x05, 0x16, 0x15, 0x03, 0x0d, 0x01, 0xff};
 void test_create_phev_message(void)
@@ -260,4 +260,22 @@ void test_phev_ack_message(void)
     TEST_ASSERT_EQUAL(0x01, phevMsg->length);
     TEST_ASSERT_EQUAL(RESPONSE_TYPE, phevMsg->type);
     TEST_ASSERT_EQUAL(0, phevMsg->data[0]);
-} */
+} 
+void test_phev_head_lights_on(void)
+{
+    const uint8_t expected[] = {0xf6, 0x04, 0x00, 0x0a, 0x01, 0x05};
+    
+    phevMessage_t * headLightsOn = phev_core_simpleRequestCommandMessage(0x0a, 1);
+    message_t * message = phev_core_convertToMessage(headLightsOn);
+    
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(expected, message->data,6); 
+    
+}
+void test_phev_head_lights_on_message(void)
+{
+    const uint8_t expected[] = {0xf6, 0x04, 0x00, 0x0a, 0x01, 0xbb};
+    
+    phevMessage_t * headLightsOn = phev_core_simpleRequestCommandMessage(0x0a, 1);
+    
+    TEST_ASSERT_EQUAL(1, headLightsOn->data[0]);
+}

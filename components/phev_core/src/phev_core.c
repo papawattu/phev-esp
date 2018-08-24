@@ -13,7 +13,7 @@ const uint8_t allowedCommands[] = {0xf2, 0x2f, 0xf6, 0x6f, 0xf9, 0x9f};
 phevMessage_t * phev_core_createMessage(uint8_t command, uint8_t type, uint8_t reg, uint8_t * data, size_t length)
 {
     LOG_V(APP_TAG,"START - createMessage");
-    
+    LOG_D(APP_TAG,"Data %d Length %d",data[0],length);
     phevMessage_t * message = malloc(sizeof(phevMessage_t));
 
     message->command = command;
@@ -22,6 +22,8 @@ phevMessage_t * phev_core_createMessage(uint8_t command, uint8_t type, uint8_t r
     message->length = length;
     message->data = malloc(message->length);
     memcpy(message->data, data, length);
+    
+    LOG_D(APP_TAG,"Message Data %d",message->data[0]);
     
     LOG_V(APP_TAG,"END - createMessage");
     
@@ -120,7 +122,7 @@ int phev_core_encodeMessage(phevMessage_t *message,uint8_t ** data)
     d[1] = message->length +3;
     d[2] = message->type;
     d[3] = message->reg;
-    if(message->length - 3 > 0) 
+    if(message->length > 0) 
     {
         memcpy(d + 4, message->data, message->length );
     }
