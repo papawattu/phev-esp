@@ -75,11 +75,19 @@ int phev_core_decodeMessage(const uint8_t *data, const size_t len, phevMessage_t
         msg->type = data[2];
         msg->reg = data[3];
         msg->data = malloc(msg->length - 3);
-        memcpy(msg->data, data + 4, msg->length - 3);
+        if(msg->length > 3) 
+        {
+            memcpy(msg->data, data + 4, msg->length - 3);
+        } else {
+            msg->data = NULL;
+        }
         msg->checksum = data[5 + msg->length];
         
         LOG_D(APP_TAG,"Command %d Length %d type %d reg %d",msg->command,msg->length ,msg->type,msg->reg);
-        LOG_BUFFER_HEXDUMP(APP_TAG,msg->data,msg->length - 3,LOG_DEBUG);
+        if(msg->data != NULL)
+        {
+            LOG_BUFFER_HEXDUMP(APP_TAG,msg->data,msg->length - 3,LOG_DEBUG);
+        }
         
         LOG_V(APP_TAG,"END - decodeMessage");
         
@@ -122,7 +130,7 @@ int phev_core_encodeMessage(phevMessage_t *message,uint8_t ** data)
     d[1] = message->length +3;
     d[2] = message->type;
     d[3] = message->reg;
-    if(message->length > 0) 
+    if(message->data != NULL) 
     {
         memcpy(d + 4, message->data, message->length );
     }
