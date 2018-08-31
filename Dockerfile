@@ -2,7 +2,6 @@ FROM gcc:latest
 RUN \
   apt-get update && \
   apt-get install -y jq ccache ruby flex bison gperf python python-serial python-pip build-essential gcc clang git libssl-dev autoconf openssl libtool cmake doxygen pkg-config unzip wget
-RUN pip install pyserial
 WORKDIR /usr/esp
 RUN wget -q https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
 RUN tar -xzf xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
@@ -24,6 +23,7 @@ RUN \
     git clone --recursive https://github.com/papawattu/libjwt.git && \
     git clone --recursive https://github.com/papawattu/jansson.git
 RUN cd jansson && cmake .
+RUN /usr/bin/python -m pip install -r /usr/src/esp-idf/requirements.txt
 WORKDIR /usr/src/cmock
 RUN bundle install
 #RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
