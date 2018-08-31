@@ -2,6 +2,7 @@ FROM gcc:latest
 RUN \
   apt-get update && \
   apt-get install -y jq ccache ruby flex bison gperf python python-serial python-pip build-essential gcc clang git libssl-dev autoconf openssl libtool cmake doxygen pkg-config unzip wget
+RUN pip install pyserial
 WORKDIR /usr/esp
 RUN wget -q https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
 RUN tar -xzf xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz
