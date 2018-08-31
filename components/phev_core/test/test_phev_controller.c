@@ -137,10 +137,13 @@ void test_phev_controller_config_splitter_connected(void)
     phev_config_checkForConnection_IgnoreAndReturn(true);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
+    phev_core_simpleRequestCommandMessage_IgnoreAndReturn(NULL);
+    phev_core_convertToMessage_IgnoreAndReturn(NULL);
+    phev_core_destroyMessage_Ignore();
     messageBundle_t * out = phev_controller_configSplitter(ctx, message);
     
     TEST_ASSERT_NOT_NULL(out);
-    TEST_ASSERT_EQUAL(1,out->numMessages);
+    TEST_ASSERT_EQUAL(2,out->numMessages);
     
     TEST_ASSERT_EQUAL_STRING(start->data,out->messages[0]->data);
 }   
@@ -182,10 +185,15 @@ void test_phev_controller_config_splitter_not_connected(void)
     phev_config_checkForConnection_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
+    phev_core_simpleRequestCommandMessage_IgnoreAndReturn(NULL);
+    phev_core_convertToMessage_IgnoreAndReturn(NULL);
+    phev_core_destroyMessage_Ignore();
+    
+    message_t * phev_controller_turnHeadLightsOn(void);
     messageBundle_t * out = phev_controller_configSplitter(ctx, message);
     
     TEST_ASSERT_NOT_NULL(out);
-    TEST_ASSERT_EQUAL(0,out->numMessages);
+    TEST_ASSERT_EQUAL(1,out->numMessages);
 } 
 void test_phev_controller_config_splitter_headLightsOn(void)
 {
