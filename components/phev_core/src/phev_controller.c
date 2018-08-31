@@ -186,6 +186,11 @@ messageBundle_t * phev_controller_configToMessageBundle(phevConfig_t * config)
         LOG_D(APP_TAG,"Head lights change, sending head lights on message");
     
         messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOn();
+    } else {
+        LOG_D(APP_TAG,"Head lights change, sending head lights off message");
+    
+        messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOff();
+        
     }
     LOG_V(APP_TAG,"END - configToMessageBundle");
     
@@ -319,7 +324,14 @@ message_t * phev_controller_turnHeadLightsOn(void)
     
     return message;
 }
-
+message_t * phev_controller_turnHeadLightsOff(void)
+{
+    phevMessage_t * headLightsOn = phev_core_simpleRequestCommandMessage(KO_WF_H_LAMP_CONT_SP, 2);
+    message_t * message = phev_core_convertToMessage(headLightsOn);
+    phev_core_destroyMessage(headLightsOn);
+    
+    return message;
+}
 void phev_controller_sendMessageBundle(phevCtx_t * ctx, messageBundle_t * messages)
 {
     LOG_V(APP_TAG,"START - sendMessageBundle");

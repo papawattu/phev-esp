@@ -71,6 +71,8 @@ message_t * phev_controller_input_responder(void * ctx, message_t * message);
 void phev_controller_sendMessage(phevCtx_t * ctx, message_t * message);
 void phev_controller_sendMessageBundle(phevCtx_t * ctx, messageBundle_t * messages);
 message_t * phev_controller_turnHeadLightsOn(void);
+message_t * phev_controller_turnHeadLightsOff(void);
+
 messageBundle_t * phev_controller_splitter(void * ctx, message_t * message);    
 messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message);
 
