@@ -192,6 +192,28 @@ messageBundle_t * phev_controller_configToMessageBundle(phevConfig_t * config)
         messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOff();
         
     }
+    if(phev_config_checkForParkLightsOn(&config->state)) 
+    {
+        LOG_D(APP_TAG,"Parking lights change, sending parking lights on message");
+    
+        messages->messages[messages->numMessages++] = phev_controller_turnParkLightsOn();
+    } else {
+        LOG_D(APP_TAG,"Parking lights change, sending parking lights off message");
+    
+        messages->messages[messages->numMessages++] = phev_controller_turnParkLightsOff();
+        
+    }
+    if(phev_config_checkForAirConOn(&config->state)) 
+    {
+        LOG_D(APP_TAG,"Air con change, sending air con on message");
+    
+        messages->messages[messages->numMessages++] = phev_controller_turnAirConOn();
+    } else {
+        LOG_D(APP_TAG,"Air con change, sending air con off message");
+    
+        messages->messages[messages->numMessages++] = phev_controller_turnAirConOff();
+        
+    }
     LOG_V(APP_TAG,"END - configToMessageBundle");
     
     return messages;
@@ -326,9 +348,41 @@ message_t * phev_controller_turnHeadLightsOn(void)
 }
 message_t * phev_controller_turnHeadLightsOff(void)
 {
-    phevMessage_t * headLightsOn = phev_core_simpleRequestCommandMessage(KO_WF_H_LAMP_CONT_SP, 2);
-    message_t * message = phev_core_convertToMessage(headLightsOn);
-    phev_core_destroyMessage(headLightsOn);
+    phevMessage_t * headLightsOff = phev_core_simpleRequestCommandMessage(KO_WF_H_LAMP_CONT_SP, 2);
+    message_t * message = phev_core_convertToMessage(headLightsOff);
+    phev_core_destroyMessage(headLightsOff);
+    
+    return message;
+}
+message_t * phev_controller_turnParkLightsOn(void)
+{
+    phevMessage_t * parkLights = phev_core_simpleRequestCommandMessage(KO_WF_P_LAMP_CONT_SP, 1);
+    message_t * message = phev_core_convertToMessage(parkLights);
+    phev_core_destroyMessage(parkLights);
+    
+    return message;
+}
+message_t * phev_controller_turnParkLightsOff(void)
+{
+    phevMessage_t * airCon = phev_core_simpleRequestCommandMessage(KO_WF_P_LAMP_CONT_SP, 2);
+    message_t * message = phev_core_convertToMessage(airCon);
+    phev_core_destroyMessage(airCon);
+    
+    return message;
+}
+message_t * phev_controller_turnAirConOn(void)
+{
+    phevMessage_t * airCon = phev_core_simpleRequestCommandMessage(KO_WF_MANUAL_AC_ON_RQ_SP, 2);
+    message_t * message = phev_core_convertToMessage(airCon);
+    phev_core_destroyMessage(airCon);
+    
+    return message;
+}
+message_t * phev_controller_turnAirConOff(void)
+{
+    phevMessage_t * airCon = phev_core_simpleRequestCommandMessage(KO_WF_MANUAL_AC_ON_RQ_SP, 1);
+    message_t * message = phev_core_convertToMessage(airCon);
+    phev_core_destroyMessage(airCon);
     
     return message;
 }

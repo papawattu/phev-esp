@@ -11,8 +11,11 @@
 #define PHEV_OK 0
 #define IMAGE_PREFIX "firmware-"
 
+#define KO_WF_MANUAL_AC_ON_RQ_SP 4
 #define KO_WF_DATE_INFO_SYNC_SP 5
 #define KO_WF_H_LAMP_CONT_SP 10
+#define KO_WF_P_LAMP_CONT_SP 11
+
 
 #ifndef __linux__ 
 #include "freertos/FreeRTOS.h"
@@ -72,6 +75,10 @@ void phev_controller_sendMessage(phevCtx_t * ctx, message_t * message);
 void phev_controller_sendMessageBundle(phevCtx_t * ctx, messageBundle_t * messages);
 message_t * phev_controller_turnHeadLightsOn(void);
 message_t * phev_controller_turnHeadLightsOff(void);
+message_t * phev_controller_turnParkLightsOn(void);
+message_t * phev_controller_turnParkLightsOff(void);
+message_t * phev_controller_turnAirConOn(void);
+message_t * phev_controller_turnAirConOff(void);
 
 messageBundle_t * phev_controller_splitter(void * ctx, message_t * message);    
 messageBundle_t * phev_controller_configSplitter(void * ctx, message_t * message);

@@ -81,6 +81,9 @@ phevConfig_t * phev_config_parseConfig(const char * config);
 bool phev_config_checkForFirmwareUpdate(const phevUpdateConfig_t * config);
 bool phev_config_checkForConnection(const phevState_t * state);
 bool phev_config_checkForHeadLightsOn(const phevState_t * state);
+bool phev_config_checkForParkLightsOn(const phevState_t * state);
+bool phev_config_checkForAirConOn(const phevState_t * state);
+
 char * phev_config_displayConfig(const phevConfig_t * config);
 
 #endif

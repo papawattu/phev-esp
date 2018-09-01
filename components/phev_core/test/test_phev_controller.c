@@ -15,6 +15,10 @@
 void setUp(void)
 {
     hexdump_Ignore();
+    phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
+    phev_config_checkForParkLightsOn_IgnoreAndReturn(false);
+    phev_config_checkForAirConOn_IgnoreAndReturn(false);
+    
 }
 
 void test_handle_event(void)
@@ -143,7 +147,7 @@ void test_phev_controller_config_splitter_connected(void)
     messageBundle_t * out = phev_controller_configSplitter(ctx, message);
     
     TEST_ASSERT_NOT_NULL(out);
-    TEST_ASSERT_EQUAL(2,out->numMessages);
+    TEST_ASSERT_EQUAL(4,out->numMessages);
     
     TEST_ASSERT_EQUAL_STRING(start->data,out->messages[0]->data);
 }   
@@ -184,7 +188,7 @@ void test_phev_controller_config_splitter_not_connected(void)
     phev_config_parseConfig_IgnoreAndReturn(&config);
     phev_config_checkForConnection_IgnoreAndReturn(false);
     phev_core_startMessageEncoded_IgnoreAndReturn(start);
-    phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
+    
     phev_core_simpleRequestCommandMessage_IgnoreAndReturn(NULL);
     phev_core_convertToMessage_IgnoreAndReturn(NULL);
     phev_core_destroyMessage_Ignore();
@@ -193,7 +197,7 @@ void test_phev_controller_config_splitter_not_connected(void)
     messageBundle_t * out = phev_controller_configSplitter(ctx, message);
     
     TEST_ASSERT_NOT_NULL(out);
-    TEST_ASSERT_EQUAL(1,out->numMessages);
+    TEST_ASSERT_EQUAL(3,out->numMessages);
 } 
 void test_phev_controller_config_splitter_headLightsOn(void)
 {

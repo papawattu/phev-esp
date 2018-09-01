@@ -177,3 +177,13 @@ bool phev_config_checkForHeadLightsOn(const phevState_t * state)
 {
     return state->headLightsOn;
 }
+
+bool phev_config_checkForAirConOn(const phevState_t * state)
+{
+    return state->airConOn;
+}
+
+bool phev_config_checkForParkLightsOn(const phevState_t * state)
+{
+    return state->parkLightsOn;
+}
