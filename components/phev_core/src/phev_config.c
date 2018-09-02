@@ -5,20 +5,26 @@
 #else
 #include <cjson/cJSON.h>
 #endif
-char * getConfigString(cJSON * json, char * option) 
+
+bool phev_config_checkForOption(const cJSON * json, const char * option)
+{
+    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
+    return (value != NULL ? true : false); 
+}
+char * phev_config_getConfigString(cJSON * json, char * option) 
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
     
     return value->valuestring;
 }
-uint16_t getConfigInt(cJSON * json, char * option) 
+uint16_t phev_config_getConfigInt(cJSON * json, char * option) 
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
     
     return value->valueint;
 }
 
-long getConfigLong(cJSON * json, char * option) 
+long phev_config_getConfigLong(cJSON * json, char * option) 
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
     if(value == NULL) {
@@ -26,7 +32,7 @@ long getConfigLong(cJSON * json, char * option)
     }
     return (long) value->valuedouble;
 }
-bool getConfigBool(cJSON * json, char * option) 
+bool phev_config_getConfigBool(cJSON * json, char * option) 
 {
     cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
     if(value == NULL) {
@@ -35,6 +41,14 @@ bool getConfigBool(cJSON * json, char * option)
     return cJSON_IsTrue(value);
 }
 
+triState_t phev_config_getConfigTriState(cJSON * json, char * option) 
+{
+    cJSON * value = cJSON_GetObjectItemCaseSensitive(json, option);
+    if(value == NULL) {
+        return NOTSET;
+    }    
+    return cJSON_IsTrue(value);
+}
 void phev_config_setUpdateConfig(phevUpdateConfig_t * config, const char * ssid, 
                                         const char * password,
                                         const char * host,
@@ -76,35 +90,35 @@ void phev_config_setUpdateConfig(phevUpdateConfig_t * config, const char * ssid,
 
 void phev_config_parseUpdateConfig(phevConfig_t * config, cJSON * update)
 {
-    unsigned long long build = getConfigLong(update,UPDATE_CONFIG_LATEST_BUILD);
+    unsigned long long build = phev_config_getConfigLong(update,UPDATE_CONFIG_LATEST_BUILD);
 
-    phev_config_setUpdateConfig(&config->updateConfig, getConfigString(update,UPDATE_CONFIG_SSID), 
-                                        getConfigString(update,UPDATE_CONFIG_PASSWORD),
-                                        getConfigString(update,UPDATE_CONFIG_HOST),
-                                        getConfigString(update,UPDATE_CONFIG_PATH),
-                                        getConfigInt(update,UPDATE_CONFIG_PORT),
+    phev_config_setUpdateConfig(&config->updateConfig, phev_config_getConfigString(update,UPDATE_CONFIG_SSID), 
+                                        phev_config_getConfigString(update,UPDATE_CONFIG_PASSWORD),
+                                        phev_config_getConfigString(update,UPDATE_CONFIG_HOST),
+                                        phev_config_getConfigString(update,UPDATE_CONFIG_PATH),
+                                        phev_config_getConfigInt(update,UPDATE_CONFIG_PORT),
                                         build,
-                                        getConfigBool(update, UPDATE_CONFIG_OVER_GSM),
-                                        getConfigBool(update, UPDATE_CONFIG_FORCE_UPDATE)
+                                        phev_config_getConfigBool(update, UPDATE_CONFIG_OVER_GSM),
+                                        phev_config_getConfigBool(update, UPDATE_CONFIG_FORCE_UPDATE)
                                     );
                                 
     
 }
 void phev_config_parseConnectionConfig(phevConfig_t * config, cJSON * connection)
 {
-    config->connectionConfig.host = phev_core_strdup(getConfigString(connection, CONNECTION_CONFIG_HOST));
-    config->connectionConfig.port = getConfigInt(connection, CONNECTION_CONFIG_PORT);
+    config->connectionConfig.host = phev_core_strdup(phev_config_getConfigString(connection, CONNECTION_CONFIG_HOST));
+    config->connectionConfig.port = phev_config_getConfigInt(connection, CONNECTION_CONFIG_PORT);
 
-    strcpy(config->connectionConfig.carConnectionWifi.ssid, getConfigString(connection, CONNECTION_CONFIG_SSID)); 
-    strcpy(config->connectionConfig.carConnectionWifi.password, getConfigString(connection, CONNECTION_CONFIG_PASSWORD)); 
+    strcpy(config->connectionConfig.carConnectionWifi.ssid, phev_config_getConfigString(connection, CONNECTION_CONFIG_SSID)); 
+    strcpy(config->connectionConfig.carConnectionWifi.password, phev_config_getConfigString(connection, CONNECTION_CONFIG_PASSWORD)); 
 }
 
 void phev_config_parseStateConfig(phevConfig_t * config, cJSON * state)
 {
-    config->state.connectedClients = getConfigInt(state, STATE_CONFIG_CONNECTED_CLIENTS);
-    config->state.headLightsOn = getConfigBool(state, STATE_CONFIG_HEADLIGHTS_ON);
-    config->state.parkLightsOn = getConfigBool(state, STATE_CONFIG_PARKLIGHTS_ON);
-    config->state.airConOn = getConfigBool(state, STATE_CONFIG_AIRCON_ON);
+    config->state.connectedClients = phev_config_getConfigInt(state, STATE_CONFIG_CONNECTED_CLIENTS);
+    config->state.headLightsOn = phev_config_getConfigTriState(state, STATE_CONFIG_HEADLIGHTS_ON);
+    config->state.parkLightsOn = phev_config_getConfigTriState(state, STATE_CONFIG_PARKLIGHTS_ON);
+    config->state.airConOn = phev_config_getConfigTriState(state, STATE_CONFIG_AIRCON_ON);
 }
 char * phev_config_displayConfig(const phevConfig_t * config)
 {
@@ -186,4 +200,19 @@ bool phev_config_checkForAirConOn(const phevState_t * state)
 bool phev_config_checkForParkLightsOn(const phevState_t * state)
 {
     return state->parkLightsOn;
+}
+
+bool phev_config_checkForHeadLightsOff(const phevState_t * state)
+{
+    return state->headLightsOn == false;
+}
+
+bool phev_config_checkForAirConOff(const phevState_t * state)
+{
+    return state->airConOn == false;
+}
+
+bool phev_config_checkForParkLightsOff(const phevState_t * state)
+{
+    return state->parkLightsOn == false;
 }

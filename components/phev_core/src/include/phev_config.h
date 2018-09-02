@@ -6,7 +6,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "phev_core.h"
-
+#ifdef __XTENSA__
+#include "cJSON.h"
+#else
+#include <cjson/cJSON.h>
+#endif
 #ifndef BUILD_NUMBER
 #define BUILD_NUMBER 1
 #endif
@@ -45,11 +49,17 @@ typedef struct phevWifi_t
     char password[MAX_WIFI_PASSWORD_LEN];
 } phevWifi_t;
 
+typedef enum {
+   TRUE      = 1,
+   FALSE     = 0,
+   NOTSET = 2
+} triState_t;
+
 typedef struct phevState_t {
     int connectedClients;
-    bool headLightsOn;
-    bool parkLightsOn;
-    bool airConOn;
+    triState_t headLightsOn;
+    triState_t parkLightsOn;
+    triState_t airConOn;
 } phevState_t;
 
 typedef struct phevConnectionConfig_t {
@@ -83,7 +93,10 @@ bool phev_config_checkForConnection(const phevState_t * state);
 bool phev_config_checkForHeadLightsOn(const phevState_t * state);
 bool phev_config_checkForParkLightsOn(const phevState_t * state);
 bool phev_config_checkForAirConOn(const phevState_t * state);
+bool phev_config_checkForHeadLightsOff(const phevState_t * state);
+bool phev_config_checkForParkLightsOff(const phevState_t * state);
+bool phev_config_checkForAirConOff(const phevState_t * state);
 
 char * phev_config_displayConfig(const phevConfig_t * config);
-
+bool phev_config_checkForOption(const cJSON * json, const char * option);
 #endif

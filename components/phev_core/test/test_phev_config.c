@@ -149,3 +149,15 @@ void test_phev_config_has_connections(void)
 
     TEST_ASSERT_TRUE(phev_config_checkForConnection(&config));
 }
+void test_phev_config_check_for_option_present(void)
+{
+    const cJSON * json = cJSON_Parse((const char *) buffer);
+
+    TEST_ASSERT_TRUE(phev_config_checkForOption(json,"carConnection"));
+}
+void test_phev_config_check_for_option_not_present(void)
+{
+    const cJSON * json = cJSON_Parse((const char *) buffer);
+
+    TEST_ASSERT_FALSE(phev_config_checkForOption(json,"airConOnNotThere"));
+}

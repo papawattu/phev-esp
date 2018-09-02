@@ -18,6 +18,9 @@ void setUp(void)
     phev_config_checkForHeadLightsOn_IgnoreAndReturn(false);
     phev_config_checkForParkLightsOn_IgnoreAndReturn(false);
     phev_config_checkForAirConOn_IgnoreAndReturn(false);
+    phev_config_checkForHeadLightsOff_IgnoreAndReturn(true);
+    phev_config_checkForParkLightsOff_IgnoreAndReturn(true);
+    phev_config_checkForAirConOff_IgnoreAndReturn(true);
     
 }
 

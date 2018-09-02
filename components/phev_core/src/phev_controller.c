@@ -186,18 +186,21 @@ messageBundle_t * phev_controller_configToMessageBundle(phevConfig_t * config)
         LOG_D(APP_TAG,"Head lights change, sending head lights on message");
     
         messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOn();
-    } else {
+    } 
+    if(phev_config_checkForHeadLightsOff(&config->state)) 
+    {
         LOG_D(APP_TAG,"Head lights change, sending head lights off message");
     
-        messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOff();
-        
+        messages->messages[messages->numMessages++] = phev_controller_turnHeadLightsOff();    
     }
     if(phev_config_checkForParkLightsOn(&config->state)) 
     {
         LOG_D(APP_TAG,"Parking lights change, sending parking lights on message");
     
         messages->messages[messages->numMessages++] = phev_controller_turnParkLightsOn();
-    } else {
+    } 
+    if(phev_config_checkForParkLightsOff(&config->state)) 
+    {
         LOG_D(APP_TAG,"Parking lights change, sending parking lights off message");
     
         messages->messages[messages->numMessages++] = phev_controller_turnParkLightsOff();
@@ -208,11 +211,12 @@ messageBundle_t * phev_controller_configToMessageBundle(phevConfig_t * config)
         LOG_D(APP_TAG,"Air con change, sending air con on message");
     
         messages->messages[messages->numMessages++] = phev_controller_turnAirConOn();
-    } else {
+    } 
+    if(phev_config_checkForAirConOff(&config->state)) 
+    {
         LOG_D(APP_TAG,"Air con change, sending air con off message");
     
         messages->messages[messages->numMessages++] = phev_controller_turnAirConOff();
-        
     }
     LOG_V(APP_TAG,"END - configToMessageBundle");
     
@@ -423,9 +427,18 @@ void phev_controller_setConfig(phevCtx_t * ctx, phevConfig_t * config)
     ctx->config->updateConfig.updateImageFullPath = phev_core_strdup(config->updateConfig.updateImageFullPath);
     ctx->config->updateConfig.forceUpdate = config->updateConfig.forceUpdate;
     ctx->config->state.connectedClients = config->state.connectedClients;
-    ctx->config->state.headLightsOn = config->state.headLightsOn;
-    ctx->config->state.parkLightsOn = config->state.parkLightsOn;
-    ctx->config->state.airConOn = config->state.airConOn;
+    if(config->state.headLightsOn != NOTSET)
+    {
+        ctx->config->state.headLightsOn = config->state.headLightsOn;
+    }
+    if(config->state.parkLightsOn != NOTSET)
+    {
+        ctx->config->state.parkLightsOn = config->state.parkLightsOn;
+    }
+    if(config->state.airConOn != NOTSET)
+    {
+        ctx->config->state.airConOn = config->state.airConOn;
+    }
     
     
     //LOG_I(APP_TAG,"%s",phev_config_displayConfig(config));
