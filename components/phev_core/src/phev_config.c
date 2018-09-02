@@ -189,30 +189,30 @@ bool phev_config_checkForConnection(const phevState_t * state)
 
 bool phev_config_checkForHeadLightsOn(const phevState_t * state)
 {
-    return state->headLightsOn;
+    return (state->headLightsOn == TRUE ? true : false) ;
 }
 
 bool phev_config_checkForAirConOn(const phevState_t * state)
 {
-    return state->airConOn;
+    return (state->airConOn == TRUE ? true : false);
 }
 
 bool phev_config_checkForParkLightsOn(const phevState_t * state)
 {
-    return state->parkLightsOn;
+    return (state->parkLightsOn == TRUE ? true : false) ;
 }
 
 bool phev_config_checkForHeadLightsOff(const phevState_t * state)
 {
-    return state->headLightsOn == false;
+    return (state->headLightsOn == TRUE ? false : true) ;
 }
 
 bool phev_config_checkForAirConOff(const phevState_t * state)
 {
-    return state->airConOn == false;
+    return (state->airConOn == TRUE ? false : true) ;
 }
 
 bool phev_config_checkForParkLightsOff(const phevState_t * state)
 {
-    return state->parkLightsOn == false;
+    return (state->parkLightsOn == TRUE ? false : true); 
 }
