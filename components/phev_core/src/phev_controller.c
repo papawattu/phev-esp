@@ -36,7 +36,7 @@ message_t * phev_controller_input_responder(void * ctx, message_t * message) {
     
     ((gcp_ctx_t *) phevCtx->pipe->in->ctx)->topic = DEVICE_STATE_TOPIC;
     
-    return msg_utils_createMsg((uint8_t *) "Hello",5);
+    return NULL; //msg_utils_createMsg((uint8_t *) "Hello",5);
 }
 message_t * phev_controller_responder(void * ctx, message_t * message)
 {
