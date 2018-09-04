@@ -32,8 +32,9 @@ void phev_controller_preOutConnectHook(msg_pipe_ctx_t * pipe)
     
 }
 message_t * phev_controller_input_responder(void * ctx, message_t * message) {
+    ((gcp_ctx_t *) ctx->pipe->in->ctx)->topic = DEVICE_STATE_TOPIC;
     
-    return NULL;
+    return msg_utils_createMsg((uint8_t *) "Hello");
 }
 message_t * phev_controller_responder(void * ctx, message_t * message)
 {
@@ -149,6 +150,7 @@ message_t * phev_controller_outputChainOutputTransformer(void * ctx, message_t *
         LOG_D(APP_TAG,"No Response required");
     }
     phev_core_destroyMessage(phevMessage);
+    ((gcp_ctx_t *) ctx->pipe->in->ctx)->topic = DEVICE_EVENT_TOPIC;
     
     LOG_V(APP_TAG,"END - outputChainOutputTransformer");
     
