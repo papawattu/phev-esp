@@ -7,6 +7,8 @@
 #include "msg_pipe.h"
 #include "msg_utils.h"
 #include "msg_tcpip.h"
+#include "msg_gcp_mqtt.h"
+#include "msg_mqtt.h"
 #include "ota.h"
 #include "logger.h"
 
@@ -63,6 +65,18 @@ message_t * phev_controller_responder(void * ctx, message_t * message)
     LOG_V(APP_TAG,"END - responder 2");
     return NULL;
 
+}
+
+#define DEVICE_STATE_TOPIC "my-device-state"
+
+void phev_controller_sendState(phevCtx_t * ctx)
+{
+    LOG_V(APP_TAG,"START - sendState");
+
+    //gcp_ctx_t * gcp = (gcp_ctx_t *) ctx->pipe->in->ctx;
+    message_t * message = msg_utils_createMsg("Hello",5);
+    msg_mqtt_publish(((gcp_ctx_t *) ctx->pipe->in->ctx)->mqtt,DEVICE_STATE_TOPIC,message);
+    LOG_V(APP_TAG,"END - sendState");
 }
 messageBundle_t * phev_controller_splitter(void * ctx, message_t * message)
 {
@@ -440,7 +454,7 @@ void phev_controller_setConfig(phevCtx_t * ctx, phevConfig_t * config)
         ctx->config->state.airConOn = config->state.airConOn;
     }
     
-    
+    phev_controller_sendState(ctx);
     //LOG_I(APP_TAG,"%s",phev_config_displayConfig(config));
     LOG_V(APP_TAG,"END - setConfig");
 }

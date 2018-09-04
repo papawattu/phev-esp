@@ -91,6 +91,6 @@ void phev_controller_setConfigJson(phevCtx_t * ctx, char * config);
 void phev_controller_eventLoop(phevCtx_t * ctx);
 void phev_controller_performUpdate(phevCtx_t * ctx);
 messageBundle_t * phev_controller_configToMessageBundle(phevConfig_t * config);
-
+void phev_controller_sendState(phevCtx_t * ctx);
 
 #endif
