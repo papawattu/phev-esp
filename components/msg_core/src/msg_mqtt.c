@@ -48,7 +48,7 @@ msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
 
 int msg_mqtt_publish(msg_mqtt_t * mqtt, topic_t topic, message_t *message)
 {
-    int ret =  mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) message->data, message->length, 0, 0);
+    int ret =  mqtt->publish((handle_t *) mqtt->handle, message->topic != NULL ? message->topic : topic, (const char *) message->data, message->length, 0, 0);
     
     return ret;
 }

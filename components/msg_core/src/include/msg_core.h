@@ -13,6 +13,7 @@ typedef uint8_t data_t;
 
 typedef struct message_t {
     uint32_t id;
+    char * topic;
     data_t * data;
     size_t length;
 }  message_t;
