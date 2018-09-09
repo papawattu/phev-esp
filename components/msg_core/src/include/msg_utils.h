@@ -34,9 +34,10 @@ inline static message_t * msg_utils_createMsg(uint8_t * data, size_t length)
 }
 inline static message_t * msg_utils_createMsgTopic(const char * topic, uint8_t * data, size_t length)
 {
+    LOG_V(MSG_UTILS_APP_TAG,"START - createMsgTopic");
     message_t * message = msg_utils_createMsg(data,length);
-
-    memcpy(message->topic,topic,strlen(topic));
+    message->topic = strdup(topic);
+    LOG_V(MSG_UTILS_APP_TAG,"END - createMsgTopic");
     return message;
 }
 inline static void msg_utils_destroyMsg(message_t * message)

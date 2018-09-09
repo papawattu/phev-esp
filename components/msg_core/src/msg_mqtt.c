@@ -5,6 +5,9 @@
 #include "msg_core.h"
 #include "msg_utils.h"
 #include "msg_mqtt.h"
+#include "logger.h"
+
+const static char *APP_TAG = "MSG_MQTT";
 
 void dataEvent(mqtt_event_handle_t event)
 {
@@ -48,8 +51,25 @@ msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
 
 int msg_mqtt_publish(msg_mqtt_t * mqtt, topic_t topic, message_t *message)
 {
-    int ret =  mqtt->publish((handle_t *) mqtt->handle, message->topic != NULL ? message->topic : topic, (const char *) message->data, message->length, 0, 0);
+    LOG_V(APP_TAG,"START - publish");
+        
+    int ret = -1;
+    if(message->topic == NULL)
+    {
+        LOG_D(APP_TAG,"Publish message to topic %s",topic);
+        ret =  mqtt->publish((handle_t *) mqtt->handle, topic, (const char *) message->data, message->length, 0, 0);
+    } else 
+    {
+        LOG_D(APP_TAG,"Publish message to topic %s", message->topic);
+        //ret =  mqtt->publish((handle_t *) mqtt->handle, "/devices/my-device2/state", (const char *) message->data, message->length, 0, 0);
+        ret =  mqtt->publish((handle_t *) mqtt->handle, message->topic, (const char *) message->data, message->length, 0, 0);
     
+    }
+
+    LOG_D(APP_TAG,"Publish return code %d", ret);
+
+    LOG_V(APP_TAG,"END - publish");
+         
     return ret;
 }
 

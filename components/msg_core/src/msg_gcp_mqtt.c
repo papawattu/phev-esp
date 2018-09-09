@@ -75,7 +75,9 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
     ctx->port = settings.port;
     ctx->device = strdup(settings.device);
     ctx->clientId = strdup(settings.clientId);
-    ctx->topic = strdup(settings.topic);
+    ctx->eventTopic = strdup(settings.eventTopic);
+    ctx->stateTopic = strdup(settings.stateTopic);
+    ctx->topic = ctx->eventTopic; // default topic
     ctx->createJwt = settings.createJwt;
     ctx->projectId = strdup(settings.projectId);
     ctx->published = settings.published;

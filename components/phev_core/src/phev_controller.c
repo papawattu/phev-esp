@@ -424,6 +424,10 @@ void phev_controller_setConfig(phevCtx_t * ctx, phevConfig_t * config)
     {
         LOG_D(APP_TAG,"Allocated new config");
         ctx->config = malloc(sizeof(phevConfig_t));
+        ctx->config->state.headLightsOn = FALSE;
+        ctx->config->state.parkLightsOn = FALSE;
+        ctx->config->state.airConOn = FALSE;
+
     }
 
     ctx->config->connectionConfig.host = phev_core_strdup(config->connectionConfig.host);
@@ -442,6 +446,7 @@ void phev_controller_setConfig(phevCtx_t * ctx, phevConfig_t * config)
     ctx->config->updateConfig.updateImageFullPath = phev_core_strdup(config->updateConfig.updateImageFullPath);
     ctx->config->updateConfig.forceUpdate = config->updateConfig.forceUpdate;
     ctx->config->state.connectedClients = config->state.connectedClients;
+
     if(config->state.headLightsOn != NOTSET)
     {
         ctx->config->state.headLightsOn = config->state.headLightsOn;
@@ -455,7 +460,7 @@ void phev_controller_setConfig(phevCtx_t * ctx, phevConfig_t * config)
         ctx->config->state.airConOn = config->state.airConOn;
     }
     
-    phev_controller_sendState(ctx);
+    //phev_controller_sendState(ctx);
     //LOG_I(APP_TAG,"%s",phev_config_displayConfig(config));
     LOG_V(APP_TAG,"END - setConfig");
 }
@@ -544,8 +549,9 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     inputChain->splitter = phev_controller_configSplitter;
     inputChain->filter = NULL;
     inputChain->outputTransformer = NULL;
-    inputChain->responder = phev_controller_input_responder;
+    inputChain->responder = phev_response_incomingHandler;
     inputChain->aggregator = NULL;
+    inputChain->respondOnce = true;
     
     outputChain->inputTransformer = phev_controller_outputChainInputTransformer;
     outputChain->splitter = phev_controller_splitter;
@@ -553,7 +559,8 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     outputChain->outputTransformer = phev_controller_outputChainOutputTransformer;
     outputChain->responder = phev_controller_responder;
     outputChain->aggregator = NULL;
-    
+    outputChain->respondOnce = false;
+
     msg_pipe_settings_t pipe_settings = {
         .in = settings->in,
         .out = settings->out,

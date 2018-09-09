@@ -24,6 +24,7 @@ typedef struct msg_pipe_chain_t
     msg_pipe_responder_t responder;
     msg_pipe_transformer_t outputTransformer;
     msg_pipe_aggregator_t aggregator;
+    bool respondOnce;
 
 } msg_pipe_chain_t;
 typedef struct msg_pipe_settings_t
@@ -62,13 +63,13 @@ msg_pipe_ctx_t *msg_pipe(msg_pipe_settings_t);
 
 void msg_pipe_loop(msg_pipe_ctx_t *ctx);
 
-message_t *msg_pipe_transformChain(msg_pipe_ctx_t *ctx, messagingClient_t *client, msg_pipe_chain_t *chain, message_t *message);
+//message_t *msg_pipe_transformChain(msg_pipe_ctx_t *ctx, messagingClient_t *client, msg_pipe_chain_t *chain, message_t *message, bool respond);
 
 int msg_pipe_in_connect(msg_pipe_ctx_t * ctx);
 
 int msg_pipe_out_connect(msg_pipe_ctx_t * ctx);
 
-message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message);
+message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message,bool respond);
 message_t * msg_pipe_callOutputTransformers(msg_pipe_ctx_t *ctx, message_t *message);
 
 void msg_pipe_outboundPublish(msg_pipe_ctx_t * ctx, message_t * message);

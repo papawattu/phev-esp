@@ -11,9 +11,6 @@
 #define PHEV_OK 0
 #define IMAGE_PREFIX "firmware-"
 
-#define DEVICE_STATE_TOPIC "my-device-state"
-#define DEVICE_EVENT_TOPIC "/devices/my-device2/events"
-
 #define KO_WF_MANUAL_AC_ON_RQ_SP 4
 #define KO_WF_DATE_INFO_SYNC_SP 5
 #define KO_WF_H_LAMP_CONT_SP 10

@@ -18,7 +18,7 @@ void msg_pipe_loop(msg_pipe_ctx_t * ctx)
     
 }
 
-message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message) 
+message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * client, msg_pipe_chain_t * chain, message_t * message, bool respond) 
 {
     LOG_V(APP_TAG,"START - transformChain");
 
@@ -46,7 +46,7 @@ message_t * msg_pipe_transformChain(msg_pipe_ctx_t * ctx, messagingClient_t * cl
             return NULL;
         }
     }
-    if(chain->responder != NULL)
+    if(chain->responder != NULL && respond)
     {
         message_t * response = chain->responder(ctx->user_context, msg);
         if(response != NULL)
@@ -93,17 +93,23 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
         out->numMessages = 0;
         
         LOG_D(APP_TAG,"Transform Loop - number of messages :%d ", messages->numMessages);
-            
+        bool respond = true;    
         for(int i=0;i<messages->numMessages;i++) 
         {
             if(messages->messages[i] != NULL) 
             {
-                message_t * transMsg = msg_pipe_transformChain(ctx, client, chain, messages->messages[i]);
+                message_t * transMsg = msg_pipe_transformChain(ctx, client, chain, messages->messages[i],respond);
+                
+                if(chain->respondOnce) 
+                {
+                    respond = false;
+                }
+
                 if(transMsg != NULL) 
                 {
                     LOG_D(APP_TAG,"Message %d", out->numMessages);
                     LOG_BUFFER_HEXDUMP(APP_TAG,transMsg->data,transMsg->length,LOG_DEBUG);
-                
+
                     out->messages[out->numMessages++] = transMsg;
                 } else {
                     LOG_D(APP_TAG,"NULL returned from transform chain");
@@ -150,7 +156,7 @@ message_t * msg_pipe_callTransformers(msg_pipe_ctx_t *ctx, messagingClient_t * c
         return ret;
     }  else {
         
-        ret = msg_pipe_transformChain(ctx, client, chain, message);
+        ret = msg_pipe_transformChain(ctx, client, chain, message,true);
         
         //LOG_D(APP_TAG,"Destroy message after transformChain 2");
             
@@ -211,7 +217,11 @@ void msg_pipe_inboundPublish(msg_pipe_ctx_t * ctx, message_t * message)
     messagingClient_t *inboundClient = ctx->in;
     if(inboundClient->connected == 0) 
     {
+        LOG_D(APP_TAG,"inboundClient not connected - connecting");
         msg_pipe_in_connect(ctx);
+    } else 
+    {
+        LOG_D(APP_TAG,"inboundClient connected");
     }
     if(message != NULL) 
     {

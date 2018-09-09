@@ -45,7 +45,8 @@ void test_createGcpClient(void)
         .createJwt = createJwt,
         .mqtt = &mqtt,
         .projectId = "phev-db3fa",
-        .topic = "/devices/my-device/events"
+        .eventTopic = "/devices/my-device/events",
+        .stateTopic = "my-device-state"
     
     };
     

@@ -73,7 +73,8 @@ phevCtx_t * app_createPhevController(msg_mqtt_t mqtt)
         .createJwt = createJwt,
         .mqtt = &mqtt,
         .projectId = "phev-db3fa",
-        .topic = "/devices/my-device2/events",
+        .eventTopic = "/devices/my-device2/events\0",
+        .stateTopic = "/devices/my-device2/state\0"
     }; 
     
     tcpIpSettings_t outSettings = {
