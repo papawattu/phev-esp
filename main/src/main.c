@@ -126,7 +126,7 @@ msg_mqtt_t mqtt = {
 };
 void main_loop(void *pvParameter)
 {
-
+    ESP_LOGI(APP_TAG,"Main Loop");
     phevCtx_t * ctx = app_createPhevController(mqtt);
 
 //    phev_controller_setConfigJson(ctx, config_json_start);
@@ -201,7 +201,7 @@ void start_app(void)
     wifi_conn_init(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
 #endif
     sntp_task();
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    //vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     xTaskCreate(&main_loop, "main_task", 4096, NULL, 5, NULL);    
     
