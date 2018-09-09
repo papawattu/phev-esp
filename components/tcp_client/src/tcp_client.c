@@ -1,3 +1,4 @@
+#include <string.h>
 #include "tcp_client.h"
 #include "logger.h"
 
