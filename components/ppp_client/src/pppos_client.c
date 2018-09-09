@@ -17,14 +17,13 @@
 #include "nvs_flash.h"
 
 #include "driver/uart.h"
-
+#include "netif/ppp/pppapi.h"
 #include "netif/ppp/pppos.h"
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
-#include "lwip/pppapi.h"
 
 #include "ppp_client.h"
 
