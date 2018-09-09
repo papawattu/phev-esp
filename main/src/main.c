@@ -25,7 +25,7 @@
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
-#include "apps/sntp/sntp.h"
+#include "lwip/apps/sntp.h"
 #include "lwip/netif.h"
 
 #include "esp_ota_ops.h"
