@@ -73,6 +73,45 @@ void test_update_store(void)
     TEST_ASSERT_NOT_NULL(msg2);
 
     TEST_ASSERT_EQUAL_MEMORY(replacementData,msg2->data,4);
+}
+void test_store_compare(void)
+{
+    const uint8_t data[] = {1,2,3,4};
 
+    const uint8_t newData[] = {1,2,3,4};
+    
+    phevStore_t * store = phev_store_create();
+
+    phev_store_add(store,0x11,data,4);
+
+    int ret = phev_store_compare(store,0x11,newData);
+
+    TEST_ASSERT_EQUAL(0,ret);
+
+} 
+void test_store_compare_not_same(void)
+{
+    const uint8_t data[] = {1,2,3,4};
+
+    const uint8_t newData[] = {1,2,4,4};
+    
+    phevStore_t * store = phev_store_create();
+
+    phev_store_add(store,0x11,data,4);
+
+    int ret = phev_store_compare(store,0x11,newData);
+
+    TEST_ASSERT_NOT_EQUAL(0,ret);
+
+} 
+void test_store_compare_not_set(void)
+{
+    const uint8_t data[] = {1,2,3,4};
+
+    phevStore_t * store = phev_store_create();
+
+    int ret = phev_store_compare(store,0x11,data);
+
+    TEST_ASSERT_NOT_EQUAL(0,ret);
 
 }

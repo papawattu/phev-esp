@@ -43,3 +43,9 @@ phevRegister_t * phev_store_get(phevStore_t * store,uint8_t reg)
 
     return message;
 }
+int phev_store_compare(phevStore_t *store,uint8_t reg,uint8_t * data)
+{
+    if(store->registers[reg] == NULL) return -1;
+    
+    return memcmp(data,store->registers[reg]->data,store->registers[reg]->length);
+}
