@@ -16,7 +16,7 @@ RUN cd libjwt && autoreconf -i && ./configure && make && make install
 WORKDIR /usr/src
 RUN \ 
     git clone --recursive https://github.com/throwtheswitch/cmock.git && \
-    git clone --recursive https://github.com/espressif/esp-idf.git 
+    git clone -b v3.0.3 --recursive https://github.com/espressif/esp-idf.git 
 WORKDIR /usr/src/esp-idf/components
 RUN \
     git clone --recursive https://github.com/papawattu/espmqtt.git && \
