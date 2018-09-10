@@ -19,11 +19,11 @@ void getIatExp(char *iat, char *exp, int time_size)
     time(&now);
     localtime_r(&now, &timeinfo);
     LOG_D(APP_TAG,"Waiting for time to be set");
-    //while (timeinfo.tm_year < (2016 - 1900))
-    //{
+    while (timeinfo.tm_year < (2016 - 1900))
+    {
         time(&now);
         localtime_r(&now, &timeinfo);
-    //}
+    }
     LOG_D(APP_TAG,"Time set");
     
     snprintf(iat, time_size, "%lu", now);
