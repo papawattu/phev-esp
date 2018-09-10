@@ -16,14 +16,17 @@ RUN cd libjwt && autoreconf -i && ./configure && make && make install
 WORKDIR /usr/src
 RUN \ 
     git clone --recursive https://github.com/throwtheswitch/cmock.git && \
-    git clone --recursive https://github.com/espressif/esp-idf.git 
+    git clone --recursive https://github.com/espressif/esp-idf.git
+WORKDIR /usr/src/esp-idf 
+RUN git checkout v3.1 
+RUN git submodule update --init --recursive
 WORKDIR /usr/src/esp-idf/components
 RUN \
     git clone --recursive https://github.com/papawattu/espmqtt.git && \
     git clone --recursive https://github.com/papawattu/libjwt.git && \
     git clone --recursive https://github.com/papawattu/jansson.git
 RUN cd jansson && cmake .
-RUN /usr/bin/python -m pip install -r /usr/src/esp-idf/requirements.txt
+#RUN /usr/bin/python -m pip install -r /usr/src/esp-idf/requirements.txt
 WORKDIR /usr/src/cmock
 RUN bundle install
 RUN curl https://sdk.cloud.google.com | bash

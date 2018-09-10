@@ -17,8 +17,9 @@
 #include "nvs_flash.h"
 
 #include "driver/uart.h"
-#include "netif/ppp/pppapi.h"
-#include "netif/ppp/pppos.h"
+//#include "netif/ppp/pppapi.h"
+//#include "netif/ppp/pppos.h"
+#include "lwip/pppapi.h"
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
@@ -206,7 +207,7 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
 
 static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
 {
-    //ESP_LOGI(TAG, "PPP tx len %d", len);
+    ESP_LOGV(TAG, "PPP tx len %d", len);
     return uart_write_bytes(uart_num, (const char *)data, len);
 }
 
@@ -292,6 +293,7 @@ static void pppos_client_task(void *pvParameters)
             memset(data, 0, BUF_SIZE);
             int len = uart_read_bytes(uart_num, (uint8_t *)data, BUF_SIZE, 10 / portTICK_RATE_MS);
             if (len > 0) {
+                ESP_LOGV(TAG, "PPP rx len %d", len);
                 pppos_input_tcpip(ppp, (u8_t *)data, len);
             }
         }

@@ -5,6 +5,9 @@
 #include <time.h>
 #include "msg_gcp_mqtt.h"
 #include "msg_mqtt.h"
+#include "logger.h"
+
+const static char *APP_TAG = "MSG_GCP_MQTT";
  
 int msg_gcp_start(messagingClient_t *client) 
 {
@@ -32,6 +35,8 @@ void msg_gcp_disconnected(mqtt_event_handle_t *event)
 
 int msg_gcp_connect(messagingClient_t *client)
 {
+    LOG_V(APP_TAG,"START - connect");
+    
     gcp_ctx_t * ctx = (gcp_ctx_t *) client->ctx;
 
     msg_mqtt_settings_t settings = {
@@ -50,8 +55,12 @@ int msg_gcp_connect(messagingClient_t *client)
         .transport = MSG_MQTT_TRANSPORT_OVER_SSL,
     };
     
+    LOG_D(APP_TAG,"Calling MQTT start");
+    
     ctx->mqtt->handle = mqtt_start(&settings);
 
+    LOG_V(APP_TAG,"END - connect");
+    
     return MSG_GCP_OK;
    
 }
@@ -66,6 +75,8 @@ void msg_gcp_outgoingHandler(messagingClient_t *client, message_t *message)
 }
 messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
 {
+    LOG_V(APP_TAG,"START - createGcpClient");
+    
     messagingSettings_t clientSettings;
     
     gcp_ctx_t * ctx = malloc(sizeof(gcp_ctx_t));
@@ -95,6 +106,8 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
 
     clientSettings.ctx = (void *) ctx;
 
+    LOG_V(APP_TAG,"END - createGcpClient");
+    
     return msg_core_createMessagingClient(clientSettings);
 
 } 

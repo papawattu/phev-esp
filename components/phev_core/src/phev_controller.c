@@ -540,6 +540,7 @@ void phev_controller_eventLoop(phevCtx_t * ctx)
 }
 phevCtx_t * phev_controller_init(phevSettings_t * settings)
 {
+    LOG_V(APP_TAG,"START - init");
     phevCtx_t * ctx = malloc(sizeof(phevCtx_t));
 
     msg_pipe_chain_t * inputChain = malloc(sizeof(msg_pipe_chain_t));
@@ -584,6 +585,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     ctx->otaUpdating = false;
 
     //phev_controller_initConfig(ctx->config);
+    LOG_V(APP_TAG,"END - init");
     
     return ctx;
 }

@@ -25,7 +25,7 @@
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
-#include "lwip/apps/sntp.h"
+#include "apps/sntp/sntp.h"
 #include "lwip/netif.h"
 
 #include "esp_ota_ops.h"
@@ -172,6 +172,7 @@ static void sntp_task(void)
     const int retry_count = 100;
     time_t now;
     struct tm timeinfo;
+    char strftime_buf[64];
 
     ESP_LOGI(APP_TAG, "Initializing SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
@@ -186,6 +187,9 @@ static void sntp_task(void)
         localtime_r(&now, &timeinfo);
     }
     ESP_LOGI(APP_TAG, "Time synced");
+    localtime_r(&now, &timeinfo);
+    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    ESP_LOGI(APP_TAG, "The current date/time is: %s", strftime_buf);
 }
 
 void start_app(void)
@@ -196,13 +200,27 @@ void start_app(void)
 
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 #ifndef NO_PPP    
+    ESP_LOGD(APP_TAG, "PPP starting...");
+    
     ppp_main();
+    for (struct netif *pri = netif_list; pri != NULL; pri=pri->next)
+    {
+        ESP_LOGD(APP_TAG, "Interface priority is %c%c%d (" IPSTR "/" IPSTR " gateway " IPSTR ")",
+        pri->name[0], pri->name[1], pri->num,
+        IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
+        if(pri->name[0] == 'p') netif_set_default(pri);
+    }
 #else
-    wifi_conn_init(CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD);
+    wifi_conn_init("BTHub6-P535", "S1mpsons",false);
 #endif
+    //ESP_LOGD(APP_TAG, "PPP delay...");
+    
+    //vTaskDelay(5000 / portTICK_PERIOD_MS);
+    ESP_LOGD(APP_TAG, "SNTP starting...");
     sntp_task();
     //vTaskDelay(2000 / portTICK_PERIOD_MS);
-
+    ESP_LOGD(APP_TAG, "Main starting...");
+    
     xTaskCreate(&main_loop, "main_task", 4096, NULL, 5, NULL);    
     
 }

@@ -46,7 +46,7 @@ msg_mqtt_err_t mqtt_event_handler(mqtt_event_handle_t event)
             break;
     }
     
-    return OK;
+    return MQTT_OK;
 }
 
 int msg_mqtt_publish(msg_mqtt_t * mqtt, topic_t topic, message_t *message)

@@ -29,7 +29,7 @@ handle_t mock_init(const msg_mqtt_config_t *config)
 msg_mqtt_err_t mock_start(handle_t client) 
 {
     mock_start_Called++;
-    return OK;
+    return MQTT_OK;
 }
 
 int mock_publish(handle_t client, const char *topic, const char *data, int len, int qos, int retain)

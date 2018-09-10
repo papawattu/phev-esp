@@ -65,6 +65,7 @@ int connectToCar(const char *host, uint16_t port)
 }
 phevCtx_t * app_createPhevController(msg_mqtt_t mqtt)
 {
+    LOG_V(APP_TAG,"START - createPhevController");
     gcpSettings_t inSettings = {
         .host = "mqtt.googleapis.com",
         .port = 8883,
@@ -94,6 +95,8 @@ phevCtx_t * app_createPhevController(msg_mqtt_t mqtt)
         .startWifi = wifi_conn_init,
     };
 
+    LOG_V(APP_TAG,"END - createPhevController");
+    
     return phev_controller_init(&phev_settings);
 }
 #if defined(__linux__)

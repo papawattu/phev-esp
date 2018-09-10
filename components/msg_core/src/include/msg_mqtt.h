@@ -30,7 +30,7 @@ typedef struct {
     int topic_len;
     int msg_id;
 } mqtt_event_t;
-#define OK 0
+#define MQTT_OK 0
 typedef uint16_t msg_mqtt_err_t;
 typedef void *handle_t;
 
