@@ -10,6 +10,7 @@
 #include "mock_ota.h"
 #include "mock_logger.h"
 #include "mock_msg_mqtt.h"
+#include "mock_phev_store.h"
 
 #include <cjson/cJSON.h>
 
@@ -23,6 +24,10 @@ void setUp(void)
     phev_config_checkForParkLightsOff_IgnoreAndReturn(true);
     phev_config_checkForAirConOff_IgnoreAndReturn(true);
     msg_mqtt_publish_IgnoreAndReturn(0);
+    phev_store_compare_IgnoreAndReturn(0);
+    phev_store_add_IgnoreAndReturn(0);
+    phev_store_create_IgnoreAndReturn(NULL);
+    
     //msg_utils_createMsg_IgnoreAndReturn(NULL);
     
 }

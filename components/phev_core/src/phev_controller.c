@@ -4,6 +4,7 @@
 #include <time.h>
 #include "phev_controller.h"
 #include "phev_response_handler.h"
+#include "phev_store.h"
 #include "msg_pipe.h"
 #include "msg_utils.h"
 #include "msg_tcpip.h"
@@ -538,6 +539,38 @@ void phev_controller_eventLoop(phevCtx_t * ctx)
     //LOG_V(APP_TAG,"END - eventLoop");
        
 }
+bool phev_controller_filter(void * ctx, message_t * message)
+{
+    phevCtx_t * phevCtx = (phevCtx_t *) ctx;
+    phevMessage_t * phevMessage = malloc(sizeof(phevMessage_t));
+    
+    bool ret = true;
+
+    int len = phev_core_decodeMessage(message->data, message->length, phevMessage);
+
+    if(phevMessage->command == 0x6f && len > 0) 
+    {
+        if(phev_store_compare(phevCtx->store,phevMessage->reg,phevMessage->data) == 0)
+        {
+            ret = false;
+        } 
+        else 
+        {
+            phev_store_add(phevCtx->store,phevMessage->reg,phevMessage->data,phevMessage->length - 3);
+        }
+    } 
+    if(phevMessage != NULL)
+    {
+        if(phevMessage->data != NULL)
+        {
+            free(phevMessage->data);
+        }
+        free(phevMessage);
+    }
+    
+    
+    return ret;
+}
 phevCtx_t * phev_controller_init(phevSettings_t * settings)
 {
     LOG_V(APP_TAG,"START - init");
@@ -556,7 +589,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     
     outputChain->inputTransformer = phev_controller_outputChainInputTransformer;
     outputChain->splitter = phev_controller_splitter;
-    outputChain->filter = NULL;
+    outputChain->filter = NULL; //phev_controller_filter;
     outputChain->outputTransformer = phev_controller_outputChainOutputTransformer;
     outputChain->responder = phev_controller_responder;
     outputChain->aggregator = NULL;
@@ -583,6 +616,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     ctx->successfulPing = false;
     ctx->lastPingTime = 0;
     ctx->otaUpdating = false;
+    ctx->store = phev_store_create();
 
     //phev_controller_initConfig(ctx->config);
     LOG_V(APP_TAG,"END - init");

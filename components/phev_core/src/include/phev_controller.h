@@ -4,6 +4,7 @@
 #include <time.h>
 #include "phev_core.h"
 #include "phev_config.h"
+#include "phev_store.h"
 
 #include "msg_pipe.h"
 
@@ -52,6 +53,7 @@ struct phevCtx_t {
     bool successfulPing;
     time_t lastPingTime;
     bool otaUpdating;
+    phevStore_t * store;
 }; 
 
 typedef struct phevEvent_t
