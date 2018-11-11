@@ -32,6 +32,7 @@ typedef struct msg_gcp_mqtt_t
 typedef struct gcpSettings_t
 {
     char * host;
+    char * uri;
     uint16_t port;
     char * clientId;
     char * device;
@@ -48,6 +49,7 @@ typedef struct gcpSettings_t
 typedef struct gcp_ctx_t
 {
     char *host;
+    char * uri;
     char *clientId;
     uint16_t port;
     uint8_t *readBuffer;

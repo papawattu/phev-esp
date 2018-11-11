@@ -85,13 +85,16 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings)
     const msg_mqtt_config_t mqtt_cfg = {
         .event_handle = mqtt_event_handler,
         .user_context = (void *) mqtt,
-        .host = settings->host,
-        .port = settings->port,
+        //.host = NULL, //settings->host,
+        //.port = NULL, //settings->port,
+        .uri = settings->uri,
         .client_id = settings->clientId,
         .username = settings->username,
         .password = settings->password,
-        .transport = settings->transport,
-        .disable_auto_reconnect = true,
+        //.transport = settings->transport,
+        //.disable_auto_reconnect = true,
+        //.client_key_pem = NULL,
+        //.client_cert_pem = NULL,
     };
     handle_t client = mqtt->init(&mqtt_cfg);
     mqtt->start(client);

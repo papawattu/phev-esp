@@ -17,9 +17,7 @@
 #include "nvs_flash.h"
 
 #include "driver/uart.h"
-//#include "netif/ppp/pppapi.h"
-//#include "netif/ppp/pppos.h"
-#include "lwip/pppapi.h"
+#include "netif/ppp/pppapi.h"
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"

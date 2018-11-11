@@ -42,6 +42,7 @@ int msg_gcp_connect(messagingClient_t *client)
     msg_mqtt_settings_t settings = {
         .host = ctx->host, 
         .port = ctx->port, 
+        .uri = ctx->uri,
         .clientId = ctx->clientId, 
         .username = ctx->device, 
         .password = ctx->createJwt(ctx->projectId), 
@@ -84,6 +85,7 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
 
     ctx->host = strdup(settings.host);
     ctx->port = settings.port;
+    ctx->uri = settings.uri;
     ctx->device = strdup(settings.device);
     ctx->clientId = strdup(settings.clientId);
     ctx->eventTopic = strdup(settings.eventTopic);

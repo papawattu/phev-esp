@@ -1,0 +1,6 @@
+[submodule "components/jansson"]
+	path = components/jansson
+	url = https://github.com/papawattu/jansson.git
+[submodule "components/libjwt"]
+	path = components/libjwt
+	url = https://github.com/papawattu/libjwt.git

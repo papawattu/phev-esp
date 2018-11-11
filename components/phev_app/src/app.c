@@ -68,6 +68,7 @@ phevCtx_t * app_createPhevController(msg_mqtt_t mqtt)
     LOG_V(APP_TAG,"START - createPhevController");
     gcpSettings_t inSettings = {
         .host = "mqtt.googleapis.com",
+        .uri = "mqtts://mqtt.googleapis.com:8883",
         .port = 8883,
         .clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device2",
         .device = "my-device2",

@@ -68,7 +68,8 @@ typedef struct
     int task_prio;
     int task_stack;
     int buffer_size;
-    const char *cert_pem;
+    const char *client_cert_pem;
+    const char *client_key_pem;
     mqtt_transport_t transport;
 } msg_mqtt_config_t;
 
@@ -98,6 +99,7 @@ typedef struct msg_mqtt_settings_t
 {
     messagingClient_t * client;
     char *host;
+    char * uri;
     char *clientId;
     uint16_t port;
     char *username;

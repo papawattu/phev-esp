@@ -48,8 +48,14 @@
 
 #include "ppp_client.h"
 
-//#define NO_PPP
-//#define NO_OTA
+#define MQTT_MAX_CLIENT_LEN         128
+#define MQTT_MAX_USERNAME_LEN       128
+#define MQTT_MAX_PASSWORD_LEN       128
+#define NQTT_MAX_HOST_LEN           128
+
+
+#define NO_PPP
+#define NO_OTA
 
 #define GSM_RESET_PIN GPIO_NUM_21
 #define UPDATE_NAME "update"
