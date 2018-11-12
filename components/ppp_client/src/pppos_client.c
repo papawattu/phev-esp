@@ -23,6 +23,7 @@
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
+#include "lwip/ip.h"
 
 #include "ppp_client.h"
 
@@ -36,9 +37,7 @@ static EventGroupHandle_t ppp_event_group;
 #define BUF_SIZE (4096)
 const char *PPP_User = "eesecure";
 const char *PPP_Pass = "secure";
-const char *PPP_ApnATReq = "AT+CGDCONT=1,\"IP\",\"" \
-                           "everywhere" \
-                           "\"";
+const char *PPP_APN = "everywhere";
 
 /* Pins used for serial communication with GSM module */
 #define UART1_TX_PIN 17
@@ -89,9 +88,8 @@ GSM_Cmd GSM_MGR_InitCmds[] = {
         .timeoutMs = 3000,
     },
     {
-        //AT+CGDCONT=1,"IP","apn"
-        .cmd = "AT+CGDCONT=1,\"IP\",\"everywhere\"\r",
-        .cmdSize = sizeof("AT+CGDCONT=1,\"IP\",\"everywhere\"\r") - 1,
+        .cmd = NULL,
+        .cmdSize = 0,
         .cmdResponseOnOk = GSM_OK_Str,
         .timeoutMs = 3000,
     },
@@ -122,6 +120,12 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
 #if PPP_IPV6_SUPPORT
         ESP_LOGI(TAG, "   our6_ipaddr = %s\n", ip6addr_ntoa(netif_ip6_addr(pppif, 0)));
 #endif /* PPP_IPV6_SUPPORT */
+        
+        //need to set DNS manually
+        ip_addr_t dnsserver;
+        IP_ADDR4( &dnsserver,8,8,8,8);
+        dns_setserver(0, &dnsserver);
+
         xEventGroupSetBits(ppp_event_group, CONNECTED_BIT);
         break;
     }
@@ -211,7 +215,17 @@ static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
 
 static void pppos_client_task(void *pvParameters)
 {
+    pppConnectionDetails_t * connectionDetails = (pppConnectionDetails_t *) pvParameters;
+
+    char cnxString[50];
+
+    snprintf(cnxString,50,"AT+CGDCONT=1,\"IP\",\"%s\"\r", connectionDetails->apn);
+    
+    GSM_MGR_InitCmds[3].cmd = cnxString;
+    GSM_MGR_InitCmds[3].cmdSize = sizeof(cnxString)-1;
+
     QueueHandle_t* uart_queue;
+    
     char *data = (char *) malloc(BUF_SIZE);
     uart_config_t uart_config = {
         .baud_rate = 115200,
@@ -266,7 +280,7 @@ static void pppos_client_task(void *pvParameters)
 
         //ESP_LOGI(TAG, "ppp task group %d",(EventGroupHandle_t *) pvParameters);
         ppp = pppapi_pppos_create(&ppp_netif,
-                                  ppp_output_callback, ppp_status_cb, pvParameters);
+                                  ppp_output_callback, ppp_status_cb, NULL);
 
         ESP_LOGD(TAG, "After pppapi_pppos_create");
 
@@ -279,7 +293,9 @@ static void pppos_client_task(void *pvParameters)
 
         ESP_LOGD(TAG, "After pppapi_set_default");
 
-        pppapi_set_auth(ppp, PPPAUTHTYPE_PAP, PPP_User, PPP_Pass);
+        pppapi_set_auth(ppp, PPPAUTHTYPE_PAP, connectionDetails->user, connectionDetails->password);
+
+        //pppapi_set_auth(ppp, PPPAUTHTYPE_PAP, PPP_User, PPP_Pass);
 
         ESP_LOGD(TAG, "After pppapi_set_auth");
 
@@ -299,12 +315,12 @@ static void pppos_client_task(void *pvParameters)
     }
 }
 
-void ppp_main(void)
+void ppp_main(pppConnectionDetails_t * connectionDetails)
 {
 
     tcpip_adapter_init();
     ppp_event_group = xEventGroupCreate();
-    xTaskCreate(&pppos_client_task, "pppos_client_task", 2048, NULL, 5, NULL);
+    xTaskCreate(&pppos_client_task, "pppos_client_task", 2048, connectionDetails, 5, NULL);
     xEventGroupWaitBits(ppp_event_group, CONNECTED_BIT,
                        false, true, portMAX_DELAY);
 

@@ -123,7 +123,7 @@ void ota(const char * updateHost,const uint16_t updatePort, const char * updateI
     /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
     esp_ota_handle_t update_handle = 0 ;
     const esp_partition_t *update_partition = NULL;
-
+    
     ESP_LOGI(APP_TAG, "Starting OTA ... Update host %s port %d path %s",updateHost, updatePort, updateImageFullPath);
 
     const esp_partition_t *configured = esp_ota_get_boot_partition();

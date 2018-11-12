@@ -3,6 +3,12 @@
 
 #include "freertos/task.h"
 
-void ppp_main(void);
+typedef struct pppConnectionDetails_t {
+    char * user;
+    char * password;
+    char * apn;
+} pppConnectionDetails_t;
+
+void ppp_main(pppConnectionDetails_t *);
 
 #endif

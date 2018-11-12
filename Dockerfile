@@ -18,15 +18,15 @@ RUN \
     git clone --recursive https://github.com/throwtheswitch/cmock.git && \
     git clone --recursive https://github.com/espressif/esp-idf.git
 WORKDIR /usr/src/esp-idf 
-RUN git checkout v3.1 
+RUN git checkout
 RUN git submodule update --init --recursive
 WORKDIR /usr/src/esp-idf/components
-RUN \
-    git clone --recursive https://github.com/papawattu/espmqtt.git && \
-    git clone --recursive https://github.com/papawattu/libjwt.git && \
-    git clone --recursive https://github.com/papawattu/jansson.git
-RUN cd jansson && cmake .
-#RUN /usr/bin/python -m pip install -r /usr/src/esp-idf/requirements.txt
+#RUN \
+#    git clone --recursive https://github.com/papawattu/espmqtt.git && \
+#    git clone --recursive https://github.com/papawattu/libjwt.git && \
+#    git clone --recursive https://github.com/papawattu/jansson.git
+#RUN cd jansson && cmake .
+RUN /usr/bin/python -m pip install -r /usr/src/esp-idf/requirements.txt
 WORKDIR /usr/src/cmock
 RUN bundle install
 RUN curl https://sdk.cloud.google.com | bash
@@ -34,14 +34,15 @@ ENV PATH $PATH:/root/google-cloud-sdk/bin
 ENV CMOCK_DIR /usr/src/cmock
 ENV CJSON_DIR /usr/src/cJSON
 COPY . /usr/src/phev-esp
+RUN git submodule update --init --recursive
 WORKDIR /usr/src/phev-esp
-RUN make test
-RUN make test
+#RUN make test
+#RUN make test
 ENV IDF_PATH /usr/src/esp-idf
 ENV PATH $PATH:/usr/esp/xtensa-esp32-elf/bin
 ENV PATH /usr/esp/xtensa-esp32-elf/bin:$IDF_PATH/tools:$PATH
 RUN date +%s > /root/build_number
-RUN BUILD_NUMBER=`cat /root/build_number` make
+RUN BUILD_NUMBER=`cat /root/build_number` make -j4
 RUN cp /usr/src/phev-esp/build/phev-esp.bin /root/firmware-`cat /root/build_number`.bin
 ENV GOOGLE_PROJECT phev-db3fa
 ENV GOOGLE_ACCOUNT configupdate@phev-db3fa.iam.gserviceaccount.com

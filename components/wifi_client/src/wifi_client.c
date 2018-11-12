@@ -13,6 +13,8 @@ void wifi_conn_init(const char * wifiSSID, const char * wifiPassword, const bool
 #include <string.h>
 #include "esp_event.h"
 #include "esp_event_loop.h"
+#include "setup_ui.h"
+#include "mdns.h"
 
 const static char *APP_TAG = "WIFI_CLIENT";
 const static int CONNECTED_BIT = BIT0;
@@ -20,10 +22,29 @@ static EventGroupHandle_t wifi_event_group;
 
 static esp_err_t wifi_client_event_handler(void *ctx, system_event_t *event)
 {
+    httpd_handle_t *server = (httpd_handle_t *) ctx;
+
     switch (event->event_id)
     {
+    case SYSTEM_EVENT_AP_STACONNECTED: 
+    {
+        ESP_LOGI(APP_TAG, "station:"MACSTR" join, AID=%d",
+            MAC2STR(event->event_info.sta_connected.mac),
+        event->event_info.sta_connected.aid);
+        //tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_AP);
+        if (server == NULL) {
+            //server = start_webserver();
+        }
+        break;
+    }
+    case SYSTEM_EVENT_AP_STADISCONNECTED:
+        ESP_LOGI(APP_TAG, "station:"MACSTR"leave, AID=%d",
+                 MAC2STR(event->event_info.sta_disconnected.mac),
+                 event->event_info.sta_disconnected.aid);
+        break;
     case SYSTEM_EVENT_STA_START:
         esp_wifi_connect();
+        //tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA);
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
@@ -39,6 +60,7 @@ static esp_err_t wifi_client_event_handler(void *ctx, system_event_t *event)
     default:
         break;
     }
+    //mdns_handle_system_event(ctx, event);
     return ESP_OK;
 }
 
@@ -54,6 +76,26 @@ void wifi_client_setup(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 }
 
+void wifi_ap_init(void * arg)
+{
+    //ESP_ERROR_CHECK(esp_event_loop_init(event_handler, arg));
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    wifi_config_t wifi_ap_config =  {
+        .ap = {
+            .ssid = AP_WIFI_SSID,
+            .ssid_len = strlen(AP_WIFI_SSID),
+            .password = AP_WIFI_PASS,
+            .max_connection = AP_MAX_STA_CONN,
+            .authmode = WIFI_AUTH_WPA_WPA2_PSK
+        },            
+    };
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_ap_config));
+
+}
 void wifi_conn_init(const char * wifiSSID, const char * wifiPassword, const bool setPPPdefault)
 {
     esp_wifi_stop();
