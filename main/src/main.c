@@ -70,7 +70,7 @@ static const char *REQUEST = "GET " WEB_URL " HTTP/1.0\r\n"
 #define MQTT_MAX_PASSWORD_LEN       128
 #define MQTT_MAX_HOST_LEN           128
 
-//#define NO_PPP
+#define NO_PPP
 #define NO_OTA
 
 #define GSM_RESET_PIN GPIO_NUM_21
@@ -260,6 +260,10 @@ void start_app(void)
     //vTaskDelay(2000 / portTICK_PERIOD_MS);
     ESP_LOGD(APP_TAG, "Main starting...");
 
+    for(;;)
+    {
+      vTaskDelay(10 / portTICK_PERIOD_MS);  
+    }
     xTaskCreate(&main_loop, "main_task", 4096, NULL, 5, NULL);    
     
 }

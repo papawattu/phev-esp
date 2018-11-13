@@ -8,6 +8,9 @@
 
 static const char *TAG="SETUP_UI";
 
+extern const char phev_remote_config_start[] asm("_binary_phev_remote_config_html_start");
+extern const char phev_remote_config_end[]   asm("_binary_phev_remote_config_html_end");
+
 connectionDetails_t * setup_ui_getConnectionDetails() 
 {
     connectionDetails_t * details = malloc(sizeof(connectionDetails_t));
@@ -84,7 +87,7 @@ esp_err_t hello_get_handler(httpd_req_t *req)
     /* Send response with custom headers and body set as the
      * string passed in user context*/
     const char* resp_str = (const char*) req->user_ctx;
-    httpd_resp_send(req, resp_str, strlen(resp_str));
+    httpd_resp_send(req, phev_remote_config_start, phev_remote_config_end - phev_remote_config_start);
 
     /* After sending the HTTP response the old HTTP request
      * headers are lost. Check if HTTP request headers can be read now. */

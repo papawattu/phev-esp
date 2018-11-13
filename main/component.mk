@@ -5,4 +5,4 @@
 
 COMPONENT_SRCDIRS := src
 COMPONENT_ADD_INCLUDEDIRS := src/include
-COMPONENT_EMBED_TXTFILES := resources/config.json
+COMPONENT_EMBED_TXTFILES := resources/config.json resources/phev-remote-config.html

@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+    <head><title>Configure</title>
+        <style type="text/css">
+            label {
+                display: block;  
+                padding: 5px;
+            }
+            input {
+                display: block; 
+                padding: 5px;
+            }
+            fieldset {
+                display: block; 
+                margin: 50px;
+            }
+            button {
+                float: right;
+                margin-right: 50px;
+            }
+        </style>
+    </head>
+    <body>
+        <form action="/send">
+            <fieldset name="bob">
+                <legend>Car WIFI</legend>
+                <label>SSID <input name="ssid" type="text"/></label><br/>
+                <label>Password <input name="password" type="text"/></label><br/>
+            </fieldset>
+            <fieldset>
+                <legend>GSM Details</legend>
+                <label>PPP User <input name="ppp_user" type="text"/></label><br/>
+                <label>PPP Password <input name="ppp_password" type="text"/></label><br/>
+                <label>PPP APN <input name="apn" type="text"/></label><br/>
+            </fieldset>
+            
+            <button type="submit" method="post">Send</button>
+        </form>
+    </body>
+</html>

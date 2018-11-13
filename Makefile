@@ -4,7 +4,8 @@ BUILD_NUMBER ?= 9999999999
 SHELL := /bin/bash
 BUILD_DIR ?= ./build
 COMP_DIR := ./components/**
-SRC_DIR := $(COMP_DIR)/src
+SRC_DIR := $(shell find $(COMP_DIR)/src -maxdepth 0 -type d -not -path ./components/jansson/src)
+#SRC_DIR := $(COMP_DIR)/src
 TEST_DIR ?= $(COMP_DIR)/test
 CJSON_DIR ?= /usr/local/include/cjson/
 INC_DIRS := $(shell find $(COMP_DIR) -type d)
@@ -30,6 +31,9 @@ unexport
 include $(IDF_PATH)/make/project.mk
 endif
 
+dir:
+	@echo $(SRC_DIR)
+#	echo $(filter-out ./components/jansson/src%, $(SRC_DIR))
 MKDIR_P ?= mkdir -p
 	
 setup:
@@ -54,7 +58,6 @@ CSRC = $(wildcard main/src/*.c) \
 	   $(wildcard components/gcp_jwt/src/*.c)
 OBJ = $(CSRC:.c=.o)
 DEP = $(OBJ:.o=.d) 
-
 $(EXEC): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
