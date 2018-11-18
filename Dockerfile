@@ -31,8 +31,8 @@ ENV PATH $PATH:/root/google-cloud-sdk/bin
 ENV CMOCK_DIR /usr/src/cmock
 ENV CJSON_DIR /usr/src/cJSON
 COPY . /usr/src/phev-esp
-RUN git submodule update --init --recursive
 WORKDIR /usr/src/phev-esp
+RUN git submodule update --init --recursive
 #RUN make test
 #RUN make test
 ENV IDF_PATH /usr/src/esp-idf
