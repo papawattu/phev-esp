@@ -10,7 +10,7 @@
 #include "msg_tcpip.h"
 #include "msg_gcp_mqtt.h"
 #include "msg_mqtt.h"
-#include "ota.h"
+#include "phev_ota.h"
 #include "logger.h"
 
 const static char *APP_TAG = "PHEV_CONTROLLER";

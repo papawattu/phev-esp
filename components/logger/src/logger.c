@@ -34,7 +34,7 @@ void hexdump(char * tag, unsigned char * buffer, int length, int level)
         printf("%s | %s |\n",padding,out);
     }
     printf("\n");
-}
+}/*
 void msgBundleDump(const char * tag, messageBundle_t * bundle)
 {
     for(int i = 0;i<bundle->numMessages;i++)
@@ -45,3 +45,4 @@ void msgBundleDump(const char * tag, messageBundle_t * bundle)
 }
 
 
+*/

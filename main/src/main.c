@@ -26,11 +26,11 @@
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
 #include "lwip/ip.h"
-//#include "lwip/apps/sntp.h"
-#include "apps/sntp/sntp.h"
+#include "lwip/apps/sntp.h"
+//#include "apps/sntp/sntp.h"
 #include "lwip/netif.h"
 
-#include "esp_ota_ops.h"
+//#include "esp_ota_ops.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 
@@ -51,9 +51,9 @@
 
 #include "jwt.h"
 
-#include "ppp_client.h"
+//#include "ppp_client.h"
 
-#include "captdns.h"
+//#include "captdns.h"
 
 #define WEB_SERVER "www.bbc.co.uk"
 #define WEB_PORT 80

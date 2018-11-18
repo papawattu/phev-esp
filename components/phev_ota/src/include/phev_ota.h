@@ -1,5 +1,5 @@
-#ifndef _OTA_H_
-#define _OTA_H_
+#ifndef _PHEV_OTA_H_
+#define _PHEV_OTA_H_
 #include <stdint.h>
 #define BUFFSIZE 1024
 #define TEXT_BUFFSIZE 1024
