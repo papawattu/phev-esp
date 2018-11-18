@@ -39,7 +39,8 @@ ENV IDF_PATH /usr/src/esp-idf
 ENV PATH $PATH:/usr/esp/xtensa-esp32-elf/bin
 ENV PATH /usr/esp/xtensa-esp32-elf/bin:$IDF_PATH/tools:$PATH
 RUN date +%s > /root/build_number
-RUN BUILD_NUMBER=`cat /root/build_number` idf.py flash
+#RUN idf.py defconfig
+RUN BUILD_NUMBER=`cat /root/build_number` idf.py app
 RUN cp /usr/src/phev-esp/build/phev-esp.bin /root/firmware-`cat /root/build_number`.bin
 ENV GOOGLE_PROJECT phev-db3fa
 ENV GOOGLE_ACCOUNT configupdate@phev-db3fa.iam.gserviceaccount.com

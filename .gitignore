@@ -10,3 +10,4 @@ phev
 components/messaging/test/*_Runner.c
 main/resources/phev-config-update.json
 notes.txt
+sdkconfig
