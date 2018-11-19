@@ -21,8 +21,11 @@ void phev_controller_preOutConnectHook(msg_pipe_ctx_t * pipe)
     phevCtx_t * ctx = (phevCtx_t *) pipe->user_context;
     LOG_D(APP_TAG,"Setting wifi ssid %s password %s",ctx->config->connectionConfig.carConnectionWifi.ssid 
                                                     ,ctx->config->connectionConfig.carConnectionWifi.password);
-    ctx->startWifi(ctx->config->connectionConfig.carConnectionWifi.ssid,
+    if(ctx->startWifi) 
+    {
+        ctx->startWifi(ctx->config->connectionConfig.carConnectionWifi.ssid,
                     ctx->config->connectionConfig.carConnectionWifi.password,true);
+    }
     LOG_D(APP_TAG,"Setting tcpip ctx host %s port %d",ctx->config->connectionConfig.host,
                                                         ctx->config->connectionConfig.port);
     ((tcpip_ctx_t *) ctx->pipe->out->ctx)->host = ctx->config->connectionConfig.host;
@@ -348,8 +351,13 @@ void phev_controller_performUpdate(phevCtx_t * ctx)
     if(!ctx->config->updateConfig.updateOverPPP)
     {
         LOG_D(APP_TAG,"Perform update over WIFI");
-        ctx->startWifi(ctx->config->updateConfig.updateWifi.ssid,ctx->config->updateConfig.updateWifi.password,false);
-        LOG_D(APP_TAG,"Started UPDATE WIFI");
+        if(ctx->startWifi) {
+            ctx->startWifi(ctx->config->updateConfig.updateWifi.ssid,ctx->config->updateConfig.updateWifi.password,false);
+            LOG_D(APP_TAG,"Started UPDATE WIFI");
+        } else {
+            LOG_D(APP_TAG,"WIFI not configured");
+        }
+        
         
     } else {
         LOG_D(APP_TAG,"Perform update over GSM");
@@ -605,7 +613,12 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
         .preOutConnectHook = phev_controller_preOutConnectHook,
     };
 
-    ctx->startWifi = settings->startWifi;
+    if(settings->startWifi)
+    {
+        ctx->startWifi = settings->startWifi;
+    } else {
+        ctx->startWifi = NULL;
+    }
     ctx->outputTransformer = settings->outputTransformer;
 
     ctx->config = NULL;

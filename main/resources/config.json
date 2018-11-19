@@ -20,5 +20,10 @@
     "password": "fhcm852767",
     "host": "192.168.8.46",
     "port": 8080
+  },
+  "pppConnection": {
+    "user" :"eesecure",
+    "password" : "secure",
+    "apn" : "everywhere" 
   }
 }

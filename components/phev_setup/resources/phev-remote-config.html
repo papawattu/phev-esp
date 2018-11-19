@@ -21,7 +21,7 @@
         </style>
     </head>
     <body>
-        <form action="/send">
+        <form action="/send" method="post">
             <fieldset name="bob">
                 <legend>Car WIFI</legend>
                 <label>SSID <input name="ssid" type="text"/></label><br/>
@@ -34,7 +34,7 @@
                 <label>PPP APN <input name="apn" type="text"/></label><br/>
             </fieldset>
             
-            <button type="submit" method="post">Send</button>
+            <button type="submit">Send</button>
         </form>
     </body>
 </html>

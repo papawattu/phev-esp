@@ -1,0 +1,11 @@
+{
+    "carConnection": {
+        "ssid": "BTHub6-P535",
+        "password": "S1mpsons"
+    },
+    "pppConnection": {
+        "user": "eesecure",
+        "password": "secure",
+        "apn": "everywhere"
+    }
+}

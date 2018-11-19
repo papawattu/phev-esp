@@ -45,8 +45,8 @@
 #include "phev_controller.h"
 #include "mqtt_client.h"
 #include "wifi_client.h"
-
-#include "setup_ui.h"
+#include <esp_http_server.h>
+#include "phev_setup.h"
 #include "mdns.h"
 
 #include "jwt.h"
@@ -250,7 +250,10 @@ void start_app(void)
         if(pri->name[0] == 'p') netif_set_default(pri);
     } 
 #else
-    wifi_conn_init("BTHub6-P535", "S1mpsons",false);
+    //wifi_conn_init("BTHub6-P535", "S1mpsons",false);
+    wifi_ap_init(&server);    
+    
+    httpd_handle_t * httpServer = start_webserver();
 #endif
     //ESP_LOGD(APP_TAG, "PPP delay...");
     //xTaskCreate(&http_get_task, "http_get_task", 4096, NULL, 5, NULL);
@@ -260,10 +263,6 @@ void start_app(void)
     //vTaskDelay(2000 / portTICK_PERIOD_MS);
     ESP_LOGD(APP_TAG, "Main starting...");
 
-    for(;;)
-    {
-      vTaskDelay(10 / portTICK_PERIOD_MS);  
-    }
     xTaskCreate(&main_loop, "main_task", 4096, NULL, 5, NULL);    
     
 }

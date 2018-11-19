@@ -99,4 +99,11 @@ bool phev_config_checkForAirConOff(const phevState_t * state);
 
 char * phev_config_displayConfig(const phevConfig_t * config);
 bool phev_config_checkForOption(const cJSON * json, const char * option);
+bool phev_config_checkForOption(const cJSON * json, const char * option);
+char * phev_config_getConfigString(cJSON * json, char * option); 
+uint16_t phev_config_getConfigInt(cJSON * json, char * option); 
+long phev_config_getConfigLong(cJSON * json, char * option); 
+bool phev_config_getConfigBool(cJSON * json, char * option); 
+triState_t phev_config_getConfigTriState(cJSON * json, char * option); 
+
 #endif

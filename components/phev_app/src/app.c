@@ -93,7 +93,7 @@ phevCtx_t * app_createPhevController(msg_mqtt_t mqtt)
         .in = msg_gcp_createGcpClient(inSettings),
 #endif
         .out = msg_tcpip_createTcpIpClient(outSettings),
-        .startWifi = wifi_conn_init,
+        .startWifi = NULL, //wifi_conn_init,
     };
 
     LOG_V(APP_TAG,"END - createPhevController");
