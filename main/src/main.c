@@ -43,6 +43,7 @@
 
 #include "phev_core.h"
 #include "phev_controller.h"
+#include "phev_store.h"
 #include "mqtt_client.h"
 #include "wifi_client.h"
 #include <esp_http_server.h>
@@ -153,6 +154,7 @@ msg_mqtt_t mqtt = {
 void main_loop(void *pvParameter)
 {
     ESP_LOGI(APP_TAG,"Main Loop");
+
     phevCtx_t * ctx = app_createPhevController(mqtt);
 
 //    phev_controller_setConfigJson(ctx, config_json_start);
@@ -223,44 +225,21 @@ void start_app(void)
     static httpd_handle_t server = NULL;
 
     ESP_LOGI(APP_TAG, "Application starting...");
+
+    phevStore_t * store = phev_store_init();
     
     wifi_client_setup();
 
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
     wifi_ap_init(&server);    
     
-    connectionDetails_t * details = setup_ui_getConnectionDetails();
+    httpd_handle_t * httpServer = phev_setup_startWebserver(store);
 
-
-#ifndef NO_PPP    
-    ESP_LOGD(APP_TAG, "PPP starting...");
+    phev_setup_startConnections(store);
     
-    pppConnectionDetails_t connectionDetails = {
-        .user = details->pppUser,
-        .password = details->pppPassword,
-        .apn = details->pppAPN,
-    };
-    ppp_main(&connectionDetails);
-    
-    for (struct netif *pri = netif_list; pri != NULL; pri=pri->next)
-    {
-        ESP_LOGD(APP_TAG, "Interface priority is %c%c%d (" IPSTR "/" IPSTR " gateway " IPSTR ")",
-        pri->name[0], pri->name[1], pri->num,
-        IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
-        if(pri->name[0] == 'p') netif_set_default(pri);
-    } 
-#else
-    //wifi_conn_init("BTHub6-P535", "S1mpsons",false);
-    wifi_ap_init(&server);    
-    
-    httpd_handle_t * httpServer = start_webserver();
-#endif
-    //ESP_LOGD(APP_TAG, "PPP delay...");
-    //xTaskCreate(&http_get_task, "http_get_task", 4096, NULL, 5, NULL);
-    //vTaskDelay(5000 / portTICK_PERIOD_MS);
     ESP_LOGD(APP_TAG, "SNTP starting...");
+
     sntp_task();
-    //vTaskDelay(2000 / portTICK_PERIOD_MS);
+
     ESP_LOGD(APP_TAG, "Main starting...");
 
     xTaskCreate(&main_loop, "main_task", 4096, NULL, 5, NULL);    
@@ -313,98 +292,6 @@ static void initialise_mdns(void)
     ESP_ERROR_CHECK( mdns_service_txt_item_set("_http", "_tcp", "path", "/foobar") );
     //change TXT item value
     ESP_ERROR_CHECK( mdns_service_txt_item_set("_http", "_tcp", "u", "admin") );
-}
-
-static void http_get_task(void *pvParameters)
-{
-    const struct addrinfo hints = {
-        .ai_family = AF_INET,
-        .ai_socktype = SOCK_STREAM,
-    };
-    struct addrinfo *res;
-    struct in_addr *addr;
-    int s, r;
-    char recv_buf[64];
-
-    while(1) {
-        /* Wait for the callback to set the CONNECTED_BIT in the
-           event group.
-        */
-       // xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
-       //                     false, true, portMAX_DELAY);
-      //  ESP_LOGI(APP_TAG, "Connected to AP");
-
-        int err = getaddrinfo(WEB_SERVER, "80", &hints, &res);
-
-        if(err != 0 || res == NULL) {
-            ESP_LOGE(APP_TAG, "DNS lookup failed err=%d res=%p", err, res);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-            continue;
-        }
-
-        /* Code to print the resolved IP.
-
-           Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */
-        addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
-        ESP_LOGI(APP_TAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
-
-        s = socket(res->ai_family, res->ai_socktype, 0);
-        if(s < 0) {
-            ESP_LOGE(APP_TAG, "... Failed to allocate socket.");
-            freeaddrinfo(res);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-            continue;
-        }
-        ESP_LOGI(APP_TAG, "... allocated socket");
-
-        if(connect(s, res->ai_addr, res->ai_addrlen) != 0) {
-            ESP_LOGE(APP_TAG, "... socket connect failed errno=%d", errno);
-            close(s);
-            freeaddrinfo(res);
-            vTaskDelay(4000 / portTICK_PERIOD_MS);
-            continue;
-        }
-
-        ESP_LOGI(APP_TAG, "... connected");
-        freeaddrinfo(res);
-
-        if (write(s, REQUEST, strlen(REQUEST)) < 0) {
-            ESP_LOGE(APP_TAG, "... socket send failed");
-            close(s);
-            vTaskDelay(4000 / portTICK_PERIOD_MS);
-            continue;
-        }
-        ESP_LOGI(APP_TAG, "... socket send success");
-
-        struct timeval receiving_timeout;
-        receiving_timeout.tv_sec = 5;
-        receiving_timeout.tv_usec = 0;
-        if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &receiving_timeout,
-                sizeof(receiving_timeout)) < 0) {
-            ESP_LOGE(APP_TAG, "... failed to set socket receiving timeout");
-            close(s);
-            vTaskDelay(4000 / portTICK_PERIOD_MS);
-            continue;
-        }
-        ESP_LOGI(APP_TAG, "... set socket receiving timeout success");
-
-        /* Read HTTP response */
-        do {
-            bzero(recv_buf, sizeof(recv_buf));
-            r = read(s, recv_buf, sizeof(recv_buf)-1);
-            for(int i = 0; i < r; i++) {
-                putchar(recv_buf[i]);
-            }
-        } while(r > 0);
-
-        ESP_LOGI(APP_TAG, "... done reading from socket. Last read return=%d errno=%d\r\n", r, errno);
-        close(s);
-        for(int countdown = 10; countdown >= 0; countdown--) {
-            ESP_LOGI(APP_TAG, "%d... ", countdown);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-        ESP_LOGI(APP_TAG, "Starting again!");
-    }
 }
 void app_main(void)
 {

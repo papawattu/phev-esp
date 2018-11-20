@@ -132,7 +132,7 @@ void wifi_conn_init(const char * wifiSSID, const char * wifiPassword, const bool
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_LOGI(APP_TAG, "start the WIFI SSID:[%s] password:[%s]", wifiSSID, wifiPassword);
     ESP_ERROR_CHECK(esp_wifi_start());
-    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
+    /*xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
     for (struct netif *pri = netif_list; pri != NULL; pri=pri->next)
     {
@@ -141,6 +141,7 @@ void wifi_conn_init(const char * wifiSSID, const char * wifiPassword, const bool
         IP2STR(&pri->ip_addr.u_addr.ip4), IP2STR(&pri->netmask.u_addr.ip4), IP2STR(&pri->gw.u_addr.ip4));
         if(pri->name[0] == 'p' && setPPPdefault) netif_set_default(pri);
     }
+    */
 }
 
 #endif

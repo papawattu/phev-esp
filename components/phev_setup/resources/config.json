@@ -1,7 +1,8 @@
 {
     "carConnection": {
-        "ssid": "REMOTE45cfsc",
-        "password": "fhcm852767"
+        "ssid": "BTHub6-P535",
+        "password": "S1mpsons",
+        "port" : 8080
     },
     "pppConnection": {
         "user": "eesecure",

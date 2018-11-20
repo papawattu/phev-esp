@@ -4,6 +4,7 @@
 #include <esp_http_server.h>
 #include "phev_core.h"
 #include "phev_config.h"
+#include "phev_store.h"
 
 #define SETUP_CONNECTION_CONFIG_JSON "carConnection"
 #define SETUP_CONNECTION_CONFIG_HOST "host"
@@ -26,15 +27,14 @@
 typedef struct connectionDetails_t {
     phevWifi_t wifi;
     char * host;
-    int port;
+    uint16_t port;
     char * pppUser;
     char * pppPassword;
     char * pppAPN;
 } connectionDetails_t;
 
-httpd_handle_t * start_webserver(void);
-void stop_webserver(httpd_handle_t server);
-
-connectionDetails_t * setup_ui_getConnectionDetails(void);
+httpd_handle_t * phev_setup_startWebserver(phevStore_t *);
+void phev_setup_stopWebserver(httpd_handle_t server);
+void phev_setup_startConnections(phevStore_t * store);
 
 #endif 

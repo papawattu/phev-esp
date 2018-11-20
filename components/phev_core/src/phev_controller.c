@@ -4,7 +4,7 @@
 #include <time.h>
 #include "phev_controller.h"
 #include "phev_response_handler.h"
-#include "phev_store.h"
+//#include "phev_store.h"
 #include "msg_pipe.h"
 #include "msg_utils.h"
 #include "msg_tcpip.h"
@@ -558,14 +558,14 @@ bool phev_controller_filter(void * ctx, message_t * message)
 
     if(phevMessage->command == 0x6f && len > 0) 
     {
-        if(phev_store_compare(phevCtx->store,phevMessage->reg,phevMessage->data) == 0)
-        {
-            ret = false;
-        } 
-        else 
-        {
-            phev_store_add(phevCtx->store,phevMessage->reg,phevMessage->data,phevMessage->length - 3);
-        }
+   //     if(phev_store_compare(phevCtx->store,phevMessage->reg,phevMessage->data) == 0)
+   //     {
+   //         ret = false;
+   //     } 
+   //     else 
+   //     {
+   //         phev_store_add(phevCtx->store,phevMessage->reg,phevMessage->data,phevMessage->length - 3);
+   //     }
     } 
     if(phevMessage != NULL)
     {
@@ -629,7 +629,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     ctx->successfulPing = false;
     ctx->lastPingTime = 0;
     ctx->otaUpdating = false;
-    ctx->store = phev_store_create();
+    //ctx->store = phev_store_create();
 
     //phev_controller_initConfig(ctx->config);
     LOG_V(APP_TAG,"END - init");
