@@ -179,11 +179,11 @@ phevConfig_t * phev_config_parseConfig(const char * config)
 }
 bool phev_config_checkForFirmwareUpdate(const phevUpdateConfig_t * config)
 {
-    #ifdef NO_OTA
-    return false;
-    #else
+#ifndef NO_OTA
     return (config->latestBuild > config->currentBuild) || config->forceUpdate;
-    #endif
+#else
+    return false;    
+#endif
 }
 
 bool phev_config_checkForConnection(const phevState_t * state)

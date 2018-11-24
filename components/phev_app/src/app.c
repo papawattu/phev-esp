@@ -20,7 +20,10 @@
 #include "phev_controller.h"
 #include "tcp_client.h"
 #include "wifi_client.h"
+
 #define FILENAME "main/resources/config-local.json"
+
+#define MAX_CLIENT_ID_SIZE 255
 
 const static char *APP_TAG = "PHEV_APP";
 
@@ -67,17 +70,27 @@ phevCtx_t * app_createPhevController(msg_mqtt_t mqtt, phevStore_t * store)
 {
     LOG_V(APP_TAG,"START - createPhevController");
     gcpSettings_t inSettings = {
-        .host = "mqtt.googleapis.com",
         .uri = "mqtts://mqtt.googleapis.com:8883",
-        .port = 8883,
-        .clientId = "projects/phev-db3fa/locations/us-central1/registries/my-registry/devices/my-device2",
-        .device = "my-device2",
+        .device = store->deviceId,
         .createJwt = createJwt,
         .mqtt = &mqtt,
-        .projectId = "phev-db3fa",
-        .eventTopic = "/devices/my-device2/events\0",
-        .stateTopic = "/devices/my-device2/state\0"
+        .projectId = store->config->gcpProjectId,
     }; 
+    
+    asprintf(&inSettings.clientId,"projects/%s/locations/%s/registries/%s/devices/%s"
+        ,store->config->gcpProjectId
+        ,store->config->gcpLocation
+        ,store->config->gcpRegistry
+        ,store->deviceId);
+    LOG_D(APP_TAG,"Client ID %s",inSettings.clientId);
+    
+    asprintf(&inSettings.eventTopic,"/devices/%s/events",store->deviceId);
+    asprintf(&inSettings.stateTopic,"/devices/%s/state",store->deviceId);
+    asprintf(&inSettings.commandsTopic,"/devices/%s/commands",store->deviceId);
+    
+    LOG_D(APP_TAG,"Events topic %s",inSettings.eventTopic);
+    LOG_D(APP_TAG,"State topic %s",inSettings.stateTopic);
+    LOG_D(APP_TAG,"Commands topic %s",inSettings.commandsTopic);
     
     tcpIpSettings_t outSettings = {
         .connect = connectToCar, 
@@ -98,6 +111,7 @@ phevCtx_t * app_createPhevController(msg_mqtt_t mqtt, phevStore_t * store)
     };
 
     LOG_V(APP_TAG,"END - createPhevController");
+    LOG_D(APP_TAG,"Init");
     
     return phev_controller_init(&phev_settings);
 }

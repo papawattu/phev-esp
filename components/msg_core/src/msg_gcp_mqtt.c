@@ -83,18 +83,16 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
     gcp_ctx_t * ctx = malloc(sizeof(gcp_ctx_t));
     //msg_mqtt_t * mqtt_ctx = malloc(sizeof(msg_mqtt_t));
 
-    ctx->host = strdup(settings.host);
-    ctx->port = settings.port;
-    ctx->uri = settings.uri;
+    ctx->uri = strdup(settings.uri);
     ctx->device = strdup(settings.device);
     ctx->clientId = strdup(settings.clientId);
     ctx->eventTopic = strdup(settings.eventTopic);
     ctx->stateTopic = strdup(settings.stateTopic);
+    ctx->commandsTopic = strdup(settings.commandsTopic);
     ctx->topic = ctx->eventTopic; // default topic
     ctx->createJwt = settings.createJwt;
     ctx->projectId = strdup(settings.projectId);
     ctx->published = settings.published;
-
     ctx->readBuffer = malloc(GCP_CLIENT_READ_BUF_SIZE);
     
     ctx->mqtt = settings.mqtt;

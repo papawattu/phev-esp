@@ -213,7 +213,11 @@ void start_app(void)
 
     ESP_LOGI(APP_TAG, "Application starting...");
 
-    store = phev_store_init();
+    uint8_t mac[6];
+    
+    esp_efuse_mac_get_default(&mac);
+
+    store = phev_store_init(&mac);
     
     wifi_client_setup();
 
@@ -222,6 +226,10 @@ void start_app(void)
     httpd_handle_t * httpServer = phev_setup_startWebserver(store);
 
     phev_setup_startPPPConnection(store);
+
+    if(!store->registered) {
+        phev_setup_register(store);
+    }
     
     ESP_LOGD(APP_TAG, "SNTP starting...");
 

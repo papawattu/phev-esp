@@ -7,14 +7,19 @@
 
 const static char *APP_TAG = "PHEV_STORE";
 
-phevStore_t * phev_store_init(void)
+phevStore_t * phev_store_init(uint8_t * mac)
 {
     LOG_V(APP_TAG,"START - init");
 
     phevStore_t * store = malloc(sizeof(phevStore_t));
 
     store->config = NULL;
+    store->registered = false;
 
+    snprintf(&store->deviceId, DEVICEID_SIZE, "device%02x%02x%02x%02x%02x%02x",(unsigned char) mac[0], (unsigned char) mac[1],(unsigned char) mac[2], (unsigned char) mac[3], (unsigned char) mac[4], (unsigned char) mac[5]);
+    
+    LOG_I(APP_TAG,"Device ID %s",store->deviceId);
+    
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -105,6 +110,8 @@ void phev_store_storeConnectionConfig(phevStore_t * store, phevStoreConnectionCo
     }
 
     err = nvs_commit(store->handle); 
+
+    
     if(err != ESP_OK)
     {
         LOG_E(APP_TAG,"NVS commit error %s",esp_err_to_name(err));

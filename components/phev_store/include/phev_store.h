@@ -8,6 +8,8 @@
 
 #include "phev_config.h"
 
+#define DEVICEID_SIZE 18 
+
 typedef struct phevRegister_t
 {
     void * handle;
@@ -36,9 +38,10 @@ typedef struct phevStore_t
     phevStoreConnectionConfig_t * config;
     bool registered;
     bool configured;
+    char deviceId[12];
 } phevStore_t;
 
-phevStore_t * phev_store_init(void);
+phevStore_t * phev_store_init(uint8_t *);
 int phev_store_add(phevStore_t * store,uint8_t reg, uint8_t *data, size_t length);
 phevRegister_t * phev_store_get(phevStore_t *,uint8_t);
 int phev_store_compare(phevStore_t *store,uint8_t reg,uint8_t * data);

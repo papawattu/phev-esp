@@ -99,6 +99,19 @@ connectionDetails_t * phev_setup_jsonToConnectionDetails(const char * config)
 
     return details;
 }
+void phev_setup_register(phevStore_t * store) 
+{
+    ESP_LOGI(TAG,"Registering...");
+    if(store->config) 
+    {
+        asprintf(&store->config->gcpProjectId,"phev-db3fa");
+        asprintf(&store->config->gcpLocation,"us-central1");
+        asprintf(&store->config->gcpRegistry,"my-registry");
+    } else {
+        ESP_LOGW(TAG,"No config found");
+    }
+    
+}
 void phev_setup_waitForConfig(phevStore_t * store)
 {
     ESP_LOGI(TAG, "Checking for config");

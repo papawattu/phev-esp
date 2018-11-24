@@ -66,9 +66,9 @@ static esp_err_t wifi_client_event_handler(void *ctx, system_event_t *event)
 
 void wifi_client_setup(void)
 {
-    uint8_t new_mac[8] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
-    esp_base_mac_addr_set(new_mac);
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    //uint8_t new_mac[8] = {0x24, 0x0d, 0xc2, 0xc2, 0x91, 0x85};
+    //esp_base_mac_addr_set(new_mac);
+    //vTaskDelay(100 / portTICK_PERIOD_MS);
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_event_loop_init(wifi_client_event_handler, NULL));
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();

@@ -41,6 +41,7 @@ typedef struct gcpSettings_t
     char * topic;
     char *stateTopic;
     char *eventTopic;
+    char *commandsTopic;
     char * (* createJwt)(const char *);
     void (* published)(void);
     
@@ -48,19 +49,19 @@ typedef struct gcpSettings_t
 
 typedef struct gcp_ctx_t
 {
-    char *host;
+    char * host;
     char * uri;
-    char *clientId;
+    char * clientId;
     uint16_t port;
     uint8_t *readBuffer;
     char * (* createJwt)(const char *);
-    char *device;
-    char *projectId;
-    void *client;
-    char *topic;
-    char *stateTopic;
-    char *eventTopic;
-    
+    char * device;
+    char * projectId;
+    void * client;
+    char * topic;
+    char * stateTopic;
+    char * eventTopic;
+    char * commandsTopic;
     void (* published)(void);
     msg_mqtt_t * mqtt;
 } gcp_ctx_t;
