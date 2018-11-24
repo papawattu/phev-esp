@@ -4,7 +4,7 @@
 #include <time.h>
 #include "phev_core.h"
 #include "phev_config.h"
-//#include "phev_store.h"
+#include "phev_store.h"
 
 #include "msg_pipe.h"
 
@@ -32,6 +32,7 @@ typedef struct phevCtx_t phevCtx_t;
 typedef void (* phevStartWifi_t)(const char * ssid, const char * password, bool setPPPDefault);
 typedef struct phevSettings_t
 {
+    phevStore_t * store;
     messagingClient_t * in;
     messagingClient_t * out;
     msg_pipe_transformer_t inputTransformer;
@@ -42,6 +43,7 @@ typedef struct phevSettings_t
 typedef enum phevEventType { CONNECT_REQUEST } phevEventType_t; 
 
 struct phevCtx_t {    
+    phevStore_t * store;
     phevConfig_t * config;
     phevMessage_t * queuedCommands[MAX_QUEUED_COMMANDS];
     size_t queueSize;
@@ -53,7 +55,6 @@ struct phevCtx_t {
     bool successfulPing;
     time_t lastPingTime;
     bool otaUpdating;
-    //phevStore_t * store;
 }; 
 
 typedef struct phevEvent_t

@@ -63,7 +63,7 @@ int connectToCar(const char *host, uint16_t port)
 
     return tcp_client_connectSocket(host,port);
 }
-phevCtx_t * app_createPhevController(msg_mqtt_t mqtt)
+phevCtx_t * app_createPhevController(msg_mqtt_t mqtt, phevStore_t * store)
 {
     LOG_V(APP_TAG,"START - createPhevController");
     gcpSettings_t inSettings = {
@@ -94,6 +94,7 @@ phevCtx_t * app_createPhevController(msg_mqtt_t mqtt)
 #endif
         .out = msg_tcpip_createTcpIpClient(outSettings),
         .startWifi = NULL, //wifi_conn_init,
+        .store = store,
     };
 
     LOG_V(APP_TAG,"END - createPhevController");

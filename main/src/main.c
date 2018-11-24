@@ -71,9 +71,6 @@ static const char *REQUEST = "GET " WEB_URL " HTTP/1.0\r\n"
 #define MQTT_MAX_PASSWORD_LEN       128
 #define MQTT_MAX_HOST_LEN           128
 
-#define NO_PPP
-#define NO_OTA
-
 #define GSM_RESET_PIN GPIO_NUM_21
 #define UPDATE_NAME "update"
 #define UPDATE_SSID "ssid"
@@ -88,9 +85,10 @@ static const char *REQUEST = "GET " WEB_URL " HTTP/1.0\r\n"
 #define EXAMPLE_MDNS_HOSTNAME "phevremote"
 #define EXAMPLE_MDNS_INSTANCE "instance"
 
-#ifndef BUILD_NUMBER
-#define BUILD_NUMBER 1
-#endif
+#define DEFAULT_BUILD_NUMBER 1
+
+#define NO_OTA
+
 typedef struct {
     int type;  // the type of timer's event
     int timer_group;
@@ -100,7 +98,6 @@ typedef struct {
 
 static bool connected = false;
 //esp_mqtt_client_handle_t client;
-
 
 #define CONFIG_WIFI_SSID "REMOTE45cfsc"
 #define CONFIG_WIFI_PASSWORD "fhcm852767"
@@ -135,6 +132,8 @@ xQueueHandle timer_queue;
 
 const static char *APP_TAG = "Main";
 
+phevStore_t * store = NULL;
+
 static void http_get_task(void *pvParameters);
 
 extern const char config_json_start[] asm("_binary_config_json_start");
@@ -155,19 +154,7 @@ void main_loop(void *pvParameter)
 {
     ESP_LOGI(APP_TAG,"Main Loop");
 
-    phevCtx_t * ctx = app_createPhevController(mqtt);
-
-//    phev_controller_setConfigJson(ctx, config_json_start);
-    
-//    ESP_LOGI(APP_TAG,"Config set...");
-
-//    char * configTxt = app_displayConfig(ctx->config); 
-    
-//    ESP_LOGI(APP_TAG,"Build version :%d", ctx->config->updateConfig.currentBuild);
-//    ESP_LOGI(APP_TAG,"Latest build version :%d", ctx->config->updateConfig.latestBuild);
-//    ESP_LOGI(APP_TAG,"%s",configTxt);
-
-//    phev_controller_updateConfig(ctx, ctx->config);
+    phevCtx_t * ctx = app_createPhevController(mqtt, store);
     
     ESP_LOGI(APP_TAG,"Waiting to connect...");
     
@@ -226,7 +213,7 @@ void start_app(void)
 
     ESP_LOGI(APP_TAG, "Application starting...");
 
-    phevStore_t * store = phev_store_init();
+    store = phev_store_init();
     
     wifi_client_setup();
 
@@ -234,7 +221,7 @@ void start_app(void)
     
     httpd_handle_t * httpServer = phev_setup_startWebserver(store);
 
-    phev_setup_startConnections(store);
+    phev_setup_startPPPConnection(store);
     
     ESP_LOGD(APP_TAG, "SNTP starting...");
 
@@ -304,7 +291,7 @@ void app_main(void)
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK( err );
-    resetGSMModule(GPIO_NUM_21);
+    //resetGSMModule(GPIO_NUM_21);
     tcpip_adapter_init();
 
     //timer_example_evt_task(NULL);

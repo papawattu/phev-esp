@@ -98,8 +98,8 @@ void wifi_ap_init(void * arg)
 
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    xEventGroupWaitBits(wifi_event_group, AP_CONNECTED_BIT,
-                        false, true, portMAX_DELAY);
+    //xEventGroupWaitBits(wifi_event_group, AP_CONNECTED_BIT,
+    //                    false, true, portMAX_DELAY);
     
 }
 void wifi_conn_init(const char * wifiSSID, const char * wifiPassword, const bool setPPPdefault)

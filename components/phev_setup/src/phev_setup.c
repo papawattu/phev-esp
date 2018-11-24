@@ -99,10 +99,9 @@ connectionDetails_t * phev_setup_jsonToConnectionDetails(const char * config)
 
     return details;
 }
-
-void phev_setup_startConnections(phevStore_t * store)
+void phev_setup_waitForConfig(phevStore_t * store)
 {
-    
+    ESP_LOGI(TAG, "Checking for config");
     if(!store->config) {
 
         ESP_LOGI(TAG, "Waiting for config...");
@@ -117,6 +116,13 @@ void phev_setup_startConnections(phevStore_t * store)
                         false, true, portMAX_DELAY);
         }
     }
+    ESP_LOGI(TAG, "Config available");
+    
+}
+void phev_setup_startWifiConnection(phevStore_t * store)
+{
+    
+    phev_setup_waitForConfig(store);
     
     ESP_LOGI(TAG, "Connecting to car wifi...");
 
@@ -124,7 +130,13 @@ void phev_setup_startConnections(phevStore_t * store)
 
     ESP_LOGI(TAG, "Connected to car wifi");
 
-    ESP_LOGD(TAG, "PPP starting...");
+}
+void phev_setup_startPPPConnection(phevStore_t * store)
+{
+    
+    phev_setup_waitForConfig(store);
+    
+    ESP_LOGI(TAG, "PPP starting...");
     
     pppConnectionDetails_t connectionDetails = {
         .user = store->config->pppUser,
@@ -135,6 +147,7 @@ void phev_setup_startConnections(phevStore_t * store)
     ppp_main(&connectionDetails);
 
     ESP_LOGI(TAG, "PPP started");
+
 
 }
 

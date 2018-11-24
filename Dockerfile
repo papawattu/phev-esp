@@ -40,7 +40,7 @@ ENV PATH $PATH:/usr/esp/xtensa-esp32-elf/bin
 ENV PATH /usr/esp/xtensa-esp32-elf/bin:$IDF_PATH/tools:$PATH
 RUN date +%s > /root/build_number
 #RUN idf.py defconfig
-RUN BUILD_NUMBER=`cat /root/build_number` idf.py app
+RUN idf.py app -DBUILD_NUMBER=`cat /root/build_number`
 RUN cp /usr/src/phev-esp/build/phev-esp.bin /root/firmware-`cat /root/build_number`.bin
 ENV GOOGLE_PROJECT phev-db3fa
 ENV GOOGLE_ACCOUNT configupdate@phev-db3fa.iam.gserviceaccount.com

@@ -35,6 +35,8 @@ typedef struct connectionDetails_t {
 
 httpd_handle_t * phev_setup_startWebserver(phevStore_t *);
 void phev_setup_stopWebserver(httpd_handle_t server);
-void phev_setup_startConnections(phevStore_t * store);
+void phev_setup_startPPPConnection(phevStore_t * store);
+void phev_setup_startWifiConnection(phevStore_t * store);
+
 
 #endif 

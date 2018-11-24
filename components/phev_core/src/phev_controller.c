@@ -629,7 +629,7 @@ phevCtx_t * phev_controller_init(phevSettings_t * settings)
     ctx->successfulPing = false;
     ctx->lastPingTime = 0;
     ctx->otaUpdating = false;
-    //ctx->store = phev_store_create();
+    ctx->store = settings->store;
 
     //phev_controller_initConfig(ctx->config);
     LOG_V(APP_TAG,"END - init");
