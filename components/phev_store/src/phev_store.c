@@ -109,16 +109,19 @@ void phev_store_storeConnectionConfig(phevStore_t * store, phevStoreConnectionCo
     {
         LOG_E(APP_TAG,"NVS commit error %s",esp_err_to_name(err));
     }
-
+    if(store->config != NULL) 
+    {
+        free(store->config);
+    }
     store->config = config;
 
-    store->config->configured = true;
+    store->configured = true;
 }
 phevStoreConnectionConfig_t * phev_store_getConnectionConfig(phevStore_t * store)
 {
     phevStoreConnectionConfig_t * config = malloc(sizeof(phevStoreConnectionConfig_t));
     
-    config->configured = false;
+    store->configured = false;
     
     size_t size;
     esp_err_t err; 
@@ -219,7 +222,7 @@ phevStoreConnectionConfig_t * phev_store_getConnectionConfig(phevStore_t * store
         free(store->config);
     }
     store->config = config;
-    store->config->configured = true;
+    store->configured = true;
     return config;  
     
 }

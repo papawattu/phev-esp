@@ -17,13 +17,16 @@ typedef struct phevRegister_t
 
 typedef struct phevStoreConnectionConfig_t 
 {
-    bool configured;
     phevWifi_t wifi;
     char * host;
     uint16_t port;
     char * pppUser;
     char * pppPassword;
     char * pppAPN;
+    char * mqttUri;
+    char * gcpProjectId;
+    char * gcpLocation;
+    char * gcpRegistry;
 } phevStoreConnectionConfig_t;
 
 typedef struct phevStore_t
@@ -31,6 +34,8 @@ typedef struct phevStore_t
     unsigned int * handle;
     phevRegister_t * registers[256]; 
     phevStoreConnectionConfig_t * config;
+    bool registered;
+    bool configured;
 } phevStore_t;
 
 phevStore_t * phev_store_init(void);

@@ -102,20 +102,21 @@ connectionDetails_t * phev_setup_jsonToConnectionDetails(const char * config)
 void phev_setup_waitForConfig(phevStore_t * store)
 {
     ESP_LOGI(TAG, "Checking for config");
-    if(!store->config) {
-
+    if(!store->configured) {
         ESP_LOGI(TAG, "Waiting for config...");
 
         xEventGroupWaitBits(setup_event_group, CONFIGURED_BIT,
-                        false, true, portMAX_DELAY);
-    } else {
-        if(!store->config->configured) {
-            ESP_LOGI(TAG, "Waiting for config...");
-
-            xEventGroupWaitBits(setup_event_group, CONFIGURED_BIT,
-                        false, true, portMAX_DELAY);
-        }
+                    false, true, portMAX_DELAY);
+    
     }
+    if(!store->config) {
+
+        ESP_LOGW(TAG, "Config flag set but no config");
+
+        xEventGroupWaitBits(setup_event_group, CONFIGURED_BIT,
+                        false, true, portMAX_DELAY);
+    } 
+    
     ESP_LOGI(TAG, "Config available");
     
 }
