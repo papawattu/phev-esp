@@ -10,6 +10,8 @@
 #include "freertos/event_groups.h"
 #include <nvs_flash.h>
 #include <sys/param.h>
+#include "esp_http_client.h"
+#include "gcp_jwt.h"
 
 static const char *TAG="PHEV_SETUP";
 
@@ -99,14 +101,158 @@ connectionDetails_t * phev_setup_jsonToConnectionDetails(const char * config)
 
     return details;
 }
+esp_err_t phev_setup_httpEventHandler(esp_http_client_event_t *evt)
+{
+    switch(evt->event_id) {
+        case HTTP_EVENT_ERROR:
+            ESP_LOGD(TAG, "HTTP_EVENT_ERROR");
+            break;
+        case HTTP_EVENT_ON_CONNECTED:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_CONNECTED");
+            break;
+        case HTTP_EVENT_HEADER_SENT:
+            ESP_LOGD(TAG, "HTTP_EVENT_HEADER_SENT");
+            break;
+        case HTTP_EVENT_ON_HEADER:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
+            break;
+        case HTTP_EVENT_ON_DATA:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+            if (!esp_http_client_is_chunked_response(evt->client)) {
+                // Write out data
+                printf("%.*s", evt->data_len, (char*)evt->data);
+            }
+
+            break;
+        case HTTP_EVENT_ON_FINISH:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
+            break;
+        case HTTP_EVENT_DISCONNECTED:
+            ESP_LOGD(TAG, "HTTP_EVENT_DISCONNECTED");
+            break;
+    }
+    return ESP_OK;
+}
+void phev_setup_parseDeviceResponse(phevStore_t * store, const char * response)
+{
+    cJSON * json = cJSON_Parse((const char *) response);
+
+    if(json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            printf("Error before: %s\n", error_ptr);
+        }
+        return NULL;
+    }
+    if(phev_config_checkForOption(json, GCP_PROJECTID)) 
+    {
+        store->config->gcpProjectId = strdup(phev_config_getConfigString(json, GCP_PROJECTID));
+    } 
+    else 
+    {
+        ESP_LOGE(TAG,"Missing project id");
+    }
+    if(phev_config_checkForOption(json, GCP_LOCATION)) 
+    {
+        store->config->gcpLocation = strdup(phev_config_getConfigString(json, GCP_LOCATION));
+    } 
+    else 
+    {
+        ESP_LOGE(TAG,"Missing location");
+    }
+    if(phev_config_checkForOption(json, GCP_REGISTRY)) 
+    {
+        store->config->gcpRegistry = strdup(phev_config_getConfigString(json, GCP_REGISTRY));
+    } 
+    else 
+    {
+        ESP_LOGE(TAG,"Missing registry");
+    }
+    if(phev_config_checkForOption(json, GCP_EVENTS_TOPIC)) 
+    {
+        store->config->eventsTopic = strdup(phev_config_getConfigString(json, GCP_EVENTS_TOPIC));
+    } 
+    else 
+    {
+        ESP_LOGE(TAG,"Missing events topic");
+    }
+    if(phev_config_checkForOption(json, GCP_STATE_TOPIC)) 
+    {
+        store->config->stateTopic = strdup(phev_config_getConfigString(json, GCP_STATE_TOPIC));
+    } 
+    else 
+    {
+        ESP_LOGE(TAG,"Missing state topic");
+    }
+    if(phev_config_checkForOption(json, GCP_COMMANDS_TOPIC)) 
+    {
+        store->config->commandsTopic = strdup(phev_config_getConfigString(json, GCP_COMMANDS_TOPIC));
+    } 
+    else 
+    {
+        ESP_LOGE(TAG,"Missing commands topic");
+    }
+    if(phev_config_checkForOption(json, GCP_CONFIG_TOPIC)) 
+    {
+        store->config->configTopic = strdup(phev_config_getConfigString(json, GCP_CONFIG_TOPIC));
+    } 
+    else 
+    {
+        ESP_LOGE(TAG,"Missing config topic");
+    }
+}
+
+void phev_setup_getDevice(phevStore_t * store)
+{
+    char * auth = NULL;
+    ESP_LOGI(TAG,"Header Buffer %d",HEADER_BUFFER);
+    ESP_LOGI(TAG,"Default Buffer size %d",DEFAULT_HTTP_BUF_SIZE);
+    ESP_LOGI(TAG,"Max http recv %d",MAX_HTTP_RECV_BUFFER);
+
+    esp_http_client_config_t config = {
+    //    .url = "https://us-central1-phev-db3fa.cloudfunctions.net/devices",
+        .buffer_size = 2048,
+    //    .event_handler = phev_setup_httpEventHandler,
+    };
+    
+    asprintf(&config.url,"https://us-central1-phev-db3fa.cloudfunctions.net/devices/%s",store->deviceId);
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    asprintf(&auth,"Bearer %s\n",createJwt(NULL,store->email));
+    ESP_LOGD(TAG,"Auth header : %s", auth);
+    esp_http_client_set_header(client, "Authorization", auth);
+    
+    esp_err_t err = esp_http_client_perform(client);
+
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "HTTPS Status = %d, content_length = %d",
+                esp_http_client_get_status_code(client),
+                esp_http_client_get_content_length(client));
+        int content_length =  esp_http_client_get_content_length(client);
+        
+        char *buffer = malloc(MAX_HTTP_RECV_BUFFER);
+        
+        int read_len = esp_http_client_read(client, buffer, content_length);
+        buffer[read_len] = 0;
+        ESP_LOGD(TAG,"Buffer %s",buffer);
+        phev_setup_parseDeviceResponse(store,buffer);
+    } else {
+        ESP_LOGE(TAG, "Error perform http request %s", esp_err_to_name(err));
+    }
+    esp_http_client_cleanup(client);
+}
 void phev_setup_register(phevStore_t * store) 
 {
     ESP_LOGI(TAG,"Registering...");
     if(store->config) 
     {
-        asprintf(&store->config->gcpProjectId,"phev-db3fa");
-        asprintf(&store->config->gcpLocation,"us-central1");
-        asprintf(&store->config->gcpRegistry,"my-registry");
+        asprintf(&store->email,"jamie@wattu.com");
+        phev_setup_getDevice(store);
+        //asprintf(&store->config->gcpProjectId,"phev-db3fa");
+        //asprintf(&store->config->gcpLocation,"us-central1");
+        //asprintf(&store->config->gcpRegistry,"my-registry");
     } else {
         ESP_LOGW(TAG,"No config found");
     }

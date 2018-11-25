@@ -26,7 +26,12 @@ void msg_gcp_asyncIncomingHandler(messagingClient_t *client, message_t *message)
 void msg_gcp_connected(mqtt_event_handle_t *event)
 {    
     ((msg_mqtt_t *)((mqtt_event_t *)event)->user_context)->client->connected = 1;
-    msg_mqtt_subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/devices/my-device2/config");
+//    msg_mqtt_subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, "/devices/my-device2/config");
+    msg_mqtt_subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, ((gcp_ctx_t *) ((msg_mqtt_t *)((mqtt_event_t *)event)->user_context)->client->ctx)->configTopic);
+    LOG_D(APP_TAG,"Subdcribed to %s",((gcp_ctx_t *) ((msg_mqtt_t *)((mqtt_event_t *)event)->user_context)->client->ctx)->configTopic);
+    msg_mqtt_subscribe((msg_mqtt_t *)((mqtt_event_t *)event)->user_context, ((gcp_ctx_t *) ((msg_mqtt_t *)((mqtt_event_t *)event)->user_context)->client->ctx)->commandsTopic);
+    LOG_D(APP_TAG,"Subdcribed to %s",((gcp_ctx_t *) ((msg_mqtt_t *)((mqtt_event_t *)event)->user_context)->client->ctx)->commandsTopic);
+
 }
 void msg_gcp_disconnected(mqtt_event_handle_t *event)
 {    
@@ -45,7 +50,7 @@ int msg_gcp_connect(messagingClient_t *client)
         .uri = ctx->uri,
         .clientId = ctx->clientId, 
         .username = ctx->device, 
-        .password = ctx->createJwt(ctx->projectId), 
+        .password = ctx->createJwt(ctx->projectId,NULL), 
         .mqtt = ctx->mqtt,
         .subscribed_cb = NULL,
         .connected_cb = msg_gcp_connected,
@@ -89,6 +94,7 @@ messagingClient_t * msg_gcp_createGcpClient(gcpSettings_t settings)
     ctx->eventTopic = strdup(settings.eventTopic);
     ctx->stateTopic = strdup(settings.stateTopic);
     ctx->commandsTopic = strdup(settings.commandsTopic);
+    ctx->configTopic = strdup(settings.configTopic);
     ctx->topic = ctx->eventTopic; // default topic
     ctx->createJwt = settings.createJwt;
     ctx->projectId = strdup(settings.projectId);

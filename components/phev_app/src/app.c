@@ -84,13 +84,15 @@ phevCtx_t * app_createPhevController(msg_mqtt_t mqtt, phevStore_t * store)
         ,store->deviceId);
     LOG_D(APP_TAG,"Client ID %s",inSettings.clientId);
     
-    asprintf(&inSettings.eventTopic,"/devices/%s/events",store->deviceId);
-    asprintf(&inSettings.stateTopic,"/devices/%s/state",store->deviceId);
-    asprintf(&inSettings.commandsTopic,"/devices/%s/commands",store->deviceId);
-    
+    inSettings.eventTopic = strdup(store->config->eventsTopic);
+    inSettings.stateTopic = strdup(store->config->stateTopic);
+    inSettings.commandsTopic = strdup(store->config->commandsTopic);
+    inSettings.configTopic = strdup(store->config->configTopic);
+
     LOG_D(APP_TAG,"Events topic %s",inSettings.eventTopic);
     LOG_D(APP_TAG,"State topic %s",inSettings.stateTopic);
     LOG_D(APP_TAG,"Commands topic %s",inSettings.commandsTopic);
+    LOG_D(APP_TAG,"Config topic %s",inSettings.configTopic);
     
     tcpIpSettings_t outSettings = {
         .connect = connectToCar, 

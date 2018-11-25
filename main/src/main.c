@@ -227,13 +227,13 @@ void start_app(void)
 
     phev_setup_startPPPConnection(store);
 
-    if(!store->registered) {
-        phev_setup_register(store);
-    }
-    
     ESP_LOGD(APP_TAG, "SNTP starting...");
 
     sntp_task();
+    
+    if(!store->registered) {
+        phev_setup_register(store);
+    }
 
     ESP_LOGD(APP_TAG, "Main starting...");
 

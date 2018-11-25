@@ -29,6 +29,10 @@ typedef struct phevStoreConnectionConfig_t
     char * gcpProjectId;
     char * gcpLocation;
     char * gcpRegistry;
+    char * eventsTopic;
+    char * stateTopic;
+    char * commandsTopic;
+    char * configTopic;
 } phevStoreConnectionConfig_t;
 
 typedef struct phevStore_t
@@ -38,7 +42,8 @@ typedef struct phevStore_t
     phevStoreConnectionConfig_t * config;
     bool registered;
     bool configured;
-    char deviceId[12];
+    char * deviceId;
+    char * email;
 } phevStore_t;
 
 phevStore_t * phev_store_init(uint8_t *);

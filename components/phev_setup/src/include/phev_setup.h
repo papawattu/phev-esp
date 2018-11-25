@@ -23,7 +23,14 @@
 #define DEFAULT_PPP_PASSWORD "secure"
 #define DEFAULT_PPP_APN "everywhere"
 
+#define GCP_PROJECTID "projectId"
+#define GCP_REGISTRY "registry"
+#define GCP_LOCATION "location"
 
+#define GCP_EVENTS_TOPIC "eventsTopic"
+#define GCP_STATE_TOPIC "stateTopic"
+#define GCP_COMMANDS_TOPIC "commandsTopic"
+#define GCP_CONFIG_TOPIC "configTopic"
 typedef struct connectionDetails_t {
     phevWifi_t wifi;
     char * host;

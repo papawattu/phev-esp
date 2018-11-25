@@ -13,7 +13,7 @@ void dataEvent(mqtt_event_handle_t event)
 {
     char *topic = malloc(event->topic_len + 1);
 
-    message_t * message = msg_utils_createMsg((uint8_t *) event->data,event->data_len);
+    message_t * message = msg_utils_createMsgTopic(topic,(uint8_t *) event->data,event->data_len);
 
     ((msg_mqtt_t *) event->user_context)->incoming_cb(((msg_mqtt_t *) event->user_context)->client, message);
     free(topic);
@@ -85,16 +85,10 @@ handle_t mqtt_start(msg_mqtt_settings_t * settings)
     const msg_mqtt_config_t mqtt_cfg = {
         .event_handle = mqtt_event_handler,
         .user_context = (void *) mqtt,
-        //.host = NULL, //settings->host,
-        //.port = NULL, //settings->port,
         .uri = settings->uri,
         .client_id = settings->clientId,
         .username = settings->username,
         .password = settings->password,
-        //.transport = settings->transport,
-        //.disable_auto_reconnect = true,
-        //.client_key_pem = NULL,
-        //.client_cert_pem = NULL,
     };
     handle_t client = mqtt->init(&mqtt_cfg);
     mqtt->start(client);

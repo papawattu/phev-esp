@@ -31,7 +31,7 @@ void getIatExp(char *iat, char *exp, int time_size)
     LOG_V(APP_TAG,"END - getIatExp");
     
 } 
-char *createJwt(const char *project_id)
+char *createJwt(const char *project_id, const char *sub)
 {
     LOG_V(APP_TAG,"START - createJwt");
     
@@ -47,6 +47,15 @@ char *createJwt(const char *project_id)
     
     jwt_new(&jwt);
 
+    if(sub) 
+    {
+        ret = jwt_add_grant(jwt, "sub", sub);
+        if (ret)
+        {
+            LOG_E(APP_TAG,"Error setting subject: %d", ret);
+            return NULL;
+        }
+    }
     ret = jwt_add_grant(jwt, "iat", iat_time);
     if (ret)
     {
@@ -59,11 +68,14 @@ char *createJwt(const char *project_id)
         LOG_E(APP_TAG,"Error setting expiration: %d", ret);
         return NULL;
     }
-    ret = jwt_add_grant(jwt, "aud", project_id);
-    if (ret)
+    if(project_id) 
     {
-        LOG_E(APP_TAG,"Error adding audience: %d", ret);
-        return NULL;
+        ret = jwt_add_grant(jwt, "aud", project_id);
+        if (ret)
+        {
+            LOG_E(APP_TAG,"Error adding audience: %d", ret);
+            return NULL;
+        }
     }
     ret = jwt_set_alg(jwt, JWT_ALG_RS256, key, key_len);
     if (ret)

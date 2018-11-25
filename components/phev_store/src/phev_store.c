@@ -16,7 +16,7 @@ phevStore_t * phev_store_init(uint8_t * mac)
     store->config = NULL;
     store->registered = false;
 
-    snprintf(&store->deviceId, DEVICEID_SIZE, "device%02x%02x%02x%02x%02x%02x",(unsigned char) mac[0], (unsigned char) mac[1],(unsigned char) mac[2], (unsigned char) mac[3], (unsigned char) mac[4], (unsigned char) mac[5]);
+    asprintf(&store->deviceId, "device%02x%02x%02x%02x%02x%02x",(unsigned char) mac[0], (unsigned char) mac[1],(unsigned char) mac[2], (unsigned char) mac[3], (unsigned char) mac[4], (unsigned char) mac[5]);
     
     LOG_I(APP_TAG,"Device ID %s",store->deviceId);
     
