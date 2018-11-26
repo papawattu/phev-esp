@@ -10,6 +10,7 @@
 #define AP_MAX_STA_CONN   3
 
 void wifi_conn_init(const char * wifiSSID, const char * wifiPassword, const bool setPPPdefault);
+void wifi_conn_initAndWait(const char * wifiSSID, const char * wifiPassword, const bool setPPPdefault);
 void wifi_client_setup(void);
 void wifi_ap_init(void * arg);
 #endif

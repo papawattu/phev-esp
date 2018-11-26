@@ -60,7 +60,12 @@ phevStore_t * phev_store_init(uint8_t * mac)
 void phev_store_storeConnectionConfig(phevStore_t * store, phevStoreConnectionConfig_t * config)
 {
     esp_err_t err;
-    
+
+    err = nvs_set_str(store->handle,"email",store->email);
+    if(err != ESP_OK)
+    {
+        LOG_E(APP_TAG,"NVS set error %s",esp_err_to_name(err));
+    }    
     err = nvs_set_str(store->handle,"wifi_ssid",config->wifi.ssid);
     if(err != ESP_OK)
     {
@@ -133,6 +138,20 @@ phevStoreConnectionConfig_t * phev_store_getConnectionConfig(phevStore_t * store
     size_t size;
     esp_err_t err; 
     
+    
+    err = nvs_get_str(store->handle,"email",NULL, &size);
+    if(err != ESP_OK)
+    {
+        LOG_E(APP_TAG,"NVS get size error %s",esp_err_to_name(err));
+        return NULL;
+    }
+    store->email = malloc(size);
+    err = nvs_get_str(store->handle,"email",store->email, &size);
+    if(err != ESP_OK)
+    {
+        LOG_E(APP_TAG,"NVS get error %s",esp_err_to_name(err));
+        return NULL;
+    }
     char * ssid = malloc(MAX_WIFI_SSID_LEN + 1);
     err = nvs_get_str(store->handle,"wifi_ssid",ssid, &size);
     if(err != ESP_OK)

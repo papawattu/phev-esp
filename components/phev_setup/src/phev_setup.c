@@ -2,6 +2,7 @@
 #include "phev_config.h"
 #include "phev_store.h"
 #include "ppp_client.h"
+#include "phev_register.h"
 #include "wifi_client.h"
 #include <esp_wifi.h>
 #include <esp_event_loop.h>
@@ -89,6 +90,15 @@ connectionDetails_t * phev_setup_jsonToConnectionDetails(const char * config)
         {
             printf("Error before: %s\n", error_ptr);
         }
+        return NULL;
+    }
+    if(phev_config_checkForOption(json, SETUP_EMAIL)) 
+    {
+        details->email = strdup(phev_config_getConfigString(json, SETUP_EMAIL));
+    } 
+    else 
+    {
+        ESP_LOGE(TAG,"No email in config");
         return NULL;
     } 
     cJSON * carConnection = cJSON_GetObjectItemCaseSensitive(json, SETUP_CONNECTION_CONFIG_JSON);
@@ -212,9 +222,7 @@ void phev_setup_getDevice(phevStore_t * store)
     ESP_LOGI(TAG,"Max http recv %d",MAX_HTTP_RECV_BUFFER);
 
     esp_http_client_config_t config = {
-    //    .url = "https://us-central1-phev-db3fa.cloudfunctions.net/devices",
         .buffer_size = 2048,
-    //    .event_handler = phev_setup_httpEventHandler,
     };
     
     asprintf(&config.url,"https://us-central1-phev-db3fa.cloudfunctions.net/devices/%s",store->deviceId);
@@ -237,7 +245,12 @@ void phev_setup_getDevice(phevStore_t * store)
         int read_len = esp_http_client_read(client, buffer, content_length);
         buffer[read_len] = 0;
         ESP_LOGD(TAG,"Buffer %s",buffer);
-        phev_setup_parseDeviceResponse(store,buffer);
+        if(esp_http_client_get_status_code(client) == 200)
+        {   
+            phev_setup_parseDeviceResponse(store,buffer);
+        } else {
+            ESP_LOGW(TAG,"Unhandled server response %d",esp_http_client_get_status_code(client));
+        }
     } else {
         ESP_LOGE(TAG, "Error perform http request %s", esp_err_to_name(err));
     }
@@ -248,11 +261,15 @@ void phev_setup_register(phevStore_t * store)
     ESP_LOGI(TAG,"Registering...");
     if(store->config) 
     {
-        asprintf(&store->email,"jamie@wattu.com");
+        //asprintf(&store->email,"jamie@wattu.com");
         phev_setup_getDevice(store);
-        //asprintf(&store->config->gcpProjectId,"phev-db3fa");
-        //asprintf(&store->config->gcpLocation,"us-central1");
-        //asprintf(&store->config->gcpRegistry,"my-registry");
+        if(store->registered)
+        {
+            ESP_LOGI(TAG,"Device %s Registered",store->deviceId);
+        } else {
+            phev_register_start(store);
+
+        }
     } else {
         ESP_LOGW(TAG,"No config found");
     }
@@ -374,6 +391,7 @@ esp_err_t post_handler(httpd_req_t *req)
 
     connectionDetails_t * details = phev_setup_jsonToConnectionDetails(request);
 
+    ESP_LOGI(TAG, "Email %s",details->email);
     ESP_LOGI(TAG, "Car details");
     
     ESP_LOGI(TAG, "Host %s",details->host);
@@ -387,6 +405,7 @@ esp_err_t post_handler(httpd_req_t *req)
     ESP_LOGI(TAG, "PPP Password %s",details->pppPassword);
     ESP_LOGI(TAG, "PPP APN %s",details->pppAPN);
     
+    store->email = strdup(details->email);
     config->host = details->host;
     config->port = details->port;
     strcpy(config->wifi.ssid,details->wifi.ssid);

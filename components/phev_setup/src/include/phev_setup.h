@@ -6,6 +6,8 @@
 #include "phev_config.h"
 #include "phev_store.h"
 
+#define SETUP_EMAIL "email"
+
 #define SETUP_CONNECTION_CONFIG_JSON "carConnection"
 #define SETUP_CONNECTION_CONFIG_HOST "host"
 #define SETUP_CONNECTION_CONFIG_PORT "port"
@@ -32,6 +34,7 @@
 #define GCP_COMMANDS_TOPIC "commandsTopic"
 #define GCP_CONFIG_TOPIC "configTopic"
 typedef struct connectionDetails_t {
+    char * email;
     phevWifi_t wifi;
     char * host;
     uint16_t port;
