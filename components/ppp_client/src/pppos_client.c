@@ -39,8 +39,8 @@ const char *PPP_Pass = "secure";
 const char *PPP_APN = "everywhere";
 
 /* Pins used for serial communication with GSM module */
-#define UART1_TX_PIN 17
-#define UART1_RX_PIN 16
+#define UART1_TX_PIN 27
+#define UART1_RX_PIN 26
 #define UART1_RTS_PIN 18
 #define UART1_CTS_PIN 23
 
@@ -150,6 +150,7 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
     }
     case PPPERR_CONNECT: {
         ESP_LOGE(TAG, "status_cb: Connection lost\n");
+        pppapi_connect(pcb, 0);
         break;
     }
     case PPPERR_AUTHFAIL: {
@@ -202,8 +203,8 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx)
      * Try to reconnect in 30 seconds, if you need a modem chatscript you have
      * to do a much better signaling here ;-)
      */
-    //ppp_connect(pcb, 30);
-    /* OR ppp_listen(pcb); */
+    pppapi_connect(pcb, 0);
+    //ppp_listen(pcb); 
 }
 
 static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
@@ -215,6 +216,12 @@ static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
 static void pppos_client_task(void *pvParameters)
 {
     pppConnectionDetails_t * connectionDetails = (pppConnectionDetails_t *) pvParameters;
+
+    ESP_LOGI(TAG, "PPP / GSM details");
+    
+    ESP_LOGI(TAG, "PPP User %s",connectionDetails->user);
+    ESP_LOGI(TAG, "PPP Password %s",connectionDetails->password);
+    ESP_LOGI(TAG, "PPP APN %s",connectionDetails->apn);
 
     char cnxString[50];
 

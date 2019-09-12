@@ -51,6 +51,7 @@
 #include "mdns.h"
 
 #include "jwt.h"
+#include "ttgo.h"
 
 //#include "ppp_client.h"
 
@@ -299,6 +300,7 @@ void app_main(void)
         err = nvs_flash_init();
     }
     ESP_ERROR_CHECK( err );
+    initTTGoSIM();
     //resetGSMModule(GPIO_NUM_21);
     tcpip_adapter_init();
 

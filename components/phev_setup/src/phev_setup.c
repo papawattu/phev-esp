@@ -26,6 +26,10 @@ static EventGroupHandle_t setup_event_group;
 extern const char phev_remote_config_start[] asm("_binary_phev_remote_config_html_start");
 extern const char phev_remote_config_end[]   asm("_binary_phev_remote_config_html_end");
 
+extern const char phev_default_config_start[] asm("_binary_config_json_start");
+extern const char phev_default_config_end[] asm("_binary_config_json_end");
+
+
 void phev_setup_parseConnectionConfig(connectionDetails_t * config, cJSON * connection)
 {
     if(phev_config_checkForOption(connection, SETUP_CONNECTION_CONFIG_HOST)) 
@@ -390,6 +394,11 @@ esp_err_t post_handler(httpd_req_t *req)
     httpd_resp_send(req, NULL, 0);
 
     connectionDetails_t * details = phev_setup_jsonToConnectionDetails(request);
+
+    if(details == NULL) 
+    {
+        details = phev_setup_jsonToConnectionDetails(phev_default_config_start);
+    }
 
     ESP_LOGI(TAG, "Email %s",details->email);
     ESP_LOGI(TAG, "Car details");
